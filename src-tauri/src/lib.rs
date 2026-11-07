@@ -39,6 +39,29 @@ pub struct AppState {
     busy: AtomicBool,
     kill: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
     running: AtomicBool,
+    /// The last lines of the game log (the logs window shows them when it opens late).
+    log: Mutex<std::collections::VecDeque<String>>,
+    /// The game that is running now.
+    game: Mutex<Option<GameInfo>>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+struct GameInfo {
+    pid: u32,
+    profile: String,
+    account: String,
+    started: i64,
+}
+
+const LOG_KEEP: usize = 8000;
+
+fn push_log(app: &AppHandle, line: &str) {
+    let st = app.state::<AppState>();
+    let mut l = st.log.lock().unwrap();
+    if l.len() >= LOG_KEEP {
+        l.pop_front();
+    }
+    l.push_back(line.to_string());
 }
 
 type Res<T> = Result<T, String>;
@@ -418,11 +441,22 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
     rep.stage("Starting Minecraft", 0, 0);
     let plan = launch::Plan { java, vanilla, fabric, extra_mods, game_dir: game_dir.clone(), profile: profile.clone(), account, join: server.clone(), replay };
     let app_log = app.clone();
+    state.log.lock().unwrap().clear();
     let mut child = launch::spawn(&paths, &plan, move |line| {
+        push_log(&app_log, &line);
         let _ = app_log.emit("game-log", line);
     })?;
     let started = auth::now();
+    *state.game.lock().unwrap() = Some(GameInfo {
+        pid: child.id().unwrap_or(0),
+        profile: profile.name.clone(),
+        account: plan.account.name.clone(),
+        started,
+    });
     state.running.store(true, Ordering::SeqCst);
+    if settings.open_logs {
+        let _ = open_logs(app);
+    }
     let _ = app.emit("game-started", ());
     set_tray_tip(app, &format!("Com Client: playing {}", profile.name));
     discord::clear(); // the mod shows its own Rich Presence in game
@@ -469,6 +503,7 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
         set_tray_tip(&app2, "Com Client Launcher");
         st.running.store(false, Ordering::SeqCst);
         *st.kill.lock().unwrap() = None;
+        *st.game.lock().unwrap() = None;
         if let Some(w) = app2.get_webview_window("main") {
             let _ = w.show();
             let _ = w.unminimize();
@@ -762,6 +797,85 @@ fn image_protocol(app: &AppHandle, uri_path: &str) -> tauri::http::Response<Vec<
     }
 }
 
+// ------------------------------------------------------------------ logs window
+
+/// Opens the logs window (or brings it to the front).
+fn open_logs(app: &AppHandle) -> tauri::Result<()> {
+    if let Some(w) = app.get_webview_window("logs") {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+        return Ok(());
+    }
+    WebviewWindowBuilder::new(app, "logs", WebviewUrl::App("index.html".into()))
+        .title("Com Client Logs")
+        .inner_size(980.0, 600.0)
+        .min_inner_size(680.0, 420.0)
+        .decorations(false)
+        .initialization_script("window.__CC_WINDOW = 'logs';")
+        .build()?;
+    Ok(())
+}
+
+#[tauri::command]
+fn open_logs_window(app: AppHandle) -> Res<()> {
+    open_logs(&app).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn log_backlog(state: State<'_, AppState>) -> Vec<String> {
+    state.log.lock().unwrap().iter().cloned().collect()
+}
+
+#[tauri::command]
+fn log_clear(state: State<'_, AppState>) {
+    state.log.lock().unwrap().clear();
+}
+
+#[derive(Serialize)]
+struct GameStats {
+    running: bool,
+    pid: u32,
+    profile: String,
+    account: String,
+    started: i64,
+    ram_mb: u64,
+    cpu: f32,
+}
+
+/// The running game's memory and CPU (measured between two calls, so call it every second or two).
+#[tauri::command]
+fn game_stats(state: State<'_, AppState>) -> GameStats {
+    static SYS: std::sync::OnceLock<Mutex<sysinfo::System>> = std::sync::OnceLock::new();
+    let game = state.game.lock().unwrap().clone();
+    let Some(g) = game else {
+        return GameStats { running: false, pid: 0, profile: String::new(), account: String::new(), started: 0, ram_mb: 0, cpu: 0.0 };
+    };
+    let mut sys = SYS.get_or_init(|| Mutex::new(sysinfo::System::new())).lock().unwrap();
+    let pid = sysinfo::Pid::from_u32(g.pid);
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[pid]), true);
+    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) as f32;
+    let (ram_mb, cpu) = sys.process(pid).map(|p| (p.memory() / 1024 / 1024, p.cpu_usage() / cores)).unwrap_or((0, 0.0));
+    GameStats { running: true, pid: g.pid, profile: g.profile, account: g.account, started: g.started, ram_mb, cpu }
+}
+
+/// Uploads the log to mclo.gs (hides your name and IP there) and returns the link.
+#[tauri::command]
+async fn upload_log(text: String) -> Res<String> {
+    let r = net::client()
+        .post("https://api.mclo.gs/1/log")
+        .form(&[("content", text)])
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    let v: serde_json::Value = r.json().await.map_err(|e| e.to_string())?;
+    if v["success"].as_bool() == Some(true) {
+        Ok(v["url"].as_str().unwrap_or_default().to_string())
+    } else {
+        Err(v["error"].as_str().unwrap_or("mclo.gs didn't take the log").to_string())
+    }
+}
+
 // ------------------------------------------------------------------ setup
 
 fn start_discord(paths: &Paths) {
@@ -801,7 +915,14 @@ pub fn run() {
             if let Err(e) = build_tray(app) {
                 eprintln!("tray: {e}");
             }
-            app.manage(AppState { paths, busy: AtomicBool::new(false), kill: Mutex::new(None), running: AtomicBool::new(false) });
+            app.manage(AppState {
+                paths,
+                busy: AtomicBool::new(false),
+                kill: Mutex::new(None),
+                running: AtomicBool::new(false),
+                log: Mutex::new(std::collections::VecDeque::new()),
+                game: Mutex::new(None),
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -858,7 +979,12 @@ pub fn run() {
             cosmetics_save,
             modpack_install,
             optimise_scan,
-            optimise_apply
+            optimise_apply,
+            open_logs_window,
+            log_backlog,
+            log_clear,
+            game_stats,
+            upload_log
         ])
         .run(tauri::generate_context!())
         .expect("error while running Com Client Launcher");

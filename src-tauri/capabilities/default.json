@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What the launcher window may do",
-  "windows": ["main"],
+  "description": "What the launcher windows may do",
+  "windows": ["main", "logs"],
   "permissions": [
     "core:default",
     "core:window:allow-minimize",

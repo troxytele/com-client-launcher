@@ -130,6 +130,13 @@ export default function Settings({ info, reload, running }: { info: Info; reload
         </div>
         <div className="setting">
           <div>
+            <b>Logs window</b>
+            <span>Opens a separate window with the game's log, its memory and CPU while it starts and runs</span>
+          </div>
+          <Switch on={s.open_logs} onChange={(v) => setSetting({ ...s, open_logs: v })} />
+        </div>
+        <div className="setting">
+          <div>
             <b>Discord Rich Presence</b>
             <span>Shows "In the launcher" on your Discord profile while the launcher is open</span>
           </div>

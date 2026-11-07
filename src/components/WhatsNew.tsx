@@ -5,6 +5,12 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.1",
+    items: [
+      ["terminal", "Logs window", "A separate window with the game's log (colours, filters, search), its memory and CPU, and one-click upload to mclo.gs. Turn it on in Settings, or open it from the Logs page."],
+    ],
+  },
+  {
     version: "0.6.0",
     items: [
       ["image", "Gallery", "Every screenshot from all your profiles in one grid: open, copy, share or delete them."],
