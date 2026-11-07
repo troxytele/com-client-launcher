@@ -3234,6 +3234,8 @@ svg.flip {
   font-size: 12px;
   text-align: center;
   line-height: 1.25;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .shop-card .price {
   font-size: 10.5px;

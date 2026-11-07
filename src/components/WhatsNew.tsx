@@ -5,6 +5,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.2",
+    items: [
+      ["sparkle", "Locker fixed", "Cape names and pictures show properly again, and picking one of the official capes works."],
+      ["users", "Friends fixed", "Signing in to Com Client no longer fails when the page loads or while the game is running."],
+    ],
+  },
+  {
     version: "0.6.1",
     items: [
       ["terminal", "Logs window", "A separate window with the game's log (colours, filters, search), its memory and CPU, and one-click upload to mclo.gs. Turn it on in Settings, or open it from the Logs page."],

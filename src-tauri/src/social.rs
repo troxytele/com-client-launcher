@@ -11,7 +11,38 @@ use crate::store::Account;
 
 static TOKEN: Mutex<Option<(String, String)>> = Mutex::new(None); // (uuid, token)
 
-async fn login(acc: &Account) -> Result<String> {
+/// Only one login at a time: Mojang keeps a single pending "join" per player, so two logins at once (or the game
+/// logging in at the same moment) make the server's check fail for all but the last one.
+static LOGIN: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+fn cached(acc: &Account) -> Option<String> {
+    TOKEN.lock().unwrap().clone().filter(|(u, _)| *u == acc.uuid).map(|(_, t)| t)
+}
+
+/// A fresh token. `stale` is the token that was just refused (if any), so a login another request finished
+/// meanwhile is reused instead of starting a second one.
+async fn login(acc: &Account, stale: Option<&str>) -> Result<String> {
+    let _guard = LOGIN.lock().await;
+    if let Some(t) = cached(acc).filter(|t| Some(t.as_str()) != stale) {
+        return Ok(t);
+    }
+    let mut last = anyhow!("Com Client login failed");
+    for attempt in 0..3 {
+        if attempt > 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(1500 * attempt)).await;
+        }
+        match login_once(acc).await {
+            Ok(token) => {
+                *TOKEN.lock().unwrap() = Some((acc.uuid.clone(), token.clone()));
+                return Ok(token);
+            }
+            Err(e) => last = e,
+        }
+    }
+    Err(last)
+}
+
+async fn login_once(acc: &Account) -> Result<String> {
     let r: Value = client().post(format!("{API_URL}/auth/challenge")).json(&json!({"name": acc.name})).send().await?.json().await?;
     let server_id = r["serverId"].as_str().ok_or_else(|| anyhow!("Com Client server unreachable"))?;
     let join = client()
@@ -19,6 +50,9 @@ async fn login(acc: &Account) -> Result<String> {
         .json(&json!({"accessToken": acc.mc_token, "selectedProfile": acc.uuid.replace('-', ""), "serverId": server_id}))
         .send()
         .await?;
+    if join.status().as_u16() == 401 || join.status().as_u16() == 403 {
+        bail!("Your Minecraft sign-in expired: open Accounts and sign in again");
+    }
     if !join.status().is_success() {
         bail!("Mojang session check failed ({})", join.status());
     }
@@ -28,21 +62,22 @@ async fn login(acc: &Account) -> Result<String> {
         .send()
         .await?
         .json()
-        .await?;
-    let token = v["token"].as_str().ok_or_else(|| anyhow!("Com Client login failed"))?.to_string();
-    *TOKEN.lock().unwrap() = Some((acc.uuid.clone(), token.clone()));
-    Ok(token)
+        .await
+        .unwrap_or(Value::Null);
+    match v["token"].as_str() {
+        Some(t) => Ok(t.to_string()),
+        None => bail!("Com Client login failed: {}", v["detail"].as_str().unwrap_or("no answer from the server")),
+    }
 }
 
 async fn get(acc: &Account, path: &str) -> Result<Value> {
-    let cached = TOKEN.lock().unwrap().clone().filter(|(u, _)| *u == acc.uuid).map(|(_, t)| t);
-    let token = match cached {
+    let token = match cached(acc) {
         Some(t) => t,
-        None => login(acc).await?,
+        None => login(acc, None).await?,
     };
     let mut r = client().get(format!("{API_URL}{path}")).bearer_auth(&token).send().await?;
     if r.status().as_u16() == 401 {
-        let token = login(acc).await?;
+        let token = login(acc, Some(&token)).await?;
         r = client().get(format!("{API_URL}{path}")).bearer_auth(&token).send().await?;
     }
     if !r.status().is_success() {
@@ -64,10 +99,9 @@ fn check(path: &str) -> Result<()> {
 /// GET or POST on the Com Client server as you. Errors carry the server's own message ("detail").
 pub async fn request(acc: &Account, method: &str, path: &str, body: Option<Value>) -> Result<Value> {
     check(path)?;
-    let cached = TOKEN.lock().unwrap().clone().filter(|(u, _)| *u == acc.uuid).map(|(_, t)| t);
-    let mut token = match cached {
+    let mut token = match cached(acc) {
         Some(t) => t,
-        None => login(acc).await?,
+        None => login(acc, None).await?,
     };
     let send = |token: String| {
         let url = format!("{API_URL}{path}");
@@ -83,7 +117,7 @@ pub async fn request(acc: &Account, method: &str, path: &str, body: Option<Value
     };
     let mut r = send(token.clone()).await?;
     if r.status().as_u16() == 401 {
-        token = login(acc).await?;
+        token = login(acc, Some(&token)).await?;
         r = send(token).await?;
     }
     let status = r.status();
