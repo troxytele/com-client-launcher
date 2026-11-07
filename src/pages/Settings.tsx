@@ -7,7 +7,8 @@ import { toast } from "../stores";
 import Icon from "../components/Icon";
 import { Modal, Spinner, Switch } from "../components/Ui";
 import { getLook, Look, onLook, setLook, THEMES } from "../theme";
-import { ImportSource, ago } from "../api";
+import { ImportProgress, ImportSource, ago } from "../api";
+import { listen } from "@tauri-apps/api/event";
 
 export default function Settings({ info, reload, running }: { info: Info; reload: () => void; running: boolean }) {
   const [profileId, setProfileId] = useState(info.settings.active_profile);
@@ -24,16 +25,26 @@ export default function Settings({ info, reload, running }: { info: Info; reload
   useEffect(() => setS(info.settings), [info.settings]);
 
   const dirty = JSON.stringify(p) !== JSON.stringify(profile);
+  const [saved, setSaved] = useState<"idle" | "saving" | "saved">("idle");
 
   async function saveProfile() {
+    setSaved("saving");
     try {
       await api.saveProfile(p);
       reload();
-      toast("Profile saved", "ok");
+      setSaved("saved");
     } catch (e) {
+      setSaved("idle");
       toast(msg(e), "error");
     }
   }
+
+  // every change is saved by itself a moment after you stop moving the slider / typing
+  useEffect(() => {
+    if (!dirty || !p.name.trim()) return;
+    const t = setTimeout(saveProfile, 600);
+    return () => clearTimeout(t);
+  }, [p]);
 
   async function setSetting(next: S) {
     setS(next);
@@ -157,6 +168,14 @@ export default function Settings({ info, reload, running }: { info: Info; reload
 
         <div className="setting">
           <div>
+            <b>Performance mods</b>
+            <span>Sodium, Lithium, FerriteCore and EntityCulling for a lot more FPS. Installed and updated for you, hidden from your mods folder.</span>
+          </div>
+          <Switch on={p.performance_mods !== false} onChange={(v) => setP({ ...p, performance_mods: v })} />
+        </div>
+
+        <div className="setting">
+          <div>
             <b>ReplayMod</b>
             <span>Record your games and watch them back from any angle. Installed and updated for you, hidden from your mods folder.</span>
           </div>
@@ -191,7 +210,20 @@ export default function Settings({ info, reload, running }: { info: Info; reload
           <button className="btn" onClick={() => api.openFolder("game")}>
             <Icon name="folder" size={14} /> Open game folder
           </button>
-          <button className="btn primary" disabled={!dirty} onClick={saveProfile}>
+          <span className={"autosave " + saved}>
+            {dirty || saved === "saving" ? (
+              <>
+                <Spinner size={11} /> Saving…
+              </>
+            ) : saved === "saved" ? (
+              <>
+                <Icon name="check" size={12} /> Saved
+              </>
+            ) : (
+              "Changes save automatically"
+            )}
+          </span>
+          <button className="btn primary" style={{ display: "none" }} disabled={!dirty} onClick={saveProfile}>
             <Icon name="check" size={14} /> Save
           </button>
         </div>
@@ -355,6 +387,7 @@ function NewProfile({ onClose, onCreated }: { onClose: () => void; onCreated: (i
                 created: 0,
                 last_played: 0,
                 replay_mod: false,
+                performance_mods: true,
               });
               const created = list[list.length - 1];
               onCreated(created.id);
@@ -376,8 +409,16 @@ function ImportBlock({ profileId, profileName, running }: { profileId: string; p
   const [sources, setSources] = useState<ImportSource[] | null>(null);
   const [scanning, setScanning] = useState(false);
   const [pick, setPick] = useState<string>("");
-  const [what, setWhat] = useState({ settings: true, keybinds: true, servers: true });
+  const [what, setWhat] = useState({ settings: true, keybinds: true, servers: true, packs: true });
   const [busy, setBusy] = useState(false);
+  const [prog, setProg] = useState<ImportProgress | null>(null);
+
+  useEffect(() => {
+    const off = listen<ImportProgress>("import-progress", (e) => setProg(e.payload));
+    return () => {
+      off.then((f) => f());
+    };
+  }, []);
 
   async function scan() {
     setScanning(true);
@@ -394,14 +435,18 @@ function ImportBlock({ profileId, profileName, running }: { profileId: string; p
 
   async function run() {
     setBusy(true);
+    setProg(null);
     try {
-      toast(await api.importApply(pick, profileId, what.settings, what.keybinds, what.servers), "ok");
+      toast(await api.importApply(pick, profileId, what.settings, what.keybinds, what.servers, what.packs && (chosen?.packs ?? 0) > 0), "ok");
     } catch (e) {
       toast(msg(e), "error");
     } finally {
       setBusy(false);
+      setTimeout(() => setProg(null), 1500);
     }
   }
+  const pct = prog && prog.total > 0 ? Math.min(100, (prog.done / prog.total) * 100) : 0;
+  const mb = (b: number) => (b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : Math.max(0.1, b / 1e6).toFixed(1) + " MB");
 
   const chosen = sources?.find((x) => x.dir === pick);
   return (
@@ -415,7 +460,7 @@ function ImportBlock({ profileId, profileName, running }: { profileId: string; p
         </button>
       </div>
       <p className="muted small" style={{ marginTop: -4 }}>
-        Copies your settings (render distance, mouse sensitivity, FOV, sounds …), keybinds and server list from Minecraft Launcher, Lunar,
+        Copies your settings (render distance, mouse sensitivity, FOV, sounds …), keybinds, server list and resource packs from Minecraft Launcher, Lunar,
         Modrinth, NoRisk, Prism, CurseForge and others into <b>{profileName}</b>. Mods are never copied.
       </p>
       {sources && sources.length === 0 && <p className="muted small">No other Minecraft installs found on this PC.</p>}
@@ -431,29 +476,43 @@ function ImportBlock({ profileId, profileName, running }: { profileId: string; p
                     {x.name && x.name !== ".minecraft" && x.name !== x.launcher ? " · " + x.name : ""}
                   </b>
                   <small>
-                    {x.keybinds} keybinds{x.servers ? " · server list" : ""} · changed {ago(x.modified)}
+                    {x.keybinds} keybinds{x.servers ? " · server list" : ""}
+                    {x.packs > 0 ? ` · ${x.packs} resource pack${x.packs === 1 ? "" : "s"} (${mb(x.packs_bytes)})` : ""} · changed {ago(x.modified)}
                   </small>
                 </span>
               </button>
             ))}
           </div>
           <div className="import-what">
-            {(["settings", "keybinds", "servers"] as const).map((k) => (
+            {(["settings", "keybinds", "servers", "packs"] as const).map((k) => (
               <label key={k}>
                 <Switch on={what[k]} onChange={(v) => setWhat({ ...what, [k]: v })} />
-                {k === "settings" ? "Settings" : k === "keybinds" ? "Keybinds" : "Server list"}
+                {k === "settings" ? "Settings" : k === "keybinds" ? "Keybinds" : k === "servers" ? "Server list" : "Resource packs"}
               </label>
             ))}
             <span className="grow" />
             <button
               className="btn primary"
-              disabled={!chosen || busy || running || (!what.settings && !what.keybinds && !what.servers) || (what.servers && !what.settings && !what.keybinds && !chosen?.servers)}
+              disabled={!chosen || busy || running || (!what.settings && !what.keybinds && !what.servers && !(what.packs && chosen.packs > 0))}
               onClick={run}
             >
               {busy ? <Spinner size={13} /> : <Icon name="download" size={14} />} Import
             </button>
           </div>
-          <span className="muted small">Your current settings are kept as options.txt.before-import, just in case.</span>
+          {busy && what.packs && (chosen?.packs ?? 0) > 0 && (
+            <div className="import-progress">
+              <div className="progress-text">
+                <span>{prog?.name ? "Copying " + prog.name : "Copying resource packs…"}</span>
+                <span>
+                  {prog ? `${mb(prog.done)} / ${mb(prog.total)} · ${Math.round(pct)}%` : "0%"}
+                </span>
+              </div>
+              <div className="bar">
+                <div style={{ width: pct + "%" }} />
+              </div>
+            </div>
+          )}
+          <span className="muted small">Your current settings are kept as options.txt.before-import, just in case. Packs you already have are skipped.</span>
         </>
       )}
     </section>

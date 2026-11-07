@@ -100,10 +100,11 @@ pub fn arguments(paths: &Paths, plan: &Plan) -> Vec<String> {
     let mut args = Vec::new();
     // memory first, then the player's own arguments (they may override the defaults)
     args.push(format!("-Xmx{}M", p.ram_mb.max(512)));
-    args.push(format!("-Xms{}M", (p.ram_mb / 2).clamp(512, 2048)));
+    // the whole heap up front: no stutters while Java grows it
+    args.push(format!("-Xms{}M", p.ram_mb.max(512)));
     args.extend(
         ["-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20",
-         "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M"]
+         "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M", "-XX:+ParallelRefProcEnabled", "-XX:+DisableExplicitGC"]
             .iter()
             .map(|s| s.to_string()),
     );

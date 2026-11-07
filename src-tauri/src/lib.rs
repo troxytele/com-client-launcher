@@ -74,10 +74,52 @@ async fn import_scan(state: State<'_, AppState>) -> Res<Vec<import::Source>> {
     tokio::task::spawn_blocking(move || import::scan(&root)).await.map_err(|e| e.to_string())
 }
 
+#[derive(Clone, serde::Serialize)]
+struct ImportProgress {
+    done: u64,
+    total: u64,
+    name: String,
+}
+
 #[tauri::command]
-fn import_apply(state: State<'_, AppState>, source: String, profile: String, settings: bool, keybinds: bool, servers: bool) -> Res<String> {
+async fn import_apply(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    source: String,
+    profile: String,
+    settings: bool,
+    keybinds: bool,
+    servers: bool,
+    packs: bool,
+) -> Res<String> {
     let p = Profiles::load(&state.paths).get(&profile);
-    import::apply(&source, &store::game_dir(&state.paths, &p), settings, keybinds, servers).map_err(err)
+    let target = store::game_dir(&state.paths, &p);
+    tokio::task::spawn_blocking(move || -> anyhow::Result<String> {
+        let mut done = Vec::new();
+        let first = import::apply(&source, &target, settings, keybinds, servers)?;
+        if !first.is_empty() {
+            done.push(first.trim_start_matches("Imported ").to_string());
+        }
+        if packs {
+            let last = std::sync::Mutex::new(std::time::Instant::now() - std::time::Duration::from_secs(1));
+            let n = import::copy_packs(std::path::Path::new(&source), &target, &|d, t, name| {
+                // at most ~20 updates a second
+                let mut l = last.lock().unwrap();
+                if d >= t || l.elapsed().as_millis() >= 50 {
+                    *l = std::time::Instant::now();
+                    let _ = app.emit("import-progress", ImportProgress { done: d, total: t, name: name.to_string() });
+                }
+            })?;
+            done.push(format!("{n} resource pack{}", if n == 1 { "" } else { "s" }));
+        }
+        if done.is_empty() {
+            anyhow::bail!("Nothing to import");
+        }
+        Ok(format!("Imported {}", done.join(", ")))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+    .map_err(err)
 }
 
 #[tauri::command]
@@ -272,7 +314,7 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState) -> anyhow::Result<
     let component = vanilla.json["javaVersion"]["component"].as_str().unwrap_or("java-runtime-delta").to_string();
     let java = java::ensure(&paths, &component, &rep).await?;
     let fabric = fabric::install(&paths, config::MC_VERSION, None, &rep).await?;
-    let jars = client::ensure(&paths, config::MC_VERSION, Some(&settings.custom_client_jar), profile.replay_mod, &rep).await?;
+    let jars = client::ensure(&paths, config::MC_VERSION, Some(&settings.custom_client_jar), profile.replay_mod, profile.performance_mods, &rep).await?;
     // don't load a second copy of something the player put in their own mods folder
     let theirs = mods::mod_ids(&game_dir);
     let mut extra_mods = Vec::new();

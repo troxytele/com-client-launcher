@@ -19,6 +19,9 @@ pub struct Installed {
     pub fabric_api_file: String,
     #[serde(default)]
     pub replay_file: String,
+    /// Optional hidden mods: Modrinth project -> file name of the copy we have.
+    #[serde(default)]
+    pub extra: std::collections::HashMap<String, String>,
 }
 
 fn installed_path(paths: &Paths) -> PathBuf {
@@ -35,7 +38,7 @@ fn save(paths: &Paths, i: &Installed) {
 }
 
 /// The jars to load. `custom` = a test jar picked in the settings (instead of the GitHub release).
-pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool, rep: &Reporter) -> Result<Vec<PathBuf>> {
+pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool, perf: bool, rep: &Reporter) -> Result<Vec<PathBuf>> {
     rep.stage("Updating Com Client", 0, 0);
     let mut state = installed(paths);
     let mut jars = Vec::new();
@@ -101,34 +104,48 @@ pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool,
         }
     }
 
-    // ReplayMod (optional per profile). A problem here never stops the game from starting.
+    // optional hidden mods (per profile). A problem here never stops the game from starting.
+    let mut wanted: Vec<(&str, &str)> = Vec::new();
     if replay {
-        match latest_modrinth("replaymod", mc).await {
-            Ok((_, name, url, sha1, size)) => {
-                let path = paths.client().join(&name);
-                let d = Download::new(url, &path, Some(sha1), size);
-                let ok = net::is_valid(&d) || {
-                    rep.stage("Downloading ReplayMod", 0, 0);
-                    net::fetch(&d, None).await.is_ok()
-                };
-                if ok {
-                    if !state.replay_file.is_empty() && state.replay_file != name {
-                        let _ = std::fs::remove_file(paths.client().join(&state.replay_file));
-                    }
-                    state.replay_file = name;
-                    save(paths, &state);
-                    jars.push(path);
-                }
-            }
-            Err(_) => {
-                let have = paths.client().join(&state.replay_file);
-                if !state.replay_file.is_empty() && have.is_file() {
-                    jars.push(have);
-                }
-            }
+        wanted.push(("replaymod", "ReplayMod"));
+    }
+    if perf {
+        wanted.extend([("sodium", "Sodium"), ("lithium", "Lithium"), ("ferrite-core", "FerriteCore"), ("entityculling", "EntityCulling")]);
+    }
+    for (slug, title) in wanted {
+        if let Some(p) = optional(paths, &mut state, slug, title, mc, rep).await {
+            jars.push(p);
         }
     }
+    save(paths, &state);
     Ok(jars)
+}
+
+/// Newest copy of an optional Modrinth mod, or the one we have when offline. None = not available for this version.
+async fn optional(paths: &Paths, state: &mut Installed, slug: &str, title: &str, mc: &str, rep: &Reporter) -> Option<PathBuf> {
+    let have = state.extra.get(slug).cloned().unwrap_or_default();
+    match latest_modrinth(slug, mc).await {
+        Ok((_, name, url, sha1, size)) => {
+            let path = paths.client().join(&name);
+            let d = Download::new(url, &path, Some(sha1), size);
+            if !net::is_valid(&d) {
+                rep.stage(&format!("Downloading {title}"), 0, 0);
+                if net::fetch(&d, None).await.is_err() {
+                    let old = paths.client().join(&have);
+                    return (!have.is_empty() && old.is_file()).then_some(old);
+                }
+            }
+            if !have.is_empty() && have != name {
+                let _ = std::fs::remove_file(paths.client().join(&have));
+            }
+            state.extra.insert(slug.to_string(), name);
+            Some(path)
+        }
+        Err(_) => {
+            let old = paths.client().join(&have);
+            (!have.is_empty() && old.is_file()).then_some(old)
+        }
+    }
 }
 
 /// (tag, file name, url, hash, size) of the .jar in the newest GitHub release of the mod.

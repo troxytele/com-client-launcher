@@ -153,6 +153,8 @@ pub struct Profile {
     pub last_played: i64,
     /// Load ReplayMod (record and watch replays), kept hidden like Fabric API.
     pub replay_mod: bool,
+    /// Sodium, Lithium, FerriteCore and EntityCulling for more FPS (hidden like Fabric API).
+    pub performance_mods: bool,
 }
 
 impl Default for Profile {
@@ -169,6 +171,7 @@ impl Default for Profile {
             created: auth::now(),
             last_played: 0,
             replay_mod: false,
+            performance_mods: true,
         }
     }
 }
