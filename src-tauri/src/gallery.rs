@@ -126,7 +126,7 @@ pub fn replays(paths: &Paths) -> Vec<Replay> {
 /// metaData.json inside a replay file (it is a zip).
 fn replay_meta(path: &Path) -> Option<serde_json::Value> {
     let mut zip = zip::ZipArchive::new(std::fs::File::open(path).ok()?).ok()?;
-    let mut f = zip.by_name("metaData.json").ok()?;
+    let f = zip.by_name("metaData.json").ok()?;
     let mut t = String::new();
     f.take(64 * 1024).read_to_string(&mut t).ok()?;
     serde_json::from_str(&t).ok()
