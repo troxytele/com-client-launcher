@@ -139,7 +139,7 @@ async fn latest_client() -> Result<(String, String, String, Hash, u64)> {
     let url = format!("https://api.github.com/repos/{}/releases/latest", config::CLIENT_REPO);
     let r = net::client().get(&url).header("Accept", "application/vnd.github+json").send().await?;
     if r.status().as_u16() == 404 {
-        bail!("There is no Com Client release on GitHub yet ({}).", config::CLIENT_REPO);
+        bail!("There is no Com Client release on GitHub yet (github.com/{} must be a public repo with a release that has the .jar).", config::CLIENT_REPO);
     }
     if !r.status().is_success() {
         bail!("GitHub answered {}", r.status());

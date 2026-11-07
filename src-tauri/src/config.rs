@@ -6,7 +6,7 @@ pub const MC_VERSION: &str = "1.21.11";
 /// GitHub repo of the Com Client MOD. The launcher installs the .jar of its newest release
 /// (push a tag like `v0.2.0` there and the GitHub Action builds and publishes it).
 /// Replace YOUR_GITHUB_NAME with your GitHub user name.
-pub const CLIENT_REPO: &str = "troxytele/com-client";
+pub const CLIENT_REPO: &str = "troxytele/com-client-releases";
 
 /// GitHub repo of this LAUNCHER (its releases are the launcher updates, news.json is read from it).
 pub const LAUNCHER_REPO: &str = "troxytele/com-client-launcher";

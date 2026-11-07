@@ -19,7 +19,7 @@ Built with **Tauri 2**: Rust does the work (`src-tauri/src`), the window is Reac
 
 | Repo | What goes in | Releases are... |
 |---|---|---|
-| `com-client` | the mod (`E:\Minecraft Mods\Com Client`, without this `launcher` folder) | Com Client versions (.jar) |
+| `com-client-releases` (public) | nothing but releases: one .jar per release | Com Client versions (.jar) |
 | `com-client-launcher` | everything in this `launcher` folder | launcher versions (setup .exe + update info) |
 
 Public, because the launcher downloads releases without logging in. Tip: move this `launcher` folder out of the mod
@@ -44,14 +44,14 @@ Keep a backup of that key somewhere safe. Without it you can't publish updates t
 
 ### 4. The mod release workflow
 
-Copy `mod-workflow/release.yml` into the mod project as `.github/workflows/release.yml` and push it to `com-client`.
+Copy `mod-workflow/release.yml` into the mod project as `.github/workflows/release.yml` and push it to a public repo (the `com-client` repo is the backend's data and must stay private).
 
 ---
 
 ## Publishing
 
 **A new Com Client version** (the mod):
-GitHub → `com-client` → Releases → *Draft a new release* → tag e.g. `v0.2.0` → *Publish*.
+GitHub → `com-client-releases` → Releases → *Draft a new release* → tag e.g. `v0.2.0` → *Publish*.
 GitHub builds the mod and attaches the jar. Every launcher installs it the next time someone presses Play.
 
 **A new launcher version**:
