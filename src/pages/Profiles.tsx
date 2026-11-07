@@ -3,6 +3,7 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { ago, api, fmtTime, Info, msg, PinnedServer, Profile } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
+import Optimise from "../components/Optimise";
 import ProfileIcon, { iconUrl } from "../components/ProfileIcon";
 import { Modal, Spinner, Switch } from "../components/Ui";
 import { ImportBlock } from "./Settings";
@@ -35,6 +36,7 @@ export default function Profiles({
   const [p, setP] = useState<Profile>(profile);
   const [saved, setSaved] = useState<"idle" | "saving" | "saved">("idle");
   const [picker, setPicker] = useState(false);
+  const [optimise, setOptimise] = useState(false);
   const [busy, setBusy] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -311,6 +313,9 @@ export default function Profiles({
               <button className="btn small" onClick={() => api.openFolder("profile:" + p.id)}>
                 <Icon name="folder" size={14} /> Folder
               </button>
+              <button className="btn small" disabled={running} onClick={() => setOptimise(true)} title="Checks your PC and picks memory, performance mods and video settings">
+                <Icon name="bolt" size={14} /> Auto-optimise
+              </button>
               <span className="grow" />
               {info.profiles.length > 1 && (
                 <button
@@ -441,6 +446,17 @@ export default function Profiles({
         </div>
       </div>
 
+      {optimise && (
+        <Optimise
+          profile={p}
+          onClose={() => setOptimise(false)}
+          onDone={(list) => {
+            const u = list.find((x) => x.id === p.id);
+            if (u) setP(u);
+            reload();
+          }}
+        />
+      )}
       {picker && (
         <IconPicker
           current={p.icon}

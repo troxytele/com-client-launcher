@@ -17,8 +17,11 @@ import Logs from "./pages/Logs";
 import Skins from "./pages/Skins";
 import Profiles from "./pages/Profiles";
 import WhatsNew from "./components/WhatsNew";
+import Gallery from "./pages/Gallery";
+import Friends from "./pages/Friends";
+import Locker from "./pages/Locker";
 
-type Page = "home" | "profiles" | "skins" | "mods" | "settings" | "logs" | "crashes";
+type Page = "home" | "profiles" | "skins" | "locker" | "mods" | "friends" | "gallery" | "settings" | "logs" | "crashes";
 
 export default function App() {
   const [updated, setUpdated] = useState(false);
@@ -38,6 +41,8 @@ export default function App() {
   const [skinKey, setSkinKey] = useState(0);
   const [crashFile, setCrashFile] = useState<string | null>(null);
   const [crash, setCrash] = useState<GameExit | null>(null);
+  const [unread, setUnread] = useState(0);
+  const onUnread = useCallback((n: number) => setUnread(n), []);
 
   useEffect(() => {
     if (!introOver || !updated || !info) return;
@@ -85,7 +90,7 @@ export default function App() {
     };
   }, [reload]);
 
-  async function play(server?: string) {
+  async function play(server?: string, profileId?: string, replay?: string) {
     if (!info) return;
     if (!info.accounts.some((a) => a.active)) {
       setAccountsOpen(true);
@@ -96,7 +101,7 @@ export default function App() {
     setProgress({ stage: "Getting ready", done: 0, total: 0 });
     pushLog("[Launcher] ---- starting " + new Date().toLocaleTimeString() + (server ? " (joining " + server + ")" : "") + " ----");
     try {
-      await api.launch(server);
+      await api.launch(server, profileId, replay);
       if (info.settings.open_logs) setPage("logs");
     } catch (e) {
       const m = msg(e);
@@ -128,11 +133,17 @@ export default function App() {
     { id: "home", icon: "play", label: "Play" },
     { id: "profiles", icon: "layers", label: "Profiles" },
     { id: "skins", icon: "shirt", label: "Skins" },
+    { id: "locker", icon: "sparkle", label: "Locker" },
     { id: "mods", icon: "cube", label: "Mods" },
+    { id: "friends", icon: "users", label: "Friends" },
+    { id: "gallery", icon: "image", label: "Gallery" },
     { id: "crashes", icon: "bug", label: "Crashes" },
     { id: "logs", icon: "terminal", label: "Logs" },
   ];
-  const titles: Record<Page, string> = { home: "Play", profiles: "Profiles", skins: "Skins", mods: "Mods", crashes: "Crashes", logs: "Logs", settings: "Settings" };
+  const titles: Record<Page, string> = {
+    home: "Play", profiles: "Profiles", skins: "Skins", locker: "Locker", mods: "Mods", friends: "Friends", gallery: "Gallery",
+    crashes: "Crashes", logs: "Logs", settings: "Settings",
+  };
 
   return (
     <div className={"app" + (introOver ? " entered" : " waiting")}>
@@ -143,6 +154,7 @@ export default function App() {
         onPage={(p) => setPage(p as Page)}
         account={active}
         onAccounts={() => setAccountsOpen(true)}
+        badge={{ friends: unread }}
       />
       <div className="main">
         <div className="topstrip" data-tauri-drag-region>
@@ -182,7 +194,39 @@ export default function App() {
               onSkinChanged={() => setSkinKey((k) => k + 1)}
             />
           )}
-          {page === "mods" && <Mods profileName={profile.name} running={phase === "running"} />}
+          {page === "mods" && (
+            <Mods
+              profileName={profile.name}
+              running={phase === "running"}
+              onModpack={async (id) => {
+                await selectProfile(id);
+                setPage("profiles");
+              }}
+            />
+          )}
+          {page === "locker" && <Locker signedIn={!!active} onAccounts={() => setAccountsOpen(true)} skinKey={skinKey} />}
+          {page === "friends" && (
+            <Friends
+              signedIn={!!active}
+              running={phase !== "idle"}
+              onAccounts={() => setAccountsOpen(true)}
+              onUnread={onUnread}
+              onJoin={(server) => {
+                setPage("home");
+                play(server);
+              }}
+            />
+          )}
+          {page === "gallery" && (
+            <Gallery
+              profiles={info.profiles}
+              running={phase !== "idle"}
+              onWatch={(r) => {
+                setPage("home");
+                play(undefined, r.profile, r.path);
+              }}
+            />
+          )}
           {page === "settings" && <Settings info={info} reload={reload} running={phase !== "idle"} />}
           {page === "logs" && <Logs />}
           {page === "crashes" && <Crashes initial={crashFile} />}

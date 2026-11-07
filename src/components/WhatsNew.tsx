@@ -5,6 +5,17 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.0",
+    items: [
+      ["image", "Gallery", "Every screenshot from all your profiles in one grid: open, copy, share or delete them."],
+      ["film", "Replays", "Your ReplayMod recordings, with a Watch button that starts the game straight into one."],
+      ["users", "Friends", "Who's online and on which server, Join them with one click, and chat right from the launcher."],
+      ["box", "Modpacks", "Mods → Modpacks: install a whole Modrinth modpack as a new profile in one click."],
+      ["sparkle", "Locker", "Browse and wear capes, wings, halos, hats and auras, tried on your own skin in 3D. All free for now."],
+      ["bolt", "Auto-optimise", "On the Profiles page: checks your PC and picks the memory, performance mods and video settings."],
+    ],
+  },
+  {
     version: "0.5.1",
     items: [["edit", "Rename profiles", "Click a profile's name (or Rename) on the Profiles page, or double-click it in the list, then type the new name."]],
   },
