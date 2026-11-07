@@ -6,6 +6,7 @@ import { api, Info, msg, Profile, Settings as S } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import { Modal, Spinner, Switch } from "../components/Ui";
+import { getLook, Look, onLook, setLook, THEMES } from "../theme";
 
 export default function Settings({ info, reload, running }: { info: Info; reload: () => void; running: boolean }) {
   const [profileId, setProfileId] = useState(info.settings.active_profile);
@@ -15,6 +16,8 @@ export default function Settings({ info, reload, running }: { info: Info; reload
   const [newOpen, setNewOpen] = useState(false);
   const [repairing, setRepairing] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [look, setLookState] = useState<Look>(getLook());
+  useEffect(() => onLook(setLookState), []);
 
   useEffect(() => setP(profile), [profile.id]);
   useEffect(() => setS(info.settings), [info.settings]);
@@ -51,6 +54,29 @@ export default function Settings({ info, reload, running }: { info: Info; reload
           <p className="muted">Profiles keep their own worlds, mods and options.</p>
         </div>
       </div>
+
+      <section className="settings-block glass">
+        <div className="block-head">
+          <h2>
+            <Icon name="sparkle" size={17} /> Appearance
+          </h2>
+        </div>
+        <div className="themes">
+          {THEMES.map((t) => (
+            <button key={t.id} className={"theme-swatch" + (look.theme === t.id ? " on" : "")} onClick={() => setLook({ ...look, theme: t.id })}>
+              <i style={{ background: `radial-gradient(circle at 35% 30%, ${t.hi}, ${t.accent} 45%, ${t.accent2} 75%, ${t.bg})` }} />
+              {t.name}
+            </button>
+          ))}
+        </div>
+        <div className="setting">
+          <div>
+            <b>Moving background</b>
+            <span>Specks of light drifting slowly behind everything. Turn off for a still background.</span>
+          </div>
+          <Switch on={look.stars} onChange={(v) => setLook({ ...look, stars: v })} />
+        </div>
+      </section>
 
       <section className="settings-block glass">
         <div className="block-head">
@@ -180,7 +206,7 @@ export default function Settings({ info, reload, running }: { info: Info; reload
         <div className="setting">
           <div>
             <b>Discord Rich Presence</b>
-            <span>Shows "In the launcher" on Discord (uses the Discord app ID from Com Client's settings)</span>
+            <span>Shows "In the launcher" on your Discord profile while the launcher is open</span>
           </div>
           <Switch on={s.discord_rpc} onChange={(v) => setSetting({ ...s, discord_rpc: v })} />
         </div>

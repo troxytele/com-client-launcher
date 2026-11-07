@@ -24,7 +24,7 @@ pub const DEVICE_SCOPE: &str = "service::user.auth.xboxlive.com::MBI_SSL";
 
 /// Discord application for the launcher's Rich Presence. Empty = use the discordAppId from the mod's
 /// config/comclient/client.json (if there is one), otherwise no Rich Presence.
-pub const DISCORD_APP_ID: &str = "";
+pub const DISCORD_APP_ID: &str = "1568597886856462417"; // same Discord application as the mod
 
 pub const LAUNCHER_NAME: &str = "ComClientLauncher";
 

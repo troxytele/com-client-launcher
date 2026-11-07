@@ -1,23 +1,30 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, GameExit, Info, msg, on, Progress } from "./api";
 import { getLog, pushLog, toast } from "./stores";
-import TitleBar from "./components/TitleBar";
+import TopBar from "./components/TopBar";
+import Splash from "./components/Splash";
+import Backdrop from "./components/Backdrop";
 import Icon from "./components/Icon";
-import Face from "./components/Face";
 import Accounts from "./components/Accounts";
 import Updater from "./components/Updater";
-import { Modal, Spinner, Toasts } from "./components/Ui";
+import { Modal, Toasts } from "./components/Ui";
 import Home from "./pages/Home";
 import Mods from "./pages/Mods";
 import Settings from "./pages/Settings";
 import Logs from "./pages/Logs";
 import Skins from "./pages/Skins";
-import logo from "./assets/logo.png";
 
 type Page = "home" | "skins" | "mods" | "settings" | "logs";
 
 export default function App() {
   const [updated, setUpdated] = useState(false);
+  // the start-up animation plays at least this long, then fades out over the launcher
+  const [introOver, setIntroOver] = useState(false);
+  const [splashGone, setSplashGone] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setIntroOver(true), 1900);
+    return () => clearTimeout(t);
+  }, []);
   const [info, setInfo] = useState<Info | null>(null);
   const [page, setPage] = useState<Page>("home");
   const [phase, setPhase] = useState<"idle" | "preparing" | "running">("idle");
@@ -26,6 +33,12 @@ export default function App() {
   const [accountsOpen, setAccountsOpen] = useState(false);
   const [skinKey, setSkinKey] = useState(0);
   const [crash, setCrash] = useState<GameExit | null>(null);
+
+  useEffect(() => {
+    if (!introOver || !updated || !info) return;
+    const t = setTimeout(() => setSplashGone(true), 900);
+    return () => clearTimeout(t);
+  }, [introOver, updated, info !== null]);
 
   const reload = useCallback(() => {
     api.info().then((i) => {
@@ -95,64 +108,38 @@ export default function App() {
     reload();
   }
 
-  if (!updated) {
+  if (!updated || !info) {
     return (
       <div className="app">
-        <TitleBar version="" />
-        <Updater onDone={() => setUpdated(true)} />
-        <div className="boot">
-          <img src={logo} alt="" />
-          <Spinner size={18} />
-        </div>
-      </div>
-    );
-  }
-
-  if (!info) {
-    return (
-      <div className="app">
-        <TitleBar version="" />
-        <div className="boot">
-          <img src={logo} alt="" />
-          <Spinner size={18} />
-        </div>
+        {!updated && <Updater onDone={() => setUpdated(true)} />}
+        <Splash leaving={false} />
       </div>
     );
   }
 
   const active = info.accounts.find((a) => a.active);
   const profile = info.profiles.find((p) => p.id === info.settings.active_profile) ?? info.profiles[0];
-  const nav: { id: Page; icon: string; label: string }[] = [
-    { id: "home", icon: "home", label: "Home" },
+  const tabs: { id: Page; icon: string; label: string }[] = [
+    { id: "home", icon: "play", label: "Play" },
     { id: "skins", icon: "shirt", label: "Skins" },
     { id: "mods", icon: "cube", label: "Mods" },
     { id: "logs", icon: "terminal", label: "Logs" },
-    { id: "settings", icon: "gear", label: "Settings" },
   ];
 
   return (
-    <div className="app">
-      <div className="bg" />
-      <TitleBar version={info.version} />
+    <div className={"app" + (introOver ? " entered" : " waiting")}>
+      <Backdrop />
+      <TopBar
+        version={info.version}
+        tabs={tabs}
+        page={page}
+        onPage={(p) => setPage(p as Page)}
+        phase={phase}
+        account={active}
+        onAccounts={() => setAccountsOpen(true)}
+        onSettings={() => setPage("settings")}
+      />
       <div className="layout">
-        <nav className="sidebar">
-          <img src={logo} className="side-logo" alt="Com Client" />
-          {nav.map((n) => (
-            <button key={n.id} className={"nav" + (page === n.id ? " on" : "")} onClick={() => setPage(n.id)} title={n.label}>
-              <Icon name={n.icon} size={20} />
-              <span>{n.label}</span>
-            </button>
-          ))}
-          <span className="grow" />
-          {phase !== "idle" && (
-            <div className="side-status" title={phase === "running" ? "Minecraft is running" : progress?.stage}>
-              {phase === "running" ? <span className="dot" /> : <Spinner size={12} />}
-            </div>
-          )}
-          <button className="side-account" onClick={() => setAccountsOpen(true)} title={active ? active.name : "Sign in"}>
-            <Face skin={active?.skin_url} name={active?.name} size={34} />
-          </button>
-        </nav>
         <main className="content" key={page}>
           {page === "home" && (
             <Home
@@ -230,6 +217,7 @@ export default function App() {
         </Modal>
       )}
       <Toasts />
+      {!splashGone && <Splash leaving={introOver} />}
     </div>
   );
 }
