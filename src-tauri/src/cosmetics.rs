@@ -13,7 +13,7 @@ use crate::paths::Paths;
 use crate::social;
 use crate::store::{self, Account, Profiles};
 
-/// Official capes that are always listed (the rest comes from MineSkin's catalogue, like in the mod).
+/// Official capes that are always listed as (name, texture hash); the rest comes from MineSkin's catalogue, like in the mod.
 const BUILT_IN_CAPES: &[(&str, &str)] = &[
     ("Migrator", "2340c0e03dd24a11b15a8b33c2a7e9e32abb2051b2481d0ba7defd635ca7a933"),
     ("Vanilla", "f9a76537647989f9a0b6d001e320dac591c359e9e61a31f4ce11c88f207f0ad4"),
@@ -78,7 +78,7 @@ fn is_hash(h: &str) -> bool {
 
 /// Everything you can wear. The cape list is cached for a day (MineSkin knows every cape that exists).
 pub async fn catalog(paths: &Paths) -> Catalog {
-    let mut capes: Vec<Item> = items(BUILT_IN_CAPES);
+    let mut capes: Vec<Item> = BUILT_IN_CAPES.iter().map(|(name, hash)| Item { id: hash.to_string(), name: name.to_string() }).collect();
     let cache = paths.root.join("cache").join("capes.json");
     let fresh = std::fs::metadata(&cache)
         .ok()
