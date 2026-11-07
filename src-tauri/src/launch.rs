@@ -24,6 +24,8 @@ pub struct Plan {
     pub account: Account,
     /// Join this server right away (host:port).
     pub join: Option<String>,
+    /// Open this ReplayMod recording right away (Com Client opens it once the main menu is up).
+    pub replay: Option<String>,
 }
 
 /// The full java command line (also shown in the logs for debugging, with the token hidden).
@@ -115,6 +117,9 @@ pub fn arguments(paths: &Paths, plan: &Plan) -> Vec<String> {
     args.extend(plan.fabric.jvm_args.iter().map(|s| fill(s)));
     if let Some((path, arg)) = &plan.vanilla.log_config {
         args.push(arg.replace("${path}", &native(path)));
+    }
+    if let Some(replay) = plan.replay.as_deref().filter(|r| !r.trim().is_empty()) {
+        args.push(format!("-Dcomclient.replay={replay}"));
     }
     if !plan.extra_mods.is_empty() {
         let list: Vec<String> = plan.extra_mods.iter().map(|p| native(p)).collect();
@@ -247,6 +252,7 @@ mod plan_tests {
         let paths = Paths::new(std::env::temp_dir().join("cc-launch-test"));
         let plan = Plan {
             join: None,
+            replay: None,
             java: PathBuf::from("java"),
             vanilla: Vanilla {
                 id: "1.21.11".into(),

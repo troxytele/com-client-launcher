@@ -34,6 +34,7 @@ fn project_type(kind: &str) -> &'static str {
     match kind {
         "resourcepack" => "resourcepack",
         "shader" => "shader",
+        "modpack" => "modpack",
         _ => "mod",
     }
 }
@@ -49,7 +50,7 @@ fn loaders(kind: &str) -> Vec<&'static str> {
 /// sort: relevance | downloads | follows | newest | updated
 pub async fn search(query: &str, kind: &str, mc: &str, sort: &str, offset: u32) -> Result<SearchResult> {
     let mut facets = vec![vec![format!("project_type:{}", project_type(kind))], vec![format!("versions:{mc}")]];
-    if kind == "mod" {
+    if kind == "mod" || kind == "modpack" {
         facets.push(vec!["categories:fabric".into()]);
     }
     let url = format!(
@@ -83,7 +84,7 @@ pub async fn search(query: &str, kind: &str, mc: &str, sort: &str, offset: u32) 
     Ok(SearchResult { hits, total: v["total_hits"].as_u64().unwrap_or(0) })
 }
 
-async fn best_version(project: &str, kind: &str, mc: &str) -> Result<Value> {
+pub async fn best_version(project: &str, kind: &str, mc: &str) -> Result<Value> {
     let url = format!(
         "{API}/project/{}/version?game_versions={}&loaders={}",
         urlencoding::encode(project),
@@ -100,7 +101,7 @@ async fn best_version(project: &str, kind: &str, mc: &str) -> Result<Value> {
         .ok_or_else(|| anyhow!("No version for Minecraft {mc}"))
 }
 
-fn primary_file(v: &Value) -> Option<Value> {
+pub fn primary_file(v: &Value) -> Option<Value> {
     let files = v["files"].as_array()?;
     files.iter().find(|f| f["primary"].as_bool().unwrap_or(false)).or_else(|| files.first()).cloned()
 }

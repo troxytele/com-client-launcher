@@ -3,13 +3,17 @@
 pub mod auth;
 pub mod client;
 pub mod config;
+pub mod cosmetics;
 pub mod discord;
+pub mod gallery;
 pub mod fabric;
 pub mod java;
 pub mod launch;
 pub mod minecraft;
+pub mod modpacks;
 pub mod modrinth;
 pub mod mods;
+pub mod optimise;
 pub mod net;
 pub mod paths;
 pub mod profiles;
@@ -361,24 +365,33 @@ struct GameExit {
     crash_report: Option<String>,
 }
 
+/// Starts the game. `profile` = a profile other than the selected one, `replay` = open this recording right away.
 #[tauri::command]
-async fn launch(app: AppHandle, state: State<'_, AppState>, server: Option<String>) -> Res<()> {
+async fn launch(app: AppHandle, state: State<'_, AppState>, server: Option<String>, profile: Option<String>, replay: Option<String>) -> Res<()> {
     if state.running.load(Ordering::SeqCst) {
         return Err("The game is already running".into());
+    }
+    if let Some(r) = replay.as_deref() {
+        if !gallery::allowed(&state.paths, std::path::Path::new(r)) {
+            return Err("That replay isn't in a profile's replay_recordings folder".into());
+        }
     }
     if state.busy.swap(true, Ordering::SeqCst) {
         return Err("Already starting".into());
     }
-    let result = prepare_and_start(&app, &state, server).await;
+    let result = prepare_and_start(&app, &state, server, profile, replay).await;
     state.busy.store(false, Ordering::SeqCst);
     result.map_err(err)
 }
 
-async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<String>) -> anyhow::Result<()> {
+async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<String>, profile_id: Option<String>, replay: Option<String>) -> anyhow::Result<()> {
     let paths = state.paths.clone();
     let settings = Settings::load(&paths);
     let mut profiles = Profiles::load(&paths);
-    let profile = profiles.get(&settings.active_profile);
+    let mut profile = profiles.get(profile_id.as_deref().unwrap_or(&settings.active_profile));
+    if replay.is_some() {
+        profile.replay_mod = true; // watching a replay needs ReplayMod
+    }
     let game_dir = store::game_dir(&paths, &profile);
     let app_ = app.clone();
     let rep = Reporter::new(move |p: Progress| {
@@ -403,7 +416,7 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
     }
 
     rep.stage("Starting Minecraft", 0, 0);
-    let plan = launch::Plan { java, vanilla, fabric, extra_mods, game_dir: game_dir.clone(), profile: profile.clone(), account, join: server.clone() };
+    let plan = launch::Plan { java, vanilla, fabric, extra_mods, game_dir: game_dir.clone(), profile: profile.clone(), account, join: server.clone(), replay };
     let app_log = app.clone();
     let mut child = launch::spawn(&paths, &plan, move |line| {
         let _ = app_log.emit("game-log", line);
@@ -624,6 +637,131 @@ async fn skin_current(state: State<'_, AppState>) -> Res<skins::Current> {
     skins::current(&state.paths).await.map_err(err)
 }
 
+// ------------------------------------------------------------------ gallery (screenshots, replays)
+
+#[tauri::command]
+async fn shots_list(state: State<'_, AppState>) -> Res<Vec<gallery::Shot>> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || gallery::screenshots(&paths)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn replays_list(state: State<'_, AppState>) -> Res<Vec<gallery::Replay>> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || gallery::replays(&paths)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn gallery_delete(state: State<'_, AppState>, path: String) -> Res<()> {
+    gallery::delete(&state.paths, &path).map_err(err)
+}
+
+#[tauri::command]
+async fn shot_copy(state: State<'_, AppState>, path: String) -> Res<()> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || gallery::copy_image(&paths, &path)).await.map_err(|e| e.to_string())?.map_err(err)
+}
+
+#[tauri::command]
+async fn shot_share(state: State<'_, AppState>, path: String) -> Res<()> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || gallery::share(&paths, &path)).await.map_err(|e| e.to_string())?.map_err(err)
+}
+
+// ------------------------------------------------------------------ friends + chat (Com Client server)
+
+#[tauri::command]
+async fn server_get(state: State<'_, AppState>, path: String) -> Res<serde_json::Value> {
+    let acc = store::fresh_account(&state.paths).await.map_err(err)?;
+    social::request(&acc, "GET", &path, None).await.map_err(err)
+}
+
+#[tauri::command]
+async fn server_post(state: State<'_, AppState>, path: String, body: Option<serde_json::Value>) -> Res<serde_json::Value> {
+    let acc = store::fresh_account(&state.paths).await.map_err(err)?;
+    social::request(&acc, "POST", &path, body).await.map_err(err)
+}
+
+// ------------------------------------------------------------------ cosmetics
+
+#[tauri::command]
+async fn cosmetics_catalog(state: State<'_, AppState>) -> Res<cosmetics::Catalog> {
+    Ok(cosmetics::catalog(&state.paths).await)
+}
+
+#[tauri::command]
+async fn cosmetic_texture(state: State<'_, AppState>, kind: String, id: String) -> Res<String> {
+    cosmetics::texture(&state.paths, &kind, &id).await.map_err(err)
+}
+
+#[tauri::command]
+async fn cosmetics_get(state: State<'_, AppState>) -> Res<cosmetics::Look> {
+    let acc = store::fresh_account(&state.paths).await.map_err(err)?;
+    Ok(cosmetics::get(&state.paths, &acc).await)
+}
+
+#[tauri::command]
+async fn cosmetics_save(state: State<'_, AppState>, look: cosmetics::Look) -> Res<()> {
+    let acc = store::fresh_account(&state.paths).await.map_err(err)?;
+    cosmetics::save(&state.paths, &acc, &look).await.map_err(err)
+}
+
+// ------------------------------------------------------------------ modpacks + auto-optimise
+
+#[tauri::command]
+async fn modpack_install(app: AppHandle, state: State<'_, AppState>, project: String, title: String, icon: String) -> Res<String> {
+    if state.busy.swap(true, Ordering::SeqCst) {
+        return Err("Wait until the launcher has finished what it's doing".into());
+    }
+    let app_ = app.clone();
+    let rep = Reporter::new(move |p: Progress| {
+        let _ = app_.emit("modpack-progress", p);
+    });
+    let res = modpacks::install(&state.paths, &project, &title, &icon, &rep).await;
+    state.busy.store(false, Ordering::SeqCst);
+    res.map_err(err)
+}
+
+#[tauri::command]
+async fn optimise_scan() -> Res<optimise::Plan> {
+    tokio::task::spawn_blocking(optimise::scan).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn optimise_apply(state: State<'_, AppState>, profile: String, video: bool) -> Res<Vec<Profile>> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || -> anyhow::Result<Vec<Profile>> {
+        let plan = optimise::scan();
+        optimise::apply(&paths, &profile, &plan, video)?;
+        Ok(Profiles::load(&paths).list)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+    .map_err(err)
+}
+
+/// Pictures for the Gallery page: ccimg://localhost/<file path>, only from a profile's screenshots folder.
+fn image_protocol(app: &AppHandle, uri_path: &str) -> tauri::http::Response<Vec<u8>> {
+    let raw = uri_path.trim_start_matches('/');
+    let path = urlencoding::decode(raw).map(|s| s.into_owned()).unwrap_or_default();
+    let file = std::path::PathBuf::from(&path);
+    let state = app.state::<AppState>();
+    let body = if gallery::allowed(&state.paths, &file) { std::fs::read(&file).ok() } else { None };
+    match body {
+        Some(bytes) => {
+            let lower = path.to_lowercase();
+            let mime = if lower.ends_with(".png") { "image/png" } else { "image/jpeg" };
+            tauri::http::Response::builder()
+                .header("Content-Type", mime)
+                .header("Cache-Control", "max-age=3600")
+                .header("Access-Control-Allow-Origin", "*")
+                .body(bytes)
+                .unwrap_or_default()
+        }
+        None => tauri::http::Response::builder().status(404).body(Vec::new()).unwrap_or_default(),
+    }
+}
+
 // ------------------------------------------------------------------ setup
 
 fn start_discord(paths: &Paths) {
@@ -652,6 +790,7 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .register_uri_scheme_protocol("ccimg", |ctx, req| image_protocol(ctx.app_handle(), req.uri().path()))
         .setup(|app| {
             let root = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("ComClientLauncher"));
             let paths = Paths::new(root);
@@ -705,7 +844,21 @@ pub fn run() {
             icon_upload,
             profile_duplicate,
             profile_export,
-            profile_import
+            profile_import,
+            shots_list,
+            replays_list,
+            gallery_delete,
+            shot_copy,
+            shot_share,
+            server_get,
+            server_post,
+            cosmetics_catalog,
+            cosmetic_texture,
+            cosmetics_get,
+            cosmetics_save,
+            modpack_install,
+            optimise_scan,
+            optimise_apply
         ])
         .run(tauri::generate_context!())
         .expect("error while running Com Client Launcher");

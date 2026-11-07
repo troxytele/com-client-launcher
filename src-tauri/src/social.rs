@@ -51,6 +51,50 @@ async fn get(acc: &Account, path: &str) -> Result<Value> {
     Ok(r.json().await?)
 }
 
+/// Paths the window may call on the Com Client server (friends, chats, cosmetics), signed in as you.
+const ALLOWED: &[&str] = &["/state", "/chats", "/friends/", "/cosmetics", "/profile/me"];
+
+fn check(path: &str) -> Result<()> {
+    if path.contains("..") || !ALLOWED.iter().any(|p| path.starts_with(p)) {
+        bail!("Not allowed: {path}");
+    }
+    Ok(())
+}
+
+/// GET or POST on the Com Client server as you. Errors carry the server's own message ("detail").
+pub async fn request(acc: &Account, method: &str, path: &str, body: Option<Value>) -> Result<Value> {
+    check(path)?;
+    let cached = TOKEN.lock().unwrap().clone().filter(|(u, _)| *u == acc.uuid).map(|(_, t)| t);
+    let mut token = match cached {
+        Some(t) => t,
+        None => login(acc).await?,
+    };
+    let send = |token: String| {
+        let url = format!("{API_URL}{path}");
+        let b = body.clone();
+        async move {
+            let req = if method == "POST" {
+                client().post(url).json(&b.unwrap_or_else(|| json!({})))
+            } else {
+                client().get(url)
+            };
+            req.bearer_auth(token).send().await
+        }
+    };
+    let mut r = send(token.clone()).await?;
+    if r.status().as_u16() == 401 {
+        token = login(acc).await?;
+        r = send(token).await?;
+    }
+    let status = r.status();
+    let v: Value = r.json().await.unwrap_or(Value::Null);
+    if !status.is_success() {
+        let detail = v["detail"].as_str().map(String::from).unwrap_or_else(|| format!("Com Client server answered {status}"));
+        bail!(detail);
+    }
+    Ok(v)
+}
+
 #[derive(Serialize, Clone, Debug)]
 pub struct Friend {
     pub uuid: String,
