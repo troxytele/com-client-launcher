@@ -12,6 +12,7 @@ pub mod modrinth;
 pub mod mods;
 pub mod net;
 pub mod paths;
+pub mod profiles;
 pub mod progress;
 pub mod skins;
 pub mod crashes;
@@ -251,7 +252,13 @@ fn save_profile(state: State<'_, AppState>, mut profile: Profile) -> Res<Vec<Pro
     }
     profile.ram_mb = profile.ram_mb.clamp(1024, store::total_ram_mb().max(2048));
     match ps.list.iter_mut().find(|p| p.id == profile.id) {
-        Some(p) => *p = profile,
+        Some(p) => {
+            // play time is only written by the launcher itself (the window may hold an old copy)
+            profile.playtime_secs = p.playtime_secs;
+            profile.sessions = std::mem::take(&mut p.sessions);
+            profile.last_played = p.last_played;
+            *p = profile
+        }
         None => ps.list.push(profile),
     }
     ps.save(&state.paths).map_err(err)?;
@@ -274,6 +281,76 @@ fn delete_profile(state: State<'_, AppState>, id: String) -> Res<Vec<Profile>> {
     Ok(ps.list)
 }
 
+#[tauri::command]
+async fn icon_names(state: State<'_, AppState>) -> Res<Vec<String>> {
+    let jar = profiles::client_jar(&state.paths, config::MC_VERSION).await.map_err(err)?;
+    profiles::icon_names(&jar).map_err(err)
+}
+
+#[tauri::command]
+async fn icons(state: State<'_, AppState>, names: Vec<String>) -> Res<std::collections::HashMap<String, String>> {
+    let jar = profiles::client_jar(&state.paths, config::MC_VERSION).await.map_err(err)?;
+    profiles::icons(&jar, &names).map_err(err)
+}
+
+#[tauri::command]
+fn icon_upload(file: String) -> Res<String> {
+    profiles::upload_icon(std::path::Path::new(&file)).map_err(err)
+}
+
+#[tauri::command]
+fn profile_duplicate(state: State<'_, AppState>, id: String) -> Res<Vec<Profile>> {
+    profiles::duplicate(&state.paths, &id).map_err(err)
+}
+
+#[tauri::command]
+fn profile_export(state: State<'_, AppState>, id: String, dest: String) -> Res<()> {
+    profiles::export(&state.paths, &id, std::path::Path::new(&dest)).map_err(err)
+}
+
+#[tauri::command]
+fn profile_import(state: State<'_, AppState>, file: String) -> Res<Vec<Profile>> {
+    profiles::import(&state.paths, std::path::Path::new(&file)).map_err(err)
+}
+
+fn show_main(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+    }
+}
+
+fn set_tray_tip(app: &AppHandle, tip: &str) {
+    if let Some(t) = app.tray_by_id("main") {
+        let _ = t.set_tooltip(Some(tip));
+    }
+}
+
+fn build_tray(app: &tauri::App) -> tauri::Result<()> {
+    use tauri::menu::{Menu, MenuItem};
+    use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+    let open = MenuItem::with_id(app, "open", "Open launcher", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit launcher", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&open, &quit])?;
+    let mut b = TrayIconBuilder::with_id("main").tooltip("Com Client Launcher").menu(&menu).show_menu_on_left_click(false);
+    if let Some(icon) = app.default_window_icon() {
+        b = b.icon(icon.clone());
+    }
+    b.on_menu_event(|app, e| match e.id.as_ref() {
+        "open" => show_main(app),
+        "quit" => app.exit(0),
+        _ => {}
+    })
+    .on_tray_icon_event(|tray, e| {
+        if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = e {
+            show_main(tray.app_handle());
+        }
+    })
+    .build(app)?;
+    Ok(())
+}
+
 // ------------------------------------------------------------------ launching
 
 #[derive(Serialize, Clone)]
@@ -285,19 +362,19 @@ struct GameExit {
 }
 
 #[tauri::command]
-async fn launch(app: AppHandle, state: State<'_, AppState>) -> Res<()> {
+async fn launch(app: AppHandle, state: State<'_, AppState>, server: Option<String>) -> Res<()> {
     if state.running.load(Ordering::SeqCst) {
         return Err("The game is already running".into());
     }
     if state.busy.swap(true, Ordering::SeqCst) {
         return Err("Already starting".into());
     }
-    let result = prepare_and_start(&app, &state).await;
+    let result = prepare_and_start(&app, &state, server).await;
     state.busy.store(false, Ordering::SeqCst);
     result.map_err(err)
 }
 
-async fn prepare_and_start(app: &AppHandle, state: &AppState) -> anyhow::Result<()> {
+async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<String>) -> anyhow::Result<()> {
     let paths = state.paths.clone();
     let settings = Settings::load(&paths);
     let mut profiles = Profiles::load(&paths);
@@ -326,7 +403,7 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState) -> anyhow::Result<
     }
 
     rep.stage("Starting Minecraft", 0, 0);
-    let plan = launch::Plan { java, vanilla, fabric, extra_mods, game_dir: game_dir.clone(), profile: profile.clone(), account };
+    let plan = launch::Plan { java, vanilla, fabric, extra_mods, game_dir: game_dir.clone(), profile: profile.clone(), account, join: server.clone() };
     let app_log = app.clone();
     let mut child = launch::spawn(&paths, &plan, move |line| {
         let _ = app_log.emit("game-log", line);
@@ -334,6 +411,7 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState) -> anyhow::Result<
     let started = auth::now();
     state.running.store(true, Ordering::SeqCst);
     let _ = app.emit("game-started", ());
+    set_tray_tip(app, &format!("Com Client: playing {}", profile.name));
     discord::clear(); // the mod shows its own Rich Presence in game
 
     if let Some(p) = profiles.list.iter_mut().find(|p| p.id == profile.id) {
@@ -373,6 +451,9 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState) -> anyhow::Result<
         let crashed = !killed && code.map(|c| c != 0).unwrap_or(false);
         let report = if crashed { launch::crash_report(&game_dir, started - 5).map(|p| paths::native(&p)) } else { None };
         let st = app2.state::<AppState>();
+        let secs = (auth::now() - started).max(0) as u64;
+        Profiles::record(&st.paths, &profile.id, started, secs, server.as_deref().unwrap_or_default());
+        set_tray_tip(&app2, "Com Client Launcher");
         st.running.store(false, Ordering::SeqCst);
         *st.kill.lock().unwrap() = None;
         if let Some(w) = app2.get_webview_window("main") {
@@ -493,6 +574,7 @@ fn open_folder(app: AppHandle, state: State<'_, AppState>, which: String) -> Res
         "launcher" => state.paths.root.clone(),
         "game" => game,
         "crash" => game.join("crash-reports"),
+        other if other.starts_with("profile:") => store::game_dir(&state.paths, &Profiles::load(&state.paths).get(&other[8..])),
         other => game.join(other),
     };
     std::fs::create_dir_all(&path).map_err(|e| e.to_string())?;
@@ -577,6 +659,9 @@ pub fn run() {
                 start_discord(&paths);
                 discord::set("In the launcher", &format!("Minecraft {}", config::MC_VERSION));
             }
+            if let Err(e) = build_tray(app) {
+                eprintln!("tray: {e}");
+            }
             app.manage(AppState { paths, busy: AtomicBool::new(false), kill: Mutex::new(None), running: AtomicBool::new(false) });
             Ok(())
         })
@@ -614,7 +699,13 @@ pub fn run() {
             crash_list,
             crash_read,
             import_scan,
-            import_apply
+            import_apply,
+            icon_names,
+            icons,
+            icon_upload,
+            profile_duplicate,
+            profile_export,
+            profile_import
         ])
         .run(tauri::generate_context!())
         .expect("error while running Com Client Launcher");

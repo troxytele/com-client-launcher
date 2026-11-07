@@ -2,49 +2,28 @@ import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { api, Info, msg, Profile, Settings as S } from "../api";
+import { api, Info, msg, Settings as S } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
-import { Modal, Spinner, Switch } from "../components/Ui";
-import { getLook, Look, onLook, setLook, THEMES } from "../theme";
+import { Spinner, Switch } from "../components/Ui";
+import { getLook, isHex, Look, onLook, setLook, THEMES } from "../theme";
+import { getSounds, setSounds, sfx, SoundPrefs } from "../sounds";
 import { ImportProgress, ImportSource, ago } from "../api";
 import { listen } from "@tauri-apps/api/event";
 
 export default function Settings({ info, reload, running }: { info: Info; reload: () => void; running: boolean }) {
-  const [profileId, setProfileId] = useState(info.settings.active_profile);
-  const profile = info.profiles.find((p) => p.id === profileId) ?? info.profiles[0];
-  const [p, setP] = useState<Profile>(profile);
   const [s, setS] = useState<S>(info.settings);
-  const [newOpen, setNewOpen] = useState(false);
   const [repairing, setRepairing] = useState(false);
   const [checking, setChecking] = useState(false);
   const [look, setLookState] = useState<Look>(getLook());
   useEffect(() => onLook(setLookState), []);
 
-  useEffect(() => setP(profile), [profile.id]);
   useEffect(() => setS(info.settings), [info.settings]);
-
-  const dirty = JSON.stringify(p) !== JSON.stringify(profile);
-  const [saved, setSaved] = useState<"idle" | "saving" | "saved">("idle");
-
-  async function saveProfile() {
-    setSaved("saving");
-    try {
-      await api.saveProfile(p);
-      reload();
-      setSaved("saved");
-    } catch (e) {
-      setSaved("idle");
-      toast(msg(e), "error");
-    }
+  const [snd, setSnd] = useState<SoundPrefs>(getSounds());
+  function sound(next: SoundPrefs) {
+    setSnd(next);
+    setSounds(next);
   }
-
-  // every change is saved by itself a moment after you stop moving the slider / typing
-  useEffect(() => {
-    if (!dirty || !p.name.trim()) return;
-    const t = setTimeout(saveProfile, 600);
-    return () => clearTimeout(t);
-  }, [p]);
 
   async function setSetting(next: S) {
     setS(next);
@@ -56,14 +35,13 @@ export default function Settings({ info, reload, running }: { info: Info; reload
     }
   }
 
-  const maxRam = Math.max(2048, Math.floor(info.total_ram / 512) * 512 - 1024);
 
   return (
     <div className="page">
       <div className="page-head">
         <div>
           <h1>Settings</h1>
-          <p className="muted">Profiles keep their own worlds, mods and options.</p>
+          <p className="muted">How the launcher looks, sounds and behaves.</p>
         </div>
       </div>
 
@@ -82,7 +60,26 @@ export default function Settings({ info, reload, running }: { info: Info; reload
               {t.name}
             </button>
           ))}
+          <label className={"theme-swatch custom" + (look.theme === "custom" ? " on" : "")} onClick={() => look.theme !== "custom" && setLook({ ...look, theme: "custom" })}>
+            <i style={{ background: look.custom }}>
+              {look.theme === "custom" ? <Icon name="check" size={16} /> : <Icon name="edit" size={14} />}
+              <input type="color" value={look.custom} onChange={(e) => setLook({ ...look, theme: "custom", custom: e.target.value })} />
+            </i>
+            Custom
+          </label>
         </div>
+        {look.theme === "custom" && (
+          <div className="setting">
+            <div>
+              <b>Your colour</b>
+              <span>Click the Custom square for the colour picker, or type a hex code.</span>
+            </div>
+            <div className="row-gap hexrow">
+              <span className="hexdot" style={{ background: look.custom }} />
+              <HexInput value={look.custom} onChange={(v) => setLook({ ...look, theme: "custom", custom: v })} />
+            </div>
+          </div>
+        )}
         <div className="setting">
           <div>
             <b>Moving background</b>
@@ -90,146 +87,29 @@ export default function Settings({ info, reload, running }: { info: Info; reload
           </div>
           <Switch on={look.stars} onChange={(v) => setLook({ ...look, stars: v })} />
         </div>
-      </section>
-
-      <section className="settings-block glass">
-        <div className="block-head">
-          <h2>
-            <Icon name="cube" size={17} /> Profile
-          </h2>
-          <div className="row-gap">
-            <select value={profile.id} onChange={(e) => setProfileId(e.target.value)}>
-              {info.profiles.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.name}
-                  {x.id === info.settings.active_profile ? " (selected)" : ""}
-                </option>
-              ))}
-            </select>
-            <button className="btn small" onClick={() => setNewOpen(true)}>
-              <Icon name="plus" size={14} /> New
-            </button>
-          </div>
-        </div>
-
-        <div className="field">
-          <label>Name</label>
-          <input value={p.name} maxLength={32} onChange={(e) => setP({ ...p, name: e.target.value })} />
-        </div>
-
-        <div className="field">
-          <label>
-            Memory <span className="accent">{(p.ram_mb / 1024).toFixed(1)} GB</span>
-          </label>
-          <input
-            type="range"
-            min={1024}
-            max={maxRam}
-            step={256}
-            value={Math.min(p.ram_mb, maxRam)}
-            onChange={(e) => setP({ ...p, ram_mb: Number(e.target.value) })}
-          />
-          <span className="muted small">
-            Your PC has {(info.total_ram / 1024).toFixed(1)} GB. 3–6 GB is plenty for Com Client; more can make it slower.
-          </span>
-        </div>
-
-        <div className="field-row">
-          <div className="field">
-            <label>Window size</label>
-            <div className="row-gap">
-              <input type="number" value={p.width} min={640} max={7680} disabled={p.fullscreen} onChange={(e) => setP({ ...p, width: Number(e.target.value) })} />
-              <span className="muted">×</span>
-              <input type="number" value={p.height} min={360} max={4320} disabled={p.fullscreen} onChange={(e) => setP({ ...p, height: Number(e.target.value) })} />
-            </div>
-          </div>
-          <div className="field toggle-field">
-            <label>Fullscreen</label>
-            <Switch on={p.fullscreen} onChange={(v) => setP({ ...p, fullscreen: v })} />
-          </div>
-        </div>
-
-        <div className="field">
-          <label>Game folder</label>
-          <div className="row-gap">
-            <input value={p.game_dir} placeholder="Launcher folder (recommended)" onChange={(e) => setP({ ...p, game_dir: e.target.value })} />
-            <button
-              className="btn small"
-              onClick={async () => {
-                const dir = await open({ directory: true, title: "Choose the game folder" });
-                if (typeof dir === "string") setP({ ...p, game_dir: dir });
-              }}
-            >
-              <Icon name="folder" size={14} /> Choose
-            </button>
-          </div>
-          <span className="muted small">Leave empty to keep this profile separate from your normal .minecraft.</span>
-        </div>
-
         <div className="setting">
           <div>
-            <b>Performance mods</b>
-            <span>Sodium, Lithium, FerriteCore and EntityCulling for a lot more FPS. Installed and updated for you, hidden from your mods folder.</span>
+            <b>Sounds</b>
+            <span>A soft click and hover sound on buttons, the same ones as in the game.</span>
           </div>
-          <Switch on={p.performance_mods !== false} onChange={(v) => setP({ ...p, performance_mods: v })} />
-        </div>
-
-        <div className="setting">
-          <div>
-            <b>ReplayMod</b>
-            <span>Record your games and watch them back from any angle. Installed and updated for you, hidden from your mods folder.</span>
-          </div>
-          <Switch on={!!p.replay_mod} onChange={(v) => setP({ ...p, replay_mod: v })} />
-        </div>
-
-        <div className="field">
-          <label>Java arguments</label>
-          <input value={p.java_args} placeholder="e.g. -XX:+UseZGC (optional)" onChange={(e) => setP({ ...p, java_args: e.target.value })} />
-        </div>
-
-        <div className="block-foot">
-          {info.profiles.length > 1 && (
-            <button
-              className="btn ghost danger"
-              disabled={running}
-              onClick={() =>
-                api
-                  .deleteProfile(profile.id)
-                  .then(() => {
-                    reload();
-                    setProfileId(info.profiles.find((x) => x.id !== profile.id)!.id);
-                    toast("Profile deleted (its folder was kept)");
-                  })
-                  .catch((e) => toast(msg(e), "error"))
-              }
-            >
-              <Icon name="trash" size={14} /> Delete profile
-            </button>
-          )}
-          <span className="grow" />
-          <button className="btn" onClick={() => api.openFolder("game")}>
-            <Icon name="folder" size={14} /> Open game folder
-          </button>
-          <span className={"autosave " + saved}>
-            {dirty || saved === "saving" ? (
-              <>
-                <Spinner size={11} /> Saving…
-              </>
-            ) : saved === "saved" ? (
-              <>
-                <Icon name="check" size={12} /> Saved
-              </>
-            ) : (
-              "Changes save automatically"
+          <div className="row-gap">
+            {snd.on && (
+              <input
+                type="range"
+                className="vol"
+                min={0}
+                max={1}
+                step={0.05}
+                value={snd.volume}
+                onChange={(e) => sound({ ...snd, volume: Number(e.target.value) })}
+                onPointerUp={() => sfx.click()}
+              />
             )}
-          </span>
-          <button className="btn primary" style={{ display: "none" }} disabled={!dirty} onClick={saveProfile}>
-            <Icon name="check" size={14} /> Save
-          </button>
+            <Switch on={snd.on} onChange={(v) => sound({ ...snd, on: v })} />
+          </div>
         </div>
       </section>
 
-      <ImportBlock profileId={p.id} profileName={p.name} running={running} />
 
       <section className="settings-block glass">
         <div className="block-head">
@@ -240,10 +120,10 @@ export default function Settings({ info, reload, running }: { info: Info; reload
         <div className="setting">
           <div>
             <b>When the game starts</b>
-            <span>What the launcher does while you play</span>
+            <span>Hidden, it waits in the system tray (click the icon to open it) and comes back when you quit the game</span>
           </div>
           <select value={s.after_launch} onChange={(e) => setSetting({ ...s, after_launch: e.target.value as S["after_launch"] })}>
-            <option value="hide">Hide, come back after</option>
+            <option value="hide">Hide to tray, come back after</option>
             <option value="keep">Stay open</option>
             <option value="close">Close</option>
           </select>
@@ -354,58 +234,29 @@ export default function Settings({ info, reload, running }: { info: Info; reload
         </div>
       </section>
 
-      {newOpen && <NewProfile onClose={() => setNewOpen(false)} onCreated={(id) => (reload(), setProfileId(id))} />}
     </div>
   );
 }
 
-function NewProfile({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
-  const [name, setName] = useState("");
+// Import settings (options.txt: video, sensitivity, keybinds) and the server list from another launcher. Never mods.
+function HexInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [t, setT] = useState(value);
+  useEffect(() => setT(value), [value]);
   return (
-    <Modal title="New profile" onClose={onClose} width={380}>
-      <p className="muted small">A profile has its own worlds, mods, resource packs and options.</p>
-      <div className="field">
-        <label>Name</label>
-        <input autoFocus value={name} maxLength={32} placeholder="e.g. PvP" onChange={(e) => setName(e.target.value)} />
-      </div>
-      <div className="block-foot">
-        <span className="grow" />
-        <button
-          className="btn primary"
-          disabled={!name.trim()}
-          onClick={async () => {
-            try {
-              const list = await api.saveProfile({
-                id: "",
-                name: name.trim(),
-                game_dir: "",
-                ram_mb: 4096,
-                java_args: "",
-                width: 1280,
-                height: 720,
-                fullscreen: false,
-                created: 0,
-                last_played: 0,
-                replay_mod: false,
-                performance_mods: true,
-              });
-              const created = list[list.length - 1];
-              onCreated(created.id);
-              onClose();
-            } catch (e) {
-              toast(msg(e), "error");
-            }
-          }}
-        >
-          Create
-        </button>
-      </div>
-    </Modal>
+    <input
+      className="mono hex"
+      value={t}
+      maxLength={7}
+      onChange={(e) => {
+        const v = e.target.value.startsWith("#") ? e.target.value : "#" + e.target.value;
+        setT(v);
+        if (isHex(v)) onChange(v.toLowerCase());
+      }}
+    />
   );
 }
 
-// Import settings (options.txt: video, sensitivity, keybinds) and the server list from another launcher. Never mods.
-function ImportBlock({ profileId, profileName, running }: { profileId: string; profileName: string; running: boolean }) {
+export function ImportBlock({ profileId, profileName, running }: { profileId: string; profileName: string; running: boolean }) {
   const [sources, setSources] = useState<ImportSource[] | null>(null);
   const [scanning, setScanning] = useState(false);
   const [pick, setPick] = useState<string>("");

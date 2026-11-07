@@ -22,6 +22,8 @@ pub struct Plan {
     pub game_dir: PathBuf,
     pub profile: Profile,
     pub account: Account,
+    /// Join this server right away (host:port).
+    pub join: Option<String>,
 }
 
 /// The full java command line (also shown in the logs for debugging, with the token hidden).
@@ -123,6 +125,10 @@ pub fn arguments(paths: &Paths, plan: &Plan) -> Vec<String> {
     args.extend(plan.fabric.game_args.iter().map(|s| fill(s)));
     if p.fullscreen {
         args.push("--fullscreen".into());
+    }
+    if let Some(server) = plan.join.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+        args.push("--quickPlayMultiplayer".into());
+        args.push(server.to_string());
     }
     args
 }
@@ -240,6 +246,7 @@ mod plan_tests {
         }"#).unwrap();
         let paths = Paths::new(std::env::temp_dir().join("cc-launch-test"));
         let plan = Plan {
+            join: None,
             java: PathBuf::from("java"),
             vanilla: Vanilla {
                 id: "1.21.11".into(),

@@ -15,6 +15,7 @@
     "process:allow-restart",
     "process:allow-exit",
     "dialog:allow-open",
+    "dialog:allow-save",
     "opener:allow-open-url"
   ]
 }

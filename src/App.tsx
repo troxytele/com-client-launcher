@@ -15,8 +15,10 @@ import Mods from "./pages/Mods";
 import Settings from "./pages/Settings";
 import Logs from "./pages/Logs";
 import Skins from "./pages/Skins";
+import Profiles from "./pages/Profiles";
+import WhatsNew from "./components/WhatsNew";
 
-type Page = "home" | "skins" | "mods" | "settings" | "logs" | "crashes";
+type Page = "home" | "profiles" | "skins" | "mods" | "settings" | "logs" | "crashes";
 
 export default function App() {
   const [updated, setUpdated] = useState(false);
@@ -83,7 +85,7 @@ export default function App() {
     };
   }, [reload]);
 
-  async function play() {
+  async function play(server?: string) {
     if (!info) return;
     if (!info.accounts.some((a) => a.active)) {
       setAccountsOpen(true);
@@ -92,9 +94,9 @@ export default function App() {
     setError(null);
     setPhase("preparing");
     setProgress({ stage: "Getting ready", done: 0, total: 0 });
-    pushLog("[Launcher] ---- starting " + new Date().toLocaleTimeString() + " ----");
+    pushLog("[Launcher] ---- starting " + new Date().toLocaleTimeString() + (server ? " (joining " + server + ")" : "") + " ----");
     try {
-      await api.launch();
+      await api.launch(server);
       if (info.settings.open_logs) setPage("logs");
     } catch (e) {
       const m = msg(e);
@@ -124,12 +126,13 @@ export default function App() {
   const profile = info.profiles.find((p) => p.id === info.settings.active_profile) ?? info.profiles[0];
   const tabs: { id: Page; icon: string; label: string }[] = [
     { id: "home", icon: "play", label: "Play" },
+    { id: "profiles", icon: "layers", label: "Profiles" },
     { id: "skins", icon: "shirt", label: "Skins" },
     { id: "mods", icon: "cube", label: "Mods" },
     { id: "crashes", icon: "bug", label: "Crashes" },
     { id: "logs", icon: "terminal", label: "Logs" },
   ];
-  const titles: Record<Page, string> = { home: "Play", skins: "Skins", mods: "Mods", crashes: "Crashes", logs: "Logs", settings: "Settings" };
+  const titles: Record<Page, string> = { home: "Play", profiles: "Profiles", skins: "Skins", mods: "Mods", crashes: "Crashes", logs: "Logs", settings: "Settings" };
 
   return (
     <div className={"app" + (introOver ? " entered" : " waiting")}>
@@ -162,6 +165,7 @@ export default function App() {
               progress={progress}
               error={error}
               onPlay={play}
+              onProfiles={() => setPage("profiles")}
               onStop={() => api.kill()}
               onProfile={selectProfile}
               onAccounts={() => setAccountsOpen(true)}
@@ -170,6 +174,7 @@ export default function App() {
               skinKey={skinKey}
             />
           )}
+          {page === "profiles" && <Profiles info={info} reload={reload} running={phase !== "idle"} onPlay={(srv) => { setPage("home"); play(srv); }} />}
           {page === "skins" && (
             <Skins
               signedIn={!!active}
@@ -237,6 +242,7 @@ export default function App() {
           </div>
         </Modal>
       )}
+      {splashGone && <WhatsNew version={info.version} />}
       <Toasts />
       {!splashGone && <Splash leaving={introOver} />}
     </div>

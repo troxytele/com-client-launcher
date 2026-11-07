@@ -25,7 +25,15 @@ export type Profile = {
   last_played: number;
   replay_mod: boolean;
   performance_mods: boolean;
+  version: string;
+  icon: string;
+  servers: PinnedServer[];
+  playtime_secs: number;
+  sessions: Session[];
 };
+
+export type PinnedServer = { name: string; address: string };
+export type Session = { start: number; secs: number; server: string };
 
 export type CrashFile = { path: string; name: string; profile: string; kind: "crash" | "jvm" | "log"; modified: number; size: number };
 
@@ -82,7 +90,13 @@ export const api = {
   saveSettings: (settings: Settings) => invoke<void>("save_settings", { settings }),
   saveProfile: (profile: Profile) => invoke<Profile[]>("save_profile", { profile }),
   deleteProfile: (id: string) => invoke<Profile[]>("delete_profile", { id }),
-  launch: () => invoke<void>("launch"),
+  launch: (server?: string) => invoke<void>("launch", { server: server ?? null }),
+  iconNames: () => invoke<string[]>("icon_names"),
+  icons: (names: string[]) => invoke<Record<string, string>>("icons", { names }),
+  iconUpload: (file: string) => invoke<string>("icon_upload", { file }),
+  profileDuplicate: (id: string) => invoke<Profile[]>("profile_duplicate", { id }),
+  profileExport: (id: string, dest: string) => invoke<void>("profile_export", { id, dest }),
+  profileImport: (file: string) => invoke<Profile[]>("profile_import", { file }),
   kill: () => invoke<void>("kill_game"),
   repair: () => invoke<number>("repair"),
   news: () => invoke<NewsItem[]>("news"),
@@ -145,4 +159,14 @@ export function ago(unix: number): string {
   if (s < 3600) return Math.floor(s / 60) + " min ago";
   if (s < 86400) return Math.floor(s / 3600) + " h ago";
   return Math.floor(s / 86400) + " d ago";
+}
+
+/** 3725 -> "1 h 2 min" */
+export function fmtTime(secs: number): string {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  if (h >= 100) return `${h} h`;
+  if (h) return `${h} h ${m} min`;
+  if (m) return `${m} min`;
+  return secs > 0 ? "< 1 min" : "0 min";
 }

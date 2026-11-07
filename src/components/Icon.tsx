@@ -37,6 +37,10 @@ const P: Record<string, string> = {
   edit: "M14.5 5.5l4 4M4.5 19.5l1-4.5L16 4.5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9 18.5l-4.5 1Z",
   shirt: "M8.5 4 4 6.5l1.8 4 2.2-1V20h8V9.5l2.2 1 1.8-4L15.5 4c-.5 1.6-1.8 2.5-3.5 2.5S9 5.6 8.5 4Z",
   chat: "M4.5 5.5h15v10h-9l-4.5 3.5v-3.5H4.5z",
+  clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7.5V12l3 2",
+  layers: "M12 3.5 21 8l-9 4.5L3 8l9-4.5ZM3 12l9 4.5 9-4.5M3 16l9 4.5 9-4.5",
+  volume: "M4 9.5h3.5L12 5.5v13l-4.5-4H4zM15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11",
+  pin: "M9 4h6l-1 6 3 3H7l3-3-1-6ZM12 13v7",
 };
 
 export default function Icon({ name, size = 18, className, fill }: { name: string; size?: number; className?: string; fill?: boolean }) {

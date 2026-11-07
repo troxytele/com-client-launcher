@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ago, api, CurrentSkin, Info, msg, NewsItem, Progress, Social } from "../api";
+import { ago, api, fmtTime, CurrentSkin, Info, msg, NewsItem, Progress, Social } from "../api";
 import Icon from "../components/Icon";
 import SkinModel from "../components/SkinModel";
 import { Spinner } from "../components/Ui";
 import logo from "../assets/logo.png";
+import ProfileIcon from "../components/ProfileIcon";
+import { ServerIcon } from "./Profiles";
 
 type Props = {
   info: Info;
   phase: "idle" | "preparing" | "running";
   progress: Progress | null;
   error: string | null;
-  onPlay: () => void;
+  onPlay: (server?: string) => void;
+  onProfiles: () => void;
   onStop: () => void;
   onProfile: (id: string) => void;
   onAccounts: () => void;
@@ -22,7 +25,7 @@ type Props = {
 
 // The Play page: a big banner with the latest news and your player, more news below, and the launch bar at the
 // bottom (profile, friends online, progress, PLAY).
-export default function Home({ info, phase, progress, error, onPlay, onStop, onProfile, onAccounts, onLogs, onSkins, skinKey }: Props) {
+export default function Home({ info, phase, progress, error, onPlay, onProfiles, onStop, onProfile, onAccounts, onLogs, onSkins, skinKey }: Props) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [social, setSocial] = useState<Social | null>(null);
   const [skin, setSkin] = useState<CurrentSkin | null>(null);
@@ -133,13 +136,11 @@ export default function Home({ info, phase, progress, error, onPlay, onStop, onP
       <footer className="launchbar">
         <div className="lb-profile">
           <button className="lb-profile-btn" disabled={phase !== "idle"} onClick={() => setPickProfile(!pickProfile)}>
-            <span className="lb-icon">
-              <img src={logo} alt="" />
-            </span>
+            <ProfileIcon icon={profile?.icon ?? ""} size={40} className="lb-icon" />
             <span className="lb-text">
               <b>{profile?.name}</b>
               <small>
-                {info.mc_version} · Fabric{profile?.replay_mod ? " · Replay" : ""}
+                {profile?.version || info.mc_version} · {fmtTime(profile?.playtime_secs || 0)} played
               </small>
             </span>
             <Icon name="chevronDown" size={15} className={pickProfile ? "flip" : ""} />
@@ -155,12 +156,26 @@ export default function Home({ info, phase, progress, error, onPlay, onStop, onP
                     onProfile(p.id);
                   }}
                 >
-                  <b>
-                    {p.name} {p.id === profile?.id && <Icon name="check" size={12} />}
-                  </b>
-                  <span>{p.last_played ? "played " + ago(p.last_played) : "never played"}</span>
+                  <ProfileIcon icon={p.icon} size={28} />
+                  <span className="dd-text">
+                    <b>
+                      {p.name} {p.id === profile?.id && <Icon name="check" size={12} />}
+                    </b>
+                    <span>
+                      {fmtTime(p.playtime_secs || 0)} · {p.last_played ? "played " + ago(p.last_played) : "never played"}
+                    </span>
+                  </span>
                 </button>
               ))}
+              <button
+                className="dd-manage"
+                onClick={() => {
+                  setPickProfile(false);
+                  onProfiles();
+                }}
+              >
+                <Icon name="layers" size={14} /> Manage profiles
+              </button>
             </div>
           )}
         </div>
@@ -203,12 +218,26 @@ export default function Home({ info, phase, progress, error, onPlay, onStop, onP
           )}
         </div>
 
+        {phase === "idle" && active && (profile?.servers?.length ?? 0) > 0 && (
+          <div className="lb-servers">
+            {profile!.servers.slice(0, 3).map((srv) => (
+              <button key={srv.address} className="lb-server" title={"Play and join " + srv.address} onClick={() => onPlay(srv.address)}>
+                <ServerIcon address={srv.address} size={26} />
+                <span>
+                  <b>{srv.name}</b>
+                  <small>Quick join</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {phase === "running" ? (
           <button className="play-btn running" onClick={onStop}>
             <Icon name="stop" size={16} fill /> STOP
           </button>
         ) : (
-          <button className={"play-btn" + (phase === "preparing" ? " busy" : "")} onClick={onPlay} disabled={phase === "preparing"}>
+          <button className={"play-btn" + (phase === "preparing" ? " busy" : "")} onClick={() => onPlay()} disabled={phase === "preparing"}>
             {phase === "preparing" && <span className="play-fill" style={{ width: (pct ?? 0) + "%" }} />}
             {phase === "preparing" ? <Spinner size={16} /> : <Icon name="play" size={18} fill />}
             <span>{phase === "preparing" ? "STARTING" : active ? "PLAY" : "SIGN IN"}</span>

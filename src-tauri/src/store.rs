@@ -155,6 +155,30 @@ pub struct Profile {
     pub replay_mod: bool,
     /// Sodium, Lithium, FerriteCore and EntityCulling for more FPS (hidden like Fabric API).
     pub performance_mods: bool,
+    /// Minecraft version of this profile.
+    pub version: String,
+    /// "item:diamond_sword", "block:grass_block", a data: URL (uploaded picture) or empty.
+    pub icon: String,
+    /// Servers pinned to the launch bar (one click starts and joins).
+    pub servers: Vec<PinnedServer>,
+    pub playtime_secs: u64,
+    /// Newest first, at most 30.
+    pub sessions: Vec<Session>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct PinnedServer {
+    pub name: String,
+    pub address: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct Session {
+    pub start: i64,
+    pub secs: u64,
+    pub server: String,
 }
 
 impl Default for Profile {
@@ -172,6 +196,11 @@ impl Default for Profile {
             last_played: 0,
             replay_mod: false,
             performance_mods: true,
+            version: crate::config::MC_VERSION.into(),
+            icon: "block:grass_block".into(),
+            servers: Vec::new(),
+            playtime_secs: 0,
+            sessions: Vec::new(),
         }
     }
 }
@@ -209,6 +238,16 @@ impl Profiles {
     }
     pub fn save(&self, paths: &Paths) -> Result<()> {
         save(paths, "profiles.json", self)
+    }
+    /// Adds the time of one game session to a profile.
+    pub fn record(paths: &Paths, id: &str, start: i64, secs: u64, server: &str) {
+        let mut ps = Profiles::load(paths);
+        if let Some(p) = ps.list.iter_mut().find(|p| p.id == id) {
+            p.playtime_secs += secs;
+            p.sessions.insert(0, Session { start, secs, server: server.to_string() });
+            p.sessions.truncate(30);
+            let _ = ps.save(paths);
+        }
     }
     pub fn get(&self, id: &str) -> Profile {
         self.list.iter().find(|p| p.id == id).cloned().unwrap_or_else(|| self.list[0].clone())
