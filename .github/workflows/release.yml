@@ -1,0 +1,47 @@
+# Builds the Windows installer and publishes it as a GitHub release.
+# The launcher checks the newest release on every start and updates itself.
+#
+# How to publish a new launcher version:
+#   1. Raise "version" in src-tauri/tauri.conf.json AND package.json (e.g. 0.1.0 -> 0.1.1)
+#   2. Commit + push
+#   3. GitHub -> Actions -> "Release launcher" -> Run workflow
+name: Release launcher
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # the private key from updater-key/comclient-updater.key, saved as a repository secret
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        with:
+          tagName: v__VERSION__
+          releaseName: Com Client Launcher v__VERSION__
+          releaseBody: Download the setup .exe below. Installed launchers update themselves.
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true

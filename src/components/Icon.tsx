@@ -1,0 +1,55 @@
+// Line icons (own drawings in a 24x24 box, 1.8 px strokes).
+const P: Record<string, string> = {
+  home: "M3 10.5 12 3l9 7.5M5 9.5V20h5v-6h4v6h5V9.5",
+  cube: "M12 2.8 20 7.2v9.6L12 21.2 4 16.8V7.2L12 2.8ZM4 7.2l8 4.4 8-4.4M12 11.6v9.6",
+  gear: "M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4ZM19.4 13.5l1.6 1.2-1.8 3.1-1.9-.7a7 7 0 0 1-2 1.2l-.3 2h-3.6l-.3-2a7 7 0 0 1-2-1.2l-1.9.7L5.4 14.7 7 13.5a7 7 0 0 1 0-3L5.4 9.3l1.8-3.1 1.9.7a7 7 0 0 1 2-1.2l.3-2h3.6l.3 2a7 7 0 0 1 2 1.2l1.9-.7 1.8 3.1-1.6 1.2a7 7 0 0 1 0 3Z",
+  terminal: "M4 5h16v14H4zM7.5 9.5 10 12l-2.5 2.5M12.5 15H16",
+  play: "M8 5.5v13l10.5-6.5L8 5.5Z",
+  stop: "M7 7h10v10H7z",
+  folder: "M3.5 6.5h6l2 2h9v10h-17z",
+  plus: "M12 5v14M5 12h14",
+  trash: "M4.5 7h15M10 4h4M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6",
+  refresh: "M19 12a7 7 0 1 1-2.1-5M19 4.5V8h-3.5",
+  download: "M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14",
+  check: "M5 12.5 10 17l9-10",
+  x: "M6 6l12 12M18 6 6 18",
+  search: "M10.8 17.2a6.4 6.4 0 1 0 0-12.8 6.4 6.4 0 0 0 0 12.8ZM15.5 15.5 20 20",
+  user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5",
+  users: "M9 11.5a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2ZM2.8 20c1-3.3 3.3-5 6.2-5s5.2 1.7 6.2 5M16 4.6a3.6 3.6 0 0 1 0 6.8M18 15.3c1.6.7 2.7 2.2 3.2 4.7",
+  min: "M6 12h12",
+  max: "M6.5 6.5h11v11h-11z",
+  external: "M14 4h6v6M20 4l-9 9M18 13.5V20H4V6h6.5",
+  chevron: "M9 6l6 6-6 6",
+  chevronDown: "M6 9l6 6 6-6",
+  memory: "M5 7h14v10H5zM8 7V4.5M12 7V4.5M16 7V4.5M8 17v2.5M12 17v2.5M16 17v2.5",
+  wrench: "M14.5 5.5a4 4 0 0 0 4.9 5.2L11 19.1a2 2 0 0 1-2.9-2.9l8.4-8.4a4 4 0 0 1-2-2.3Z",
+  sparkle: "M12 3.5 13.6 10.4 20.5 12 13.6 13.6 12 20.5 10.4 13.6 3.5 12 10.4 10.4 12 3.5Z",
+  globe: "M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17ZM3.5 12h17M12 3.5c2.4 2.4 3.6 5.2 3.6 8.5s-1.2 6.1-3.6 8.5c-2.4-2.4-3.6-5.2-3.6-8.5S9.6 5.9 12 3.5Z",
+  image: "M4 5h16v14H4zM4 16l5-5 4 4 2.5-2.5L20 17M15.5 9.2a1.2 1.2 0 1 0 0-.1",
+  sun: "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4",
+  alert: "M12 4 21 19.5H3L12 4ZM12 10v4.5M12 17.2v.1",
+  copy: "M8.5 8.5h11v11h-11zM15.5 8.5v-4h-11v11h4",
+  key: "M8 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM11.5 12H20v3M17 12v2.5",
+  edit: "M14.5 5.5l4 4M4.5 19.5l1-4.5L16 4.5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9 18.5l-4.5 1Z",
+  shirt: "M8.5 4 4 6.5l1.8 4 2.2-1V20h8V9.5l2.2 1 1.8-4L15.5 4c-.5 1.6-1.8 2.5-3.5 2.5S9 5.6 8.5 4Z",
+  chat: "M4.5 5.5h15v10h-9l-4.5 3.5v-3.5H4.5z",
+};
+
+export default function Icon({ name, size = 18, className, fill }: { name: string; size?: number; className?: string; fill?: boolean }) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={fill ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={fill ? 0 : 1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={P[name] ?? P.sparkle} />
+    </svg>
+  );
+}

@@ -1,0 +1,37 @@
+# Put this file into the MOD project as .github/workflows/release.yml
+# (E:\Minecraft Mods\Com Client\.github\workflows\release.yml).
+#
+# How to publish a new Com Client version:
+#   GitHub -> your com-client repo -> Releases -> "Draft a new release" -> new tag like v0.2.0 -> Publish.
+#   This workflow then builds the mod and attaches the .jar to that release.
+#   Every launcher installs it the next time someone presses Play.
+name: Release Com Client
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build
+        run: |
+          .\gradlew.bat build --no-daemon
+          Remove-Item build/libs/*-sources.jar -ErrorAction SilentlyContinue
+
+      - name: Attach the jar to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: build/libs/*.jar

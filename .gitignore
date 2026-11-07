@@ -1,0 +1,7 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+# NEVER upload the private update key
+updater-key/
+*.key
