@@ -33,6 +33,9 @@ export default function Logs() {
           <p className="muted">What the game prints while it starts and runs.</p>
         </div>
         <div className="row-gap">
+          <button className="btn primary" onClick={() => api.openLogsWindow()}>
+            <Icon name="external" size={14} /> Open in a window
+          </button>
           <button className="btn" onClick={() => api.openFolder("logs")}>
             <Icon name="folder" size={14} /> Log files
           </button>

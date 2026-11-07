@@ -112,7 +112,7 @@ pub struct Settings {
     /// Developer: start this jar instead of the GitHub release.
     pub custom_client_jar: String,
     pub active_profile: String,
-    /// Show the console while the game runs.
+    /// Open the logs window while the game starts and runs.
     pub open_logs: bool,
 }
 

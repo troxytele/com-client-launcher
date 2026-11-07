@@ -102,7 +102,6 @@ export default function App() {
     pushLog("[Launcher] ---- starting " + new Date().toLocaleTimeString() + (server ? " (joining " + server + ")" : "") + " ----");
     try {
       await api.launch(server, profileId, replay);
-      if (info.settings.open_logs) setPage("logs");
     } catch (e) {
       const m = msg(e);
       pushLog("[Launcher] " + m);

@@ -134,6 +134,7 @@ export const api = {
   lookGet: () => invoke<Look>("cosmetics_get"),
   lookSave: (look: Look) => invoke<void>("cosmetics_save", { look }),
   modpackInstall: (project: string, title: string, icon: string) => invoke<string>("modpack_install", { project, title, icon }),
+  openLogsWindow: () => invoke<void>("open_logs_window"),
   optimiseScan: () => invoke<OptimisePlan>("optimise_scan"),
   optimiseApply: (profile: string, video: boolean) => invoke<Profile[]>("optimise_apply", { profile, video }),
   iconNames: () => invoke<string[]>("icon_names"),
