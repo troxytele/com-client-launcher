@@ -2,7 +2,9 @@
 
 The launcher for Com Client: Microsoft login with several accounts, installs Minecraft 1.21.11 + Fabric + Java by itself,
 keeps Com Client and Fabric API up to date (loaded from the launcher's own folder, never in your mods folder),
-a Play page with your 3D player and a profile switcher, a Skins tab (skin library, wear a skin with one click),
+a Play page (news banner with your 3D player, launch bar with profile switcher), a Skins tab (skin library, wear a skin with one click),
+a Crashes page (crash report viewer + analyzer that explains the cause), importing settings / keybinds / servers from other launchers,
+optional ReplayMod per profile, colour themes,
 profiles, a Modrinth browser for mods / resource packs / shaders with updates, friends from the Com Client server, news,
 logs + crash help, Discord Rich Presence and automatic launcher updates.
 

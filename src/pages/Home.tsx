@@ -4,6 +4,7 @@ import { ago, api, CurrentSkin, Info, msg, NewsItem, Progress, Social } from "..
 import Icon from "../components/Icon";
 import SkinModel from "../components/SkinModel";
 import { Spinner } from "../components/Ui";
+import logo from "../assets/logo.png";
 
 type Props = {
   info: Info;
@@ -19,30 +20,13 @@ type Props = {
   skinKey: number;
 };
 
-const R = 54; // radius of the progress ring around the launch disc
-const C = 2 * Math.PI * R;
-
-// The Play page: your player under a spotlight with your name huge behind it, a spec sheet of the selected
-// profile, profile cards, the round launch disc and the news underneath.
+// The Play page: a big banner with the latest news and your player, more news below, and the launch bar at the
+// bottom (profile, friends online, progress, PLAY).
 export default function Home({ info, phase, progress, error, onPlay, onStop, onProfile, onAccounts, onLogs, onSkins, skinKey }: Props) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [social, setSocial] = useState<Social | null>(null);
   const [skin, setSkin] = useState<CurrentSkin | null>(null);
-  const [animate, setAnimateState] = useState(() => {
-    try {
-      return localStorage.getItem("skinAnimation") !== "off";
-    } catch {
-      return true;
-    }
-  });
-  const setAnimate = (v: boolean) => {
-    setAnimateState(v);
-    try {
-      localStorage.setItem("skinAnimation", v ? "on" : "off");
-    } catch {
-      // not saved, still works
-    }
-  };
+  const [pickProfile, setPickProfile] = useState(false);
   const active = info.accounts.find((a) => a.active);
   const profile = info.profiles.find((p) => p.id === info.settings.active_profile) ?? info.profiles[0];
 
@@ -79,162 +63,158 @@ export default function Home({ info, phase, progress, error, onPlay, onStop, onP
 
   const pct = progress && progress.total > 0 ? Math.min(100, (progress.done / progress.total) * 100) : null;
   const online = social?.friends.filter((f) => f.online) ?? [];
-  const name = active?.name ?? "PLAYER";
-  const ramGb = (profile?.ram_mb ?? 0) / 1024;
+  const lead = news[0];
+  const rest = news.slice(1, 4);
 
   return (
-    <div className="play">
-      {/* ------------------------------------------------ the player */}
-      <section className="showcase">
-        <div className="giant-name" aria-hidden>
-          {name}
+    <div className="home">
+      {/* ------------------------------------------------ banner */}
+      <section className="banner">
+        <div className="banner-art">
+          <div className="banner-grid" />
+          <div className="banner-glow" />
+          <img className="banner-mark" src={logo} alt="" />
         </div>
-        <div className="spotlight" />
-        <div className="floor" />
-        {skin ? (
-          <SkinModel skin={skin.data} slim={skin.variant === "slim"} animate={animate} className="showcase-model" zoom={0.6} />
-        ) : (
-          <div className="showcase-model center">
-            <Spinner />
-          </div>
-        )}
-        <div className="showcase-tools">
-          <button className={"chip" + (animate ? " on" : "")} onClick={() => setAnimate(!animate)} title="Animate the player">
-            <Icon name={animate ? "play" : "stop"} size={11} fill /> {animate ? "Moving" : "Still"}
-          </button>
-          <button className="chip" onClick={onSkins}>
-            <Icon name="shirt" size={12} /> Skin
-          </button>
+        <div className="banner-text">
+          {lead ? (
+            <>
+              <span className="banner-tag">
+                {lead.tag || "News"}
+                {lead.date && <i> · {lead.date}</i>}
+              </span>
+              <h1>{lead.title}</h1>
+              <p>{lead.body}</p>
+              {lead.url && (
+                <button className="btn small ghost-light" onClick={() => openUrl(lead.url!)}>
+                  Read more <Icon name="arrowRight" size={13} />
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <span className="banner-tag">Com Client</span>
+              <h1>Welcome back{active ? ", " + active.name : ""}</h1>
+              <p>Minecraft {info.mc_version} with Com Client, ready when you are.</p>
+            </>
+          )}
         </div>
-        {online.length > 0 && (
-          <div className="online-stack" title={online.map((f) => f.name).join(", ")}>
-            <div className="faces">
-              {online.slice(0, 4).map((f) => (
-                <img
-                  key={f.uuid}
-                  src={`https://mc-heads.net/avatar/${f.uuid.replace(/-/g, "")}/32`}
-                  alt=""
-                  onError={(e) => (e.currentTarget.style.visibility = "hidden")}
-                />
-              ))}
+        <div className="banner-model">
+          <button className="banner-name" onClick={onAccounts}>
+            {active?.name ?? "Sign in"}
+          </button>
+          {skin ? (
+            <SkinModel skin={skin.data} slim={skin.variant === "slim"} animate className="banner-canvas" zoom={0.74} />
+          ) : (
+            <div className="banner-canvas center">
+              <Spinner />
             </div>
-            <span>
-              <i /> {online.length} friend{online.length === 1 ? "" : "s"} online
-            </span>
-          </div>
-        )}
+          )}
+          <button className="banner-skin" onClick={onSkins} title="Change skin">
+            <Icon name="shirt" size={14} />
+          </button>
+        </div>
       </section>
 
-      {/* ------------------------------------------------ profile + launch */}
-      <section className="deck">
-        <div className="who" onClick={onAccounts}>
-          <span className="who-label">PLAYING AS</span>
-          <b>{active?.name ?? "Not signed in"}</b>
-          {social && (
-            <span className="who-meta">
-              {social.username ? "@" + social.username + " · " : ""}level {social.level}
-              {social.unread > 0 && <em> · {social.unread} new message{social.unread === 1 ? "" : "s"}</em>}
+      {/* ------------------------------------------------ more news */}
+      {rest.length > 0 && (
+        <section className="news-row">
+          {rest.map((n, i) => (
+            <article key={i} className={"news-card" + (n.url ? " link" : "")} onClick={() => n.url && openUrl(n.url)}>
+              <span className="news-tag">{n.tag || "News"}</span>
+              <b>{n.title}</b>
+              <p>{n.body}</p>
+              {n.date && <small>{n.date}</small>}
+            </article>
+          ))}
+        </section>
+      )}
+
+      {/* ------------------------------------------------ launch bar */}
+      <footer className="launchbar">
+        <div className="lb-profile">
+          <button className="lb-profile-btn" disabled={phase !== "idle"} onClick={() => setPickProfile(!pickProfile)}>
+            <span className="lb-icon">
+              <img src={logo} alt="" />
+            </span>
+            <span className="lb-text">
+              <b>{profile?.name}</b>
+              <small>
+                {info.mc_version} · Fabric{profile?.replay_mod ? " · Replay" : ""}
+              </small>
+            </span>
+            <Icon name="chevronDown" size={15} className={pickProfile ? "flip" : ""} />
+          </button>
+          {pickProfile && (
+            <div className="dropdown up" onMouseLeave={() => setPickProfile(false)}>
+              {info.profiles.map((p) => (
+                <button
+                  key={p.id}
+                  className={p.id === profile?.id ? "on" : ""}
+                  onClick={() => {
+                    setPickProfile(false);
+                    onProfile(p.id);
+                  }}
+                >
+                  <b>
+                    {p.name} {p.id === profile?.id && <Icon name="check" size={12} />}
+                  </b>
+                  <span>{p.last_played ? "played " + ago(p.last_played) : "never played"}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="lb-middle">
+          {phase === "preparing" && progress ? (
+            <div className="lb-progress">
+              <div className="progress-text">
+                <span>{progress.stage}</span>
+                {pct !== null && <span>{Math.round(pct)}%</span>}
+              </div>
+              <div className="bar">
+                <div className={pct === null ? "indeterminate" : ""} style={{ width: (pct ?? 35) + "%" }} />
+              </div>
+            </div>
+          ) : phase === "idle" && error ? (
+            <button className="lb-error" onClick={onLogs}>
+              <Icon name="alert" size={14} /> <span>{error}</span>
+            </button>
+          ) : online.length > 0 ? (
+            <div className="lb-friends" title={online.map((f) => f.name).join(", ")}>
+              <div className="faces">
+                {online.slice(0, 5).map((f) => (
+                  <img
+                    key={f.uuid}
+                    src={`https://mc-heads.net/avatar/${f.uuid.replace(/-/g, "")}/32`}
+                    alt=""
+                    onError={(e) => (e.currentTarget.style.visibility = "hidden")}
+                  />
+                ))}
+              </div>
+              <span>
+                <i /> {online.length} friend{online.length === 1 ? "" : "s"} online
+              </span>
+            </div>
+          ) : (
+            <span className="lb-hint">
+              {active ? (profile?.last_played ? "Last played " + ago(profile.last_played) : "Ready for your first game") : "Sign in with Microsoft to play"}
             </span>
           )}
         </div>
 
-        <div className="spec">
-          <div>
-            <span>VERSION</span>
-            <b>{info.mc_version}</b>
-          </div>
-          <div>
-            <span>LOADER</span>
-            <b>Fabric</b>
-          </div>
-          <div>
-            <span>CLIENT</span>
-            <b>{info.client.client_version || "latest"}</b>
-          </div>
-          <div>
-            <span>MEMORY</span>
-            <b>{ramGb ? (Number.isInteger(ramGb) ? ramGb : ramGb.toFixed(1)) + " GB" : "auto"}</b>
-          </div>
-        </div>
-
-        <div className="profiles-row">
-          {info.profiles.map((p, i) => (
-            <button
-              key={p.id}
-              className={"pcard" + (p.id === profile?.id ? " on" : "")}
-              disabled={phase !== "idle"}
-              onClick={() => onProfile(p.id)}
-            >
-              <span className="pcard-n">{String(i + 1).padStart(2, "0")}</span>
-              <b>{p.name}</b>
-              <small>{p.last_played ? ago(p.last_played) : "new"}</small>
-            </button>
-          ))}
-        </div>
-
-        <div className="launch-zone">
-          <button
-            className={"disc" + (phase === "running" ? " running" : phase === "preparing" ? " busy" : "")}
-            onClick={phase === "running" ? onStop : onPlay}
-            disabled={phase === "preparing"}
-          >
-            <svg viewBox="0 0 120 120">
-              <circle className="disc-track" cx="60" cy="60" r={R} />
-              <circle
-                className={"disc-fill" + (phase === "preparing" && pct === null ? " spin" : "")}
-                cx="60"
-                cy="60"
-                r={R}
-                strokeDasharray={C}
-                strokeDashoffset={phase === "preparing" ? C * (1 - (pct ?? 25) / 100) : C}
-              />
-            </svg>
-            <span className="disc-core">
-              {phase === "running" ? (
-                <Icon name="stop" size={24} fill />
-              ) : phase === "preparing" ? (
-                <b>{pct !== null ? Math.round(pct) + "%" : <Spinner size={20} />}</b>
-              ) : (
-                <Icon name="play" size={30} fill />
-              )}
-            </span>
+        {phase === "running" ? (
+          <button className="play-btn running" onClick={onStop}>
+            <Icon name="stop" size={16} fill /> STOP
           </button>
-          <div className="launch-text">
-            <b>{phase === "running" ? "In game" : phase === "preparing" ? "Starting" : active ? "Launch" : "Sign in"}</b>
-            <span>
-              {phase === "running"
-                ? "Click the disc to stop Minecraft"
-                : phase === "preparing"
-                  ? progress?.stage ?? "Getting ready"
-                  : active
-                    ? profile?.name + " · " + info.mc_version
-                    : "with your Microsoft account"}
-            </span>
-            {phase === "idle" && error && (
-              <button className="launch-error" onClick={onLogs}>
-                <Icon name="alert" size={13} /> {error}
-              </button>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------ news */}
-      <section className="headlines">
-        {news.slice(0, 3).map((n, i) => (
-          <article key={i} className={"headline-card" + (n.url ? " link" : "")} onClick={() => n.url && openUrl(n.url)}>
-            <span className="idx">{String(i + 1).padStart(2, "0")}</span>
-            <div>
-              <small>
-                {n.tag ?? "News"}
-                {n.date && " · " + n.date}
-              </small>
-              <b>{n.title}</b>
-              <p>{n.body}</p>
-            </div>
-          </article>
-        ))}
-      </section>
+        ) : (
+          <button className={"play-btn" + (phase === "preparing" ? " busy" : "")} onClick={onPlay} disabled={phase === "preparing"}>
+            {phase === "preparing" && <span className="play-fill" style={{ width: (pct ?? 0) + "%" }} />}
+            {phase === "preparing" ? <Spinner size={16} /> : <Icon name="play" size={18} fill />}
+            <span>{phase === "preparing" ? "STARTING" : active ? "PLAY" : "SIGN IN"}</span>
+          </button>
+        )}
+      </footer>
     </div>
   );
 }

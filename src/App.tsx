@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, GameExit, Info, msg, on, Progress } from "./api";
 import { getLog, pushLog, toast } from "./stores";
-import TopBar from "./components/TopBar";
+import SideRail from "./components/SideRail";
+import WindowButtons from "./components/WindowButtons";
+import Crashes from "./pages/Crashes";
 import Splash from "./components/Splash";
 import Backdrop from "./components/Backdrop";
 import Icon from "./components/Icon";
@@ -14,7 +16,7 @@ import Settings from "./pages/Settings";
 import Logs from "./pages/Logs";
 import Skins from "./pages/Skins";
 
-type Page = "home" | "skins" | "mods" | "settings" | "logs";
+type Page = "home" | "skins" | "mods" | "settings" | "logs" | "crashes";
 
 export default function App() {
   const [updated, setUpdated] = useState(false);
@@ -32,6 +34,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [accountsOpen, setAccountsOpen] = useState(false);
   const [skinKey, setSkinKey] = useState(0);
+  const [crashFile, setCrashFile] = useState<string | null>(null);
   const [crash, setCrash] = useState<GameExit | null>(null);
 
   useEffect(() => {
@@ -123,22 +126,33 @@ export default function App() {
     { id: "home", icon: "play", label: "Play" },
     { id: "skins", icon: "shirt", label: "Skins" },
     { id: "mods", icon: "cube", label: "Mods" },
+    { id: "crashes", icon: "bug", label: "Crashes" },
     { id: "logs", icon: "terminal", label: "Logs" },
   ];
+  const titles: Record<Page, string> = { home: "Play", skins: "Skins", mods: "Mods", crashes: "Crashes", logs: "Logs", settings: "Settings" };
 
   return (
     <div className={"app" + (introOver ? " entered" : " waiting")}>
       <Backdrop />
-      <TopBar
-        version={info.version}
+      <SideRail
         tabs={tabs}
         page={page}
         onPage={(p) => setPage(p as Page)}
-        phase={phase}
         account={active}
         onAccounts={() => setAccountsOpen(true)}
-        onSettings={() => setPage("settings")}
       />
+      <div className="main">
+        <div className="topstrip" data-tauri-drag-region>
+          <span className="strip-title" data-tauri-drag-region>
+            COM CLIENT <i>/</i> {titles[page].toUpperCase()}
+          </span>
+          <span className="grow" data-tauri-drag-region />
+          <span className={"status-dot " + phase} data-tauri-drag-region>
+            <i />
+            {phase === "running" ? "In game" : phase === "preparing" ? "Starting…" : "Ready"} · v{info.version}
+          </span>
+          <WindowButtons />
+        </div>
       <div className="layout">
         <main className="content" key={page}>
           {page === "home" && (
@@ -166,7 +180,9 @@ export default function App() {
           {page === "mods" && <Mods profileName={profile.name} running={phase === "running"} />}
           {page === "settings" && <Settings info={info} reload={reload} running={phase !== "idle"} />}
           {page === "logs" && <Logs />}
+          {page === "crashes" && <Crashes initial={crashFile} />}
         </main>
+      </div>
       </div>
 
       {accountsOpen && (
@@ -189,11 +205,16 @@ export default function App() {
               .join("\n") || getLog().slice(-14).join("\n")}
           </pre>
           <div className="block-foot">
-            {crash.crash_report && (
-              <button className="btn" onClick={() => api.openFile(crash.crash_report!)}>
-                <Icon name="alert" size={14} /> Open crash report
-              </button>
-            )}
+            <button
+              className="btn"
+              onClick={() => {
+                setCrashFile(crash.crash_report ?? null);
+                setCrash(null);
+                setPage("crashes");
+              }}
+            >
+              <Icon name="bug" size={14} /> Why did it crash?
+            </button>
             <span className="grow" />
             <button
               className="btn"

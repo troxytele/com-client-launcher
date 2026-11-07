@@ -17,6 +17,8 @@ pub struct Installed {
     pub client_file: String,
     pub fabric_api_version: String,
     pub fabric_api_file: String,
+    #[serde(default)]
+    pub replay_file: String,
 }
 
 fn installed_path(paths: &Paths) -> PathBuf {
@@ -33,7 +35,7 @@ fn save(paths: &Paths, i: &Installed) {
 }
 
 /// The jars to load. `custom` = a test jar picked in the settings (instead of the GitHub release).
-pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, rep: &Reporter) -> Result<Vec<PathBuf>> {
+pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool, rep: &Reporter) -> Result<Vec<PathBuf>> {
     rep.stage("Updating Com Client", 0, 0);
     let mut state = installed(paths);
     let mut jars = Vec::new();
@@ -74,7 +76,7 @@ pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, rep: &Reporte
     }
 
     // Fabric API
-    match latest_fabric_api(mc).await {
+    match latest_modrinth("fabric-api", mc).await {
         Ok((version, name, url, sha1, size)) => {
             let path = paths.client().join(&name);
             let d = Download::new(url, &path, Some(sha1), size);
@@ -96,6 +98,34 @@ pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, rep: &Reporte
                 return Err(e);
             }
             jars.push(have);
+        }
+    }
+
+    // ReplayMod (optional per profile). A problem here never stops the game from starting.
+    if replay {
+        match latest_modrinth("replaymod", mc).await {
+            Ok((_, name, url, sha1, size)) => {
+                let path = paths.client().join(&name);
+                let d = Download::new(url, &path, Some(sha1), size);
+                let ok = net::is_valid(&d) || {
+                    rep.stage("Downloading ReplayMod", 0, 0);
+                    net::fetch(&d, None).await.is_ok()
+                };
+                if ok {
+                    if !state.replay_file.is_empty() && state.replay_file != name {
+                        let _ = std::fs::remove_file(paths.client().join(&state.replay_file));
+                    }
+                    state.replay_file = name;
+                    save(paths, &state);
+                    jars.push(path);
+                }
+            }
+            Err(_) => {
+                let have = paths.client().join(&state.replay_file);
+                if !state.replay_file.is_empty() && have.is_file() {
+                    jars.push(have);
+                }
+            }
         }
     }
     Ok(jars)
@@ -134,21 +164,21 @@ async fn latest_client() -> Result<(String, String, String, Hash, u64)> {
     Ok((tag, name, asset["browser_download_url"].as_str().unwrap_or_default().to_string(), hash, asset["size"].as_u64().unwrap_or(0)))
 }
 
-/// (version, file name, url, sha1, size) of the newest Fabric API for this Minecraft version (from Modrinth).
-async fn latest_fabric_api(mc: &str) -> Result<(String, String, String, String, u64)> {
+/// (version, file name, url, sha1, size) of the newest Fabric build of a Modrinth project for this Minecraft version.
+async fn latest_modrinth(project: &str, mc: &str) -> Result<(String, String, String, String, u64)> {
     let url = format!(
-        "https://api.modrinth.com/v2/project/fabric-api/version?game_versions={}&loaders={}",
+        "https://api.modrinth.com/v2/project/{project}/version?game_versions={}&loaders={}",
         urlencoding::encode(&format!("[\"{mc}\"]")),
         urlencoding::encode("[\"fabric\"]")
     );
     let versions: Value = net::get_json(&url).await?;
-    let v = versions.as_array().and_then(|a| a.first()).ok_or_else(|| anyhow!("No Fabric API for Minecraft {mc} yet"))?;
+    let v = versions.as_array().and_then(|a| a.first()).ok_or_else(|| anyhow!("No {project} for Minecraft {mc} yet"))?;
     let files = v["files"].as_array().cloned().unwrap_or_default();
     let f = files
         .iter()
         .find(|f| f["primary"].as_bool().unwrap_or(false))
         .or_else(|| files.first())
-        .ok_or_else(|| anyhow!("Fabric API has no file"))?;
+        .ok_or_else(|| anyhow!("{project} has no file"))?;
     Ok((
         v["version_number"].as_str().unwrap_or_default().to_string(),
         f["filename"].as_str().unwrap_or("fabric-api.jar").to_string(),

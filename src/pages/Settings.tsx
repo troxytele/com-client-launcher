@@ -7,6 +7,7 @@ import { toast } from "../stores";
 import Icon from "../components/Icon";
 import { Modal, Spinner, Switch } from "../components/Ui";
 import { getLook, Look, onLook, setLook, THEMES } from "../theme";
+import { ImportSource, ago } from "../api";
 
 export default function Settings({ info, reload, running }: { info: Info; reload: () => void; running: boolean }) {
   const [profileId, setProfileId] = useState(info.settings.active_profile);
@@ -64,7 +65,9 @@ export default function Settings({ info, reload, running }: { info: Info; reload
         <div className="themes">
           {THEMES.map((t) => (
             <button key={t.id} className={"theme-swatch" + (look.theme === t.id ? " on" : "")} onClick={() => setLook({ ...look, theme: t.id })}>
-              <i style={{ background: `radial-gradient(circle at 35% 30%, ${t.hi}, ${t.accent} 45%, ${t.accent2} 75%, ${t.bg})` }} />
+              <i style={{ background: `linear-gradient(135deg, ${t.hi}, ${t.accent} 55%, ${t.accent2})` }}>
+                {look.theme === t.id && <Icon name="check" size={16} />}
+              </i>
               {t.name}
             </button>
           ))}
@@ -152,6 +155,14 @@ export default function Settings({ info, reload, running }: { info: Info; reload
           <span className="muted small">Leave empty to keep this profile separate from your normal .minecraft.</span>
         </div>
 
+        <div className="setting">
+          <div>
+            <b>ReplayMod</b>
+            <span>Record your games and watch them back from any angle. Installed and updated for you, hidden from your mods folder.</span>
+          </div>
+          <Switch on={!!p.replay_mod} onChange={(v) => setP({ ...p, replay_mod: v })} />
+        </div>
+
         <div className="field">
           <label>Java arguments</label>
           <input value={p.java_args} placeholder="e.g. -XX:+UseZGC (optional)" onChange={(e) => setP({ ...p, java_args: e.target.value })} />
@@ -185,6 +196,8 @@ export default function Settings({ info, reload, running }: { info: Info; reload
           </button>
         </div>
       </section>
+
+      <ImportBlock profileId={p.id} profileName={p.name} running={running} />
 
       <section className="settings-block glass">
         <div className="block-head">
@@ -341,6 +354,7 @@ function NewProfile({ onClose, onCreated }: { onClose: () => void; onCreated: (i
                 fullscreen: false,
                 created: 0,
                 last_played: 0,
+                replay_mod: false,
               });
               const created = list[list.length - 1];
               onCreated(created.id);
@@ -354,5 +368,94 @@ function NewProfile({ onClose, onCreated }: { onClose: () => void; onCreated: (i
         </button>
       </div>
     </Modal>
+  );
+}
+
+// Import settings (options.txt: video, sensitivity, keybinds) and the server list from another launcher. Never mods.
+function ImportBlock({ profileId, profileName, running }: { profileId: string; profileName: string; running: boolean }) {
+  const [sources, setSources] = useState<ImportSource[] | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [pick, setPick] = useState<string>("");
+  const [what, setWhat] = useState({ settings: true, keybinds: true, servers: true });
+  const [busy, setBusy] = useState(false);
+
+  async function scan() {
+    setScanning(true);
+    try {
+      const list = await api.importScan();
+      setSources(list);
+      setPick(list[0]?.dir ?? "");
+    } catch (e) {
+      toast(msg(e), "error");
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  async function run() {
+    setBusy(true);
+    try {
+      toast(await api.importApply(pick, profileId, what.settings, what.keybinds, what.servers), "ok");
+    } catch (e) {
+      toast(msg(e), "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const chosen = sources?.find((x) => x.dir === pick);
+  return (
+    <section className="settings-block glass">
+      <div className="block-head">
+        <h2>
+          <Icon name="download" size={17} /> Import from another launcher
+        </h2>
+        <button className="btn small" onClick={scan} disabled={scanning}>
+          {scanning ? <Spinner size={13} /> : <Icon name="search" size={14} />} {sources ? "Scan again" : "Find my launchers"}
+        </button>
+      </div>
+      <p className="muted small" style={{ marginTop: -4 }}>
+        Copies your settings (render distance, mouse sensitivity, FOV, sounds …), keybinds and server list from Minecraft Launcher, Lunar,
+        Modrinth, NoRisk, Prism, CurseForge and others into <b>{profileName}</b>. Mods are never copied.
+      </p>
+      {sources && sources.length === 0 && <p className="muted small">No other Minecraft installs found on this PC.</p>}
+      {sources && sources.length > 0 && (
+        <>
+          <div className="import-list">
+            {sources.map((x) => (
+              <button key={x.dir} className={"import-row" + (x.dir === pick ? " on" : "")} onClick={() => setPick(x.dir)}>
+                <span className="radio">{x.dir === pick && <i />}</span>
+                <span className="import-text">
+                  <b>
+                    {x.launcher}
+                    {x.name && x.name !== ".minecraft" && x.name !== x.launcher ? " · " + x.name : ""}
+                  </b>
+                  <small>
+                    {x.keybinds} keybinds{x.servers ? " · server list" : ""} · changed {ago(x.modified)}
+                  </small>
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="import-what">
+            {(["settings", "keybinds", "servers"] as const).map((k) => (
+              <label key={k}>
+                <Switch on={what[k]} onChange={(v) => setWhat({ ...what, [k]: v })} />
+                {k === "settings" ? "Settings" : k === "keybinds" ? "Keybinds" : "Server list"}
+              </label>
+            ))}
+            <span className="grow" />
+            <button
+              className="btn primary"
+              disabled={!chosen || busy || running || (!what.settings && !what.keybinds && !what.servers) || (what.servers && !what.settings && !what.keybinds && !chosen?.servers)}
+              onClick={run}
+            >
+              {busy ? <Spinner size={13} /> : <Icon name="download" size={14} />} Import
+            </button>
+          </div>
+          <span className="muted small">Your current settings are kept as options.txt.before-import, just in case.</span>
+        </>
+      )}
+    </section>
   );
 }

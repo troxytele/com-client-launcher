@@ -14,6 +14,8 @@ pub mod net;
 pub mod paths;
 pub mod progress;
 pub mod skins;
+pub mod crashes;
+pub mod import;
 pub mod social;
 pub mod store;
 
@@ -54,6 +56,28 @@ struct Info {
     client: client::Installed,
     running: bool,
     client_repo_set: bool,
+}
+
+#[tauri::command]
+fn crash_list(state: State<'_, AppState>) -> Vec<crashes::CrashFile> {
+    crashes::list(&state.paths)
+}
+
+#[tauri::command]
+fn crash_read(state: State<'_, AppState>, path: String) -> Res<String> {
+    crashes::read(&state.paths, &path).map_err(err)
+}
+
+#[tauri::command]
+async fn import_scan(state: State<'_, AppState>) -> Res<Vec<import::Source>> {
+    let root = state.paths.root.clone();
+    tokio::task::spawn_blocking(move || import::scan(&root)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn import_apply(state: State<'_, AppState>, source: String, profile: String, settings: bool, keybinds: bool, servers: bool) -> Res<String> {
+    let p = Profiles::load(&state.paths).get(&profile);
+    import::apply(&source, &store::game_dir(&state.paths, &p), settings, keybinds, servers).map_err(err)
 }
 
 #[tauri::command]
@@ -248,7 +272,7 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState) -> anyhow::Result<
     let component = vanilla.json["javaVersion"]["component"].as_str().unwrap_or("java-runtime-delta").to_string();
     let java = java::ensure(&paths, &component, &rep).await?;
     let fabric = fabric::install(&paths, config::MC_VERSION, None, &rep).await?;
-    let jars = client::ensure(&paths, config::MC_VERSION, Some(&settings.custom_client_jar), &rep).await?;
+    let jars = client::ensure(&paths, config::MC_VERSION, Some(&settings.custom_client_jar), profile.replay_mod, &rep).await?;
     // don't load a second copy of something the player put in their own mods folder
     let theirs = mods::mod_ids(&game_dir);
     let mut extra_mods = Vec::new();
@@ -544,7 +568,11 @@ pub fn run() {
             skin_update,
             skin_delete,
             skin_apply,
-            skin_current
+            skin_current,
+            crash_list,
+            crash_read,
+            import_scan,
+            import_apply
         ])
         .run(tauri::generate_context!())
         .expect("error while running Com Client Launcher");

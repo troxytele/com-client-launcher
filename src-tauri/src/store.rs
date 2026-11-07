@@ -151,6 +151,8 @@ pub struct Profile {
     pub fullscreen: bool,
     pub created: i64,
     pub last_played: i64,
+    /// Load ReplayMod (record and watch replays), kept hidden like Fabric API.
+    pub replay_mod: bool,
 }
 
 impl Default for Profile {
@@ -166,6 +168,7 @@ impl Default for Profile {
             fullscreen: false,
             created: auth::now(),
             last_played: 0,
+            replay_mod: false,
         }
     }
 }

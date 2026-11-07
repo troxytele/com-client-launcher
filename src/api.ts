@@ -23,7 +23,12 @@ export type Profile = {
   fullscreen: boolean;
   created: number;
   last_played: number;
+  replay_mod: boolean;
 };
+
+export type CrashFile = { path: string; name: string; profile: string; kind: "crash" | "jvm" | "log"; modified: number; size: number };
+
+export type ImportSource = { launcher: string; name: string; dir: string; modified: number; servers: boolean; keybinds: number };
 
 export type Info = {
   version: string;
@@ -88,6 +93,11 @@ export const api = {
   skinDelete: (id: string) => invoke<void>("skin_delete", { id }),
   skinApply: (id: string) => invoke<Account[]>("skin_apply", { id }),
   skinCurrent: () => invoke<CurrentSkin>("skin_current"),
+  crashes: () => invoke<CrashFile[]>("crash_list"),
+  crashRead: (path: string) => invoke<string>("crash_read", { path }),
+  importScan: () => invoke<ImportSource[]>("import_scan"),
+  importApply: (source: string, profile: string, settings: boolean, keybinds: boolean, servers: boolean) =>
+    invoke<string>("import_apply", { source, profile, settings, keybinds, servers }),
 };
 
 export const on = {
