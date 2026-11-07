@@ -68,7 +68,7 @@ export type DeviceCode = { user_code: string; device_code: string; verification_
 export type NewsItem = { title: string; body: string; date: string; tag: string; url: string };
 export type Friend = { uuid: string; name: string; username: string; online: boolean; activity: string; server: string; last_seen: number; level: number };
 export type Social = { friends: Friend[]; requests: number; level: number; title: string; username: string; unread: number };
-export type Kind = "mod" | "resourcepack" | "shader";
+export type Kind = "mod" | "resourcepack" | "shader" | "modpack";
 export type Installed = {
   file: string; id: string; name: string; version: string; description: string; authors: string; icon: string;
   enabled: boolean; size: number; sha1: string;
@@ -76,6 +76,36 @@ export type Installed = {
 export type Hit = { id: string; slug: string; title: string; description: string; icon: string; author: string; downloads: number; follows: number; categories: string[] };
 export type SearchResult = { hits: Hit[]; total: number };
 export type Update = { file: string; version: string; url: string; filename: string; sha1: string; size: number };
+
+export type Shot = { path: string; name: string; profile: string; profile_name: string; modified: number; size: number };
+export type Replay = Shot & { duration_ms: number; server: string; mc_version: string };
+
+export type CosmeticItem = { id: string; name: string };
+export type Catalog = { capes: CosmeticItem[]; wings: CosmeticItem[]; halos: CosmeticItem[]; hats: CosmeticItem[]; auras: CosmeticItem[] };
+/** Same fields as the mod's config. auraColor -1 = rainbow. */
+export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number };
+
+export type OptimisePlan = {
+  ram_total_mb: number; cpu: string; cores: number; gpu: string; gpu_kind: "dedicated" | "integrated" | "unknown";
+  tier: "low" | "medium" | "high"; ram_mb: number; video: [string, string][];
+};
+
+/** /state on the Com Client server. */
+export type ServerFriend = {
+  uuid: string; name: string; username: string; online: boolean; activity: string | null; server: string | null;
+  last_seen: number; level: number;
+};
+export type ServerState = {
+  friends: ServerFriend[];
+  incoming: { uuid: string; name: string; created: number }[];
+  outgoing: { uuid: string; name: string; created: number }[];
+};
+export type ChatSummary = {
+  uuid: string; name: string; username: string; unread: number; at: number; request: boolean;
+  last: { text: string; at: number; mine: boolean } | null;
+};
+export type ChatMessage = { id: string; from: string; text: string; at: number };
+export type Chat = { uuid: string; name: string; username: string; friend: boolean; request: boolean; pending: boolean; declined: boolean; messages: ChatMessage[]; other_read: number };
 
 export type Skin = { id: string; name: string; variant: "classic" | "slim"; data: string; active: boolean };
 export type CurrentSkin = { data: string; variant: "classic" | "slim"; name: string };
@@ -90,7 +120,22 @@ export const api = {
   saveSettings: (settings: Settings) => invoke<void>("save_settings", { settings }),
   saveProfile: (profile: Profile) => invoke<Profile[]>("save_profile", { profile }),
   deleteProfile: (id: string) => invoke<Profile[]>("delete_profile", { id }),
-  launch: (server?: string) => invoke<void>("launch", { server: server ?? null }),
+  launch: (server?: string, profile?: string, replay?: string) =>
+    invoke<void>("launch", { server: server ?? null, profile: profile ?? null, replay: replay ?? null }),
+  shots: () => invoke<Shot[]>("shots_list"),
+  replays: () => invoke<Replay[]>("replays_list"),
+  galleryDelete: (path: string) => invoke<void>("gallery_delete", { path }),
+  shotCopy: (path: string) => invoke<void>("shot_copy", { path }),
+  shotShare: (path: string) => invoke<void>("shot_share", { path }),
+  serverGet: <T,>(path: string) => invoke<T>("server_get", { path }),
+  serverPost: <T,>(path: string, body?: unknown) => invoke<T>("server_post", { path, body: body ?? null }),
+  catalog: () => invoke<Catalog>("cosmetics_catalog"),
+  cosmeticTexture: (kind: "cape" | "wings", id: string) => invoke<string>("cosmetic_texture", { kind, id }),
+  lookGet: () => invoke<Look>("cosmetics_get"),
+  lookSave: (look: Look) => invoke<void>("cosmetics_save", { look }),
+  modpackInstall: (project: string, title: string, icon: string) => invoke<string>("modpack_install", { project, title, icon }),
+  optimiseScan: () => invoke<OptimisePlan>("optimise_scan"),
+  optimiseApply: (profile: string, video: boolean) => invoke<Profile[]>("optimise_apply", { profile, video }),
   iconNames: () => invoke<string[]>("icon_names"),
   icons: (names: string[]) => invoke<Record<string, string>>("icons", { names }),
   iconUpload: (file: string) => invoke<string>("icon_upload", { file }),
@@ -130,6 +175,7 @@ export const on = {
   log: (f: (line: string) => void): Promise<UnlistenFn> => listen<string>("game-log", (e) => f(e.payload)),
   started: (f: () => void): Promise<UnlistenFn> => listen("game-started", () => f()),
   exit: (f: (e: GameExit) => void): Promise<UnlistenFn> => listen<GameExit>("game-exit", (e) => f(e.payload)),
+  modpackProgress: (f: (p: Progress) => void): Promise<UnlistenFn> => listen<Progress>("modpack-progress", (e) => f(e.payload)),
 };
 
 /** Errors from Rust come as plain strings. */

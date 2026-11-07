@@ -41,6 +41,12 @@ const P: Record<string, string> = {
   layers: "M12 3.5 21 8l-9 4.5L3 8l9-4.5ZM3 12l9 4.5 9-4.5M3 16l9 4.5 9-4.5",
   volume: "M4 9.5h3.5L12 5.5v13l-4.5-4H4zM15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11",
   pin: "M9 4h6l-1 6 3 3H7l3-3-1-6ZM12 13v7",
+  film: "M4 5h16v14H4zM8 5v14M16 5v14M4 9h4M4 15h4M16 9h4M16 15h4",
+  send: "M4 11.5 20 4l-5 16-3.5-6.5L4 11.5ZM11.5 13.5 20 4",
+  bolt: "M13 3 5 13.5h6L10 21l8-10.5h-6L13 3Z",
+  share: "M17 8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM7 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM17 20.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM9.2 10.8l5.6-3.1M9.2 13.2l5.6 3.1",
+  box: "M4 7.5 12 3.5l8 4v9l-8 4-8-4v-9ZM4 7.5l8 4 8-4M12 11.5v9",
+  userPlus: "M10 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM3.5 20.5c1.1-3.4 3.6-5.3 6.5-5.3 1.4 0 2.6.4 3.7 1.1M18 14v6M15 17h6",
 };
 
 export default function Icon({ name, size = 18, className, fill }: { name: string; size?: number; className?: string; fill?: boolean }) {

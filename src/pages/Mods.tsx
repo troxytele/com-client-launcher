@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { api, fmtBytes, fmtNum, Hit, Installed, Kind, msg, Update } from "../api";
+import { api, fmtBytes, fmtNum, Hit, Installed, Kind, msg, on, Update } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import { Empty, Spinner, Switch } from "../components/Ui";
@@ -9,6 +9,7 @@ const KINDS: { id: Kind; label: string; icon: string; folder: string }[] = [
   { id: "mod", label: "Mods", icon: "cube", folder: "mods" },
   { id: "resourcepack", label: "Resource Packs", icon: "image", folder: "resourcepacks" },
   { id: "shader", label: "Shaders", icon: "sun", folder: "shaderpacks" },
+  { id: "modpack", label: "Modpacks", icon: "box", folder: "" },
 ];
 
 const SORTS = [
@@ -19,7 +20,7 @@ const SORTS = [
   { id: "updated", label: "Updated" },
 ];
 
-export default function Mods({ profileName, running }: { profileName: string; running: boolean }) {
+export default function Mods({ profileName, running, onModpack }: { profileName: string; running: boolean; onModpack: (id: string) => void }) {
   const [kind, setKind] = useState<Kind>("mod");
   const [tab, setTab] = useState<"installed" | "browse">("installed");
   const k = KINDS.find((x) => x.id === kind)!;
@@ -33,9 +34,11 @@ export default function Mods({ profileName, running }: { profileName: string; ru
             For the profile <b>{profileName}</b>. Com Client and Fabric API are built in and don't show here.
           </p>
         </div>
-        <button className="btn" onClick={() => api.openFolder(k.folder)}>
-          <Icon name="folder" size={15} /> Open folder
-        </button>
+        {k.folder && (
+          <button className="btn" onClick={() => api.openFolder(k.folder)}>
+            <Icon name="folder" size={15} /> Open folder
+          </button>
+        )}
       </div>
       <div className="toolbar">
         <div className="seg">
@@ -45,21 +48,32 @@ export default function Mods({ profileName, running }: { profileName: string; ru
             </button>
           ))}
         </div>
-        <div className="seg">
+        {kind !== "modpack" && <div className="seg">
           <button className={tab === "installed" ? "on" : ""} onClick={() => setTab("installed")}>
             Installed
           </button>
           <button className={tab === "browse" ? "on" : ""} onClick={() => setTab("browse")}>
             <Icon name="search" size={14} /> Discover
           </button>
-        </div>
+        </div>}
       </div>
       {kind === "shader" && (
         <p className="hint">
           <Icon name="sparkle" size={14} /> Shaders need the Iris mod: find it under Mods → Discover.
         </p>
       )}
-      {tab === "installed" ? <InstalledList kind={kind} running={running} onBrowse={() => setTab("browse")} /> : <Browse kind={kind} />}
+      {kind === "modpack" && (
+        <p className="hint">
+          <Icon name="box" size={14} /> A modpack installs as a new profile of its own (your other profiles stay as they are).
+        </p>
+      )}
+      {kind === "modpack" ? (
+        <Browse kind={kind} onModpack={onModpack} />
+      ) : tab === "installed" ? (
+        <InstalledList kind={kind} running={running} onBrowse={() => setTab("browse")} />
+      ) : (
+        <Browse kind={kind} />
+      )}
     </div>
   );
 }
@@ -206,7 +220,7 @@ function InstalledList({ kind, running, onBrowse }: { kind: Kind; running: boole
   );
 }
 
-function Browse({ kind }: { kind: Kind }) {
+function Browse({ kind, onModpack }: { kind: Kind; onModpack?: (id: string) => void }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("relevance");
   const [hits, setHits] = useState<Hit[]>([]);
@@ -240,8 +254,37 @@ function Browse({ kind }: { kind: Kind }) {
     return () => clearTimeout(t);
   }, [run]);
 
+  const [packStage, setPackStage] = useState<string>("");
+  useEffect(() => {
+    if (kind !== "modpack") return;
+    const un = on.modpackProgress((p) =>
+      setPackStage(p.total > 0 ? `${p.stage} ${Math.round((p.done / p.total) * 100)}%` : p.stage),
+    );
+    return () => {
+      un.then((f) => f());
+    };
+  }, [kind]);
+
   async function install(h: Hit) {
     setInstalling((s) => ({ ...s, [h.id]: "busy" }));
+    if (kind === "modpack") {
+      try {
+        const id = await api.modpackInstall(h.id, h.title, h.icon);
+        setInstalling((s) => ({ ...s, [h.id]: "done" }));
+        toast(h.title + " is installed as a new profile", "ok");
+        onModpack?.(id);
+      } catch (e) {
+        setInstalling((s) => {
+          const n = { ...s };
+          delete n[h.id];
+          return n;
+        });
+        toast(msg(e), "error");
+      } finally {
+        setPackStage("");
+      }
+      return;
+    }
     try {
       const files = await api.install(h.id, kind);
       setInstalling((s) => ({ ...s, [h.id]: "done" }));
@@ -294,7 +337,7 @@ function Browse({ kind }: { kind: Kind }) {
                 </span>
                 <button className={"btn small" + (st === "done" ? "" : " primary")} disabled={!!st} onClick={() => install(h)}>
                   {st === "busy" ? <Spinner size={12} /> : st === "done" ? <Icon name="check" size={14} /> : <Icon name="plus" size={14} />}
-                  {st === "done" ? "Installed" : "Install"}
+                  {st === "done" ? "Installed" : st === "busy" && kind === "modpack" ? packStage || "Installing…" : "Install"}
                 </button>
               </div>
             </div>
