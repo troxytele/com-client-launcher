@@ -2563,17 +2563,41 @@ html[data-theme="black"] .news-tag {
   flex-direction: column;
   gap: 8px;
 }
+.pname-wrap {
+  position: relative;
+  display: block;
+  cursor: text;
+}
 input.pname {
   font-size: 19px;
   font-weight: 650;
-  padding: 6px 10px;
-  background: transparent;
-  border-color: transparent;
+  padding: 6px 36px 6px 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border-color: var(--line);
 }
 input.pname:hover,
 input.pname:focus {
   background: rgba(0, 0, 0, 0.3);
   border-color: var(--line-hi);
+}
+.pname-wrap > svg {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  transition: color 0.15s;
+}
+.pname-wrap:hover > svg,
+.pname-wrap:focus-within > svg {
+  color: var(--accent);
+}
+input.pcard-rename {
+  width: 100%;
+  padding: 3px 7px;
+  font-size: 13px;
+  font-weight: 600;
 }
 .pactions {
   display: flex;

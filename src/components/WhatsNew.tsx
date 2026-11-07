@@ -5,6 +5,10 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.5.1",
+    items: [["edit", "Rename profiles", "Click a profile's name (or Rename) on the Profiles page, or double-click it in the list, then type the new name."]],
+  },
+  {
     version: "0.5.0",
     items: [
       ["layers", "Profiles", "A new Profiles page: names, Minecraft block or item icons (or your own picture), duplicate, export and import."],

@@ -36,6 +36,25 @@ export default function Profiles({
   const [saved, setSaved] = useState<"idle" | "saving" | "saved">("idle");
   const [picker, setPicker] = useState(false);
   const [busy, setBusy] = useState("");
+  const nameRef = useRef<HTMLInputElement>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [renameText, setRenameText] = useState("");
+
+  async function rename(x: Profile, name: string) {
+    setRenaming(null);
+    const n = name.trim();
+    if (!n || n === x.name) return;
+    if (x.id === p.id) {
+      setP({ ...p, name: n });
+      return;
+    }
+    try {
+      await api.saveProfile({ ...x, name: n });
+      reload();
+    } catch (e) {
+      toast(msg(e), "error");
+    }
+  }
 
   useEffect(() => setP(profile), [profile.id]);
   // play time etc. changes underneath us (the launcher writes it): keep those fields fresh
@@ -88,7 +107,11 @@ export default function Profiles({
       });
       reload();
       setEditId(list[list.length - 1].id);
-      toast("Profile created", "ok");
+      // straight into naming it
+      setTimeout(() => {
+        nameRef.current?.focus();
+        nameRef.current?.select();
+      }, 120);
     } catch (e) {
       toast(msg(e), "error");
     }
@@ -160,10 +183,33 @@ export default function Profiles({
             <div key={x.id} className={"pcard" + (x.id === p.id ? " editing" : "")} onClick={() => setEditId(x.id)}>
               <ProfileIcon icon={x.icon} size={42} />
               <div className="pcard-text">
-                <b>
-                  {x.name}
-                  {x.id === info.settings.active_profile && <em>Selected</em>}
-                </b>
+                {renaming === x.id ? (
+                  <input
+                    className="pcard-rename"
+                    autoFocus
+                    value={renameText}
+                    maxLength={32}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => setRenameText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") rename(x, renameText);
+                      if (e.key === "Escape") setRenaming(null);
+                    }}
+                    onBlur={() => rename(x, renameText)}
+                  />
+                ) : (
+                  <b
+                    title="Double-click to rename"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      setRenameText(x.id === p.id ? p.name : x.name);
+                      setRenaming(x.id);
+                    }}
+                  >
+                    {x.id === p.id ? p.name || x.name : x.name}
+                    {x.id === info.settings.active_profile && <em>Selected</em>}
+                  </b>
+                )}
                 <span>
                   {x.version || info.mc_version} · {fmtTime(x.playtime_secs || 0)} · {x.last_played ? ago(x.last_played) : "never played"}
                 </span>
@@ -183,7 +229,19 @@ export default function Profiles({
                 </span>
               </button>
               <div className="phead-fields">
-                <input className="pname" value={p.name} maxLength={32} onChange={(e) => setP({ ...p, name: e.target.value })} />
+                <label className="pname-wrap" title="Click to rename">
+                  <input
+                    ref={nameRef}
+                    className="pname"
+                    value={p.name}
+                    maxLength={32}
+                    placeholder="Profile name"
+                    onChange={(e) => setP({ ...p, name: e.target.value })}
+                    onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                    onBlur={() => !p.name.trim() && setP({ ...p, name: profile.name })}
+                  />
+                  <Icon name="edit" size={15} />
+                </label>
                 <div className="row-gap">
                   <select value={p.version || VERSIONS[0].id} onChange={(e) => setP({ ...p, version: e.target.value })}>
                     {VERSIONS.map((v) => (
@@ -240,6 +298,15 @@ export default function Profiles({
                 toast("Exported (settings, mods, packs and servers; no worlds)", "ok");
               })}>
                 {busy === "export" ? <Spinner size={12} /> : <Icon name="external" size={14} />} Export
+              </button>
+              <button
+                className="btn small"
+                onClick={() => {
+                  nameRef.current?.focus();
+                  nameRef.current?.select();
+                }}
+              >
+                <Icon name="edit" size={14} /> Rename
               </button>
               <button className="btn small" onClick={() => api.openFolder("profile:" + p.id)}>
                 <Icon name="folder" size={14} /> Folder
