@@ -14,22 +14,57 @@
     document.querySelectorAll(".nav nav a").forEach((a) => a.addEventListener("click", () => document.body.classList.remove("menu-open")));
   }
 
-  // ---------------------------------------------------------------- tabs
-  document.querySelectorAll(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const id = tab.dataset.tab;
-      document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t === tab));
-      document.querySelectorAll(".shot").forEach((s) => s.classList.toggle("on", s.dataset.shot === id));
+  // ---------------------------------------------------------------- the hero stage: real screens, one after another
+  const stage = document.getElementById("stage");
+  if (stage) {
+    const tabs = [...stage.querySelectorAll("[role=tab]")];
+    const shots = [...stage.querySelectorAll(".shot")];
+    const TIME = 6000;
+    stage.style.setProperty("--stage-time", TIME + "ms");
+    let i = 0;
+    let timer = null;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const show = (n, user) => {
+      i = (n + tabs.length) % tabs.length;
+      const id = tabs[i].dataset.tab;
+      tabs.forEach((t, k) => {
+        t.classList.remove("on");
+        t.setAttribute("aria-selected", String(k === i));
+      });
+      void tabs[i].offsetWidth; // restart the progress line
+      tabs[i].classList.add("on");
+      shots.forEach((s) => {
+        if (s.dataset.shot === id) s.loading = "eager";
+        s.classList.toggle("on", s.dataset.shot === id);
+      });
+      // the next screen starts loading now, so the swap never shows an empty frame
+      const next = shots.find((s) => s.dataset.shot === tabs[(i + 1) % tabs.length].dataset.tab);
+      if (next) next.loading = "eager";
+      clearTimeout(timer);
+      if (user || reduce) {
+        stage.classList.add("paused");
+        return;
+      }
+      timer = setTimeout(() => show(i + 1), TIME);
+    };
+    tabs.forEach((t, k) => {
+      t.addEventListener("click", () => show(k, true));
+      t.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+          e.preventDefault();
+          show(i + (e.key === "ArrowRight" ? 1 : -1), true);
+          tabs[i].focus();
+        }
+      });
     });
-  });
-
-  // ---------------------------------------------------------------- reveal on scroll
-  const items = document.querySelectorAll(".feature, .sec-head, .shots, .cos-card, .split-text, .launcher-mock, .launcher-list, .faq details, .download, .stats, .release");
-  if ("IntersectionObserver" in window) {
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
-    }, { rootMargin: "0px 0px -8% 0px" });
-    items.forEach((el) => { el.classList.add("reveal"); io.observe(el); });
+    // only play while it's on screen
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver((e) => {
+        if (stage.classList.contains("paused")) return;
+        if (e[0].isIntersecting) show(i);
+        else clearTimeout(timer);
+      }).observe(stage);
+    } else show(0);
   }
 
   // ---------------------------------------------------------------- download button
@@ -40,7 +75,8 @@
       return c && Date.now() - c.at < 10 * 60 * 1000 ? c : null;
     } catch { return null; }
   };
-  const applyLatest = (url, version) => {
+  const applyLatest = (url, version, size) => {
+    if (size) document.querySelectorAll("[data-size]").forEach((s) => { s.textContent = `${(size / 1048576).toFixed(1)} MB`; });
     document.querySelectorAll("[data-download]").forEach((a) => {
       a.href = url;
       if (url.endsWith(".exe")) a.setAttribute("download", "");
@@ -51,7 +87,7 @@
   applyLatest(`${RELEASES}/latest`);
 
   const cached = readCache();
-  if (cached) applyLatest(cached.url, cached.version);
+  if (cached) applyLatest(cached.url, cached.version, cached.size);
   else {
     fetch(`${API}/latest`, { headers: { Accept: "application/vnd.github+json" } })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
@@ -62,8 +98,9 @@
         const url = asset ? asset.browser_download_url : rel.html_url;
         const version = String(rel.tag_name || "").replace(/^v/, "");
         if (!/^https:\/\/github\.com\//.test(url)) return;
-        applyLatest(url, version);
-        try { sessionStorage.setItem(cacheKey, JSON.stringify({ url, version, at: Date.now() })); } catch {}
+        const size = asset ? asset.size : 0;
+        applyLatest(url, version, size);
+        try { sessionStorage.setItem(cacheKey, JSON.stringify({ url, version, size, at: Date.now() })); } catch {}
       })
       .catch(() => {});
   }

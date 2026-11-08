@@ -15,12 +15,12 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/assets/style.css?v=91d09698">
-  <link rel="stylesheet" href="/assets/pages.css?v=4671c1db">
-  <script src="/assets/main.js?v=ee397b28" defer></script>
+  <link rel="stylesheet" href="/assets/style.css?v=e3200735">
+  <link rel="stylesheet" href="/assets/pages.css?v=ac6e66eb">
+  <script src="/assets/main.js?v=37bc4e77" defer></script>
   <script src="/assets/site.js?v=44e6b615" defer></script>
   <script src="/assets/viewer.js?v=8302bebf" defer></script>
-  <script src="/assets/home.js?v=ecde8364" defer></script>
+  <script src="/assets/home.js?v=3716b1b3" defer></script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
@@ -35,145 +35,110 @@
       <a href="/help">Help</a>
       <a href="/changelog">Changelog</a>
     </nav>
-    <a class="btn primary small" href="/#download" data-download>Download</a>
+    <a class="btn primary small" href="/download">Download</a>
     <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false"><i></i><i></i><i></i></button>
   </header>
 
   <main>
     <!-- ============================================================ hero -->
     <section class="hero">
-      <div class="hero-text">
-        <span class="pill"><i></i> Minecraft 1.21.11 · Fabric · Free</span>
-        <h1>Minecraft,<br><span class="grad">but beautiful.</span></h1>
-        <p class="lead">Com Client turns the game into black &amp; white glass: 60+ modules, cosmetics everyone can see, friends and chat built in, and a launcher that sets everything up for you.</p>
-        <div class="cta">
-          <a class="btn primary big" href="#download" data-download>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7H3zM11.5 4.3 21 3v8.4h-9.5zM3 12.6h7.5v7L3 18.5zM11.5 12.6H21V21l-9.5-1.3z"/></svg>
-            Download for Windows
-          </a>
-          <a class="btn ghost big" href="#showcase">See it in action</a>
+      <div class="hero-top">
+        <h1>Minecraft,<br>but beautiful.</h1>
+        <div class="hero-side">
+          <p class="lead">A free client for Minecraft 1.21.11 that turns the game into black and white glass. 60+ modules, cosmetics other players see, friends and chat built in, and a launcher that sets it all up.</p>
+          <div class="cta">
+            <a class="btn primary big" href="/download" data-download>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7H3zM11.5 4.3 21 3v8.4h-9.5zM3 12.6h7.5v7L3 18.5zM11.5 12.6H21V21l-9.5-1.3z"/></svg>
+              Download for Windows
+           </a>
+            <a class="btn ghost big" href="/download#how">How it works</a>
+          </div>
+          <p class="fine"><span class="live-pill" id="live-pill" hidden><i></i><span></span></span><span data-version>Launcher</span> for Windows 10 and 11. No Java or Minecraft install needed.</p>
         </div>
-        <p class="fine"><span data-version>Launcher</span> · Windows 10 / 11 · no Java or Minecraft install needed</p>
       </div>
 
-      <!-- real main menu -->
-      <div class="hero-shot">
-        <figure class="window shot-frame tilt">
-          <img src="/assets/shots/menu.webp" srcset="/assets/shots/menu-sm.webp 960w, /assets/shots/menu.webp 1920w" sizes="(max-width: 860px) 100vw, 640px" width="1920" height="1057" alt="The Com Client main menu with the player's skin, wings, halo and aura">
-        </figure>
+      <!-- the one big thing: the game itself, cycling through real screenshots -->
+      <div class="stage" id="stage">
+        <div class="stage-screen">
+          <img class="shot on" data-shot="menu" src="/assets/shots/menu.webp" srcset="/assets/shots/menu-sm.webp 960w, /assets/shots/menu.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="1057" fetchpriority="high" alt="The Com Client main menu with the player's skin, wings, halo and aura">
+          <img class="shot" data-shot="gui" src="/assets/shots/gui-render.webp" srcset="/assets/shots/gui-render-sm.webp 960w, /assets/shots/gui-render.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="1057" loading="lazy" alt="The Click GUI showing Render modules like Custom Sky, Radiance and Afterglow">
+          <img class="shot" data-shot="world" src="/assets/shots/world.webp" srcset="/assets/shots/world-sm.webp 960w, /assets/shots/world.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="850" loading="lazy" alt="In game with the Com Client HUD and a custom aurora sky">
+          <img class="shot" data-shot="social" src="/assets/shots/feed.webp" srcset="/assets/shots/feed-sm.webp 960w, /assets/shots/feed.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="1057" loading="lazy" alt="The Social tab with a 24-hour feed, chats and pages">
+          <img class="shot" data-shot="locker" src="/assets/shots/locker-wings.webp" srcset="/assets/shots/locker-wings-sm.webp 960w, /assets/shots/locker-wings.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="1057" loading="lazy" alt="The Locker, picking devil wings">
+        </div>
+        <div class="stage-tabs" role="tablist" aria-label="Screens">
+          <button role="tab" class="on" data-tab="menu" aria-selected="true"><b>Main menu</b><span>Your skin and cosmetics, front and centre</span><i></i></button>
+          <button role="tab" data-tab="gui" aria-selected="false"><b>Click GUI</b><span>Every module, searchable</span><i></i></button>
+          <button role="tab" data-tab="world" aria-selected="false"><b>In game</b><span>Glass HUD and custom skies</span><i></i></button>
+          <button role="tab" data-tab="social" aria-selected="false"><b>Social</b><span>Feed, chats and pages</span><i></i></button>
+          <button role="tab" data-tab="locker" aria-selected="false"><b>Locker</b><span>Capes, wings, halos, auras</span><i></i></button>
+        </div>
       </div>
     </section>
 
-    <!-- ============================================================ numbers -->
-    <section class="stats">
-      <div><b>60+</b><span>modules</span></div>
-      <div><b>17</b><span>fonts</span></div>
-      <div><b>100+</b><span>capes &amp; cosmetics</span></div>
-      <div id="live-stat"><b>1</b><span>click to play</span></div>
-    </section>
-
-    <!-- ============================================================ features -->
+    <!-- ============================================================ features (bento) -->
     <section id="features" class="section">
-      <div class="sec-head">
-        <span class="eyebrow">Features</span>
-        <h2>Everything you want. Nothing you don't.</h2>
-        <p>Visual and quality-of-life modules only: no cheats, so it's safe on every server.</p>
+      <div class="sec-head left">
+        <h2>Everything you want.<br>Nothing you don't.</h2>
+        <p>Visual and quality-of-life modules only. No cheats, so it's safe on every server.</p>
       </div>
-      <div class="features">
-        <article class="feature glass">
-          <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16"/></svg></span>
-          <h3>Glass everything</h3>
-          <p>Hotbar, chat, tab list, tooltips and menus in frosted black &amp; white glass, with smooth animations everywhere.</p>
+      <div class="bento">
+        <article class="tile t-hud">
+          <div class="tile-text">
+            <h3>A HUD you arrange yourself</h3>
+            <p>FPS, keystrokes, armor, potions, ping, coordinates, clock, Spotify and more, in glass. Drag each one where you want it.</p>
+          </div>
+          <img src="/assets/shots/gui-hud-sm.webp" width="960" height="528" loading="lazy" alt="HUD modules in the Click GUI">
         </article>
-        <article class="feature glass">
-          <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M12 3.5 13.6 10.4 20.5 12 13.6 13.6 12 20.5 10.4 13.6 3.5 12 10.4 10.4z"/></svg></span>
-          <h3>Visuals</h3>
-          <p>Bloom, motion blur, custom sky and fog, item physics, trails, hit splashes, death animations, glint colour and 17 fonts.</p>
-        </article>
-        <article class="feature glass">
-          <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7v6H4zM13 5h7v3h-7zM13 10h7v9h-7zM4 13h7v6H4z"/></svg></span>
-          <h3>HUD you can arrange</h3>
-          <p>FPS, keystrokes, armor, potions, ping, TPS, coordinates, clock, scoreboard, Spotify and more. Drag them where you like.</p>
-        </article>
-        <article class="feature glass">
-          <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M9 11.5a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2ZM2.8 20c1-3.3 3.3-5 6.2-5s5.2 1.7 6.2 5M16 4.6a3.6 3.6 0 0 1 0 6.8M18 15.3c1.6.7 2.7 2.2 3.2 4.7"/></svg></span>
-          <h3>Friends &amp; chat</h3>
-          <p>See where your friends play, join them in one click, chat in game or in the launcher, and spot Com Client players by their badge.</p>
-        </article>
-        <article class="feature glass">
-          <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 7v6c0 4.4 3.4 7.5 8 8 4.6-.5 8-3.6 8-8V7z"/></svg></span>
-          <h3>Cosmetics for everyone to see</h3>
-          <p>Every Mojang cape, wings, glowing halos, hats and auras. Other Com Client players see them too.</p>
-        </article>
-        <article class="feature glass">
-          <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M4.5 5.5h15v10h-9l-4.5 3.5v-3.5H4.5z"/></svg></span>
-          <h3>Your own page</h3>
-          <p>Your own profile page with a background, bio, a song and all your socials, plus a feed for what you're up to.</p>
-        </article>
-        <article class="feature glass">
-          <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg></span>
-          <h3>Quality of life</h3>
-          <p>Freelook, zoom, waypoints, auto reconnect, chunk borders, hitboxes, screenshot manager and Discord Rich Presence.</p>
-        </article>
-        <article class="feature glass">
-          <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/></svg></span>
-          <h3>Fast</h3>
-          <p>Built on Fabric with Sodium, Lithium and friends. The launcher's Auto-optimise picks the best settings for your PC.</p>
-        </article>
-      </div>
-    </section>
 
-    <!-- ============================================================ showcase -->
-    <section id="showcase" class="section">
-      <div class="sec-head">
-        <span class="eyebrow">Preview</span>
-        <h2>Take a look around</h2>
-      </div>
-      <div class="tabs" role="tablist">
-        <button class="tab on" role="tab" data-tab="gui">Click GUI</button>
-        <button class="tab" role="tab" data-tab="hud">HUD modules</button>
-        <button class="tab" role="tab" data-tab="world">In game</button>
-        <button class="tab" role="tab" data-tab="social">Social</button>
-        <button class="tab" role="tab" data-tab="splash">Start screen</button>
-      </div>
-      <div class="shots window">
-        <img class="shot on" data-shot="gui" src="/assets/shots/gui-render.webp" srcset="/assets/shots/gui-render-sm.webp 960w, /assets/shots/gui-render.webp 1920w" sizes="(max-width: 1220px) 100vw, 1180px" width="1920" height="1057" alt="Com Client Click GUI showing Render modules like Custom Sky, Radiance and Afterglow">
-        <img class="shot" data-shot="hud" src="/assets/shots/gui-hud.webp" srcset="/assets/shots/gui-hud-sm.webp 960w, /assets/shots/gui-hud.webp 1920w" sizes="(max-width: 1220px) 100vw, 1180px" width="1920" height="1057" loading="lazy" alt="Click GUI showing HUD modules like Glass Hotbar, FPS and Clock">
-        <img class="shot" data-shot="world" src="/assets/shots/world.webp" srcset="/assets/shots/world-sm.webp 960w, /assets/shots/world.webp 1920w" sizes="(max-width: 1220px) 100vw, 1180px" width="1920" height="850" loading="lazy" alt="In game with the Com Client HUD and a custom aurora sky">
-        <img class="shot" data-shot="social" src="/assets/shots/feed.webp" srcset="/assets/shots/feed-sm.webp 960w, /assets/shots/feed.webp 1920w" sizes="(max-width: 1220px) 100vw, 1180px" width="1920" height="1057" loading="lazy" alt="The Social tab with a 24-hour feed, chats and pages">
-        <img class="shot" data-shot="splash" src="/assets/shots/splash.webp" srcset="/assets/shots/splash-sm.webp 960w, /assets/shots/splash.webp 1920w" sizes="(max-width: 1220px) 100vw, 1180px" width="1920" height="1080" loading="lazy" alt="The Com Client start screen">
-      </div>
-      <p class="mock-note">Real screenshots, taken in game.</p>
-    </section>
+        <article class="tile t-cos" id="cosmetics">
+          <div class="tile-text">
+            <h3>Cosmetics everyone sees</h3>
+            <p>Every Mojang cape, wings, halos, hats and auras. Free, in any colour.</p>
+          </div>
+          <figure class="live3d" id="live3d">
+            <canvas aria-label="A 3D player trying on Com Client cosmetics"></canvas>
+            <figcaption id="live3d-name">Live preview</figcaption>
+          </figure>
+          <a class="tile-link" href="/cosmetics">Try them all on</a>
+        </article>
 
-    <!-- ============================================================ cosmetics -->
-    <section id="cosmetics" class="section split">
-      <div class="split-text">
-        <span class="eyebrow">Cosmetics</span>
-        <h2>Wear it. Everyone sees it.</h2>
-        <p>Pick from every official Mojang cape (MineCon included), five pairs of wings, glowing halos, hats and animated auras. Change the colours, see it on your own skin in 3D, and every Com Client player around you sees it too.</p>
-        <ul class="ticks">
-          <li>Capes, wings, halos, hats &amp; auras</li>
-          <li>Any colour, or rainbow</li>
-          <li>Free for everyone right now</li>
-        </ul>
-        <a class="btn ghost small cos-link" href="/cosmetics">Open the cosmetics gallery</a>
-      </div>
-      <div class="cos-shots">
-        <figure class="window live3d big" id="live3d">
-          <canvas aria-label="A 3D player trying on Com Client cosmetics"></canvas>
-          <figcaption id="live3d-name">Live preview</figcaption>
-          <a class="btn primary small live3d-cta" href="/cosmetics">Try everything on</a>
-        </figure>
-        <figure class="window shot-frame"><img src="/assets/shots/locker-aura.webp" srcset="/assets/shots/locker-aura-sm.webp 960w, /assets/shots/locker-aura.webp 1920w" sizes="(max-width: 860px) 100vw, 300px" width="1920" height="1057" loading="lazy" alt="Locker: auras"><figcaption>Auras</figcaption></figure>
-        <figure class="window shot-frame"><img src="/assets/shots/locker-capes.webp" srcset="/assets/shots/locker-capes-sm.webp 960w, /assets/shots/locker-capes.webp 1920w" sizes="(max-width: 860px) 100vw, 300px" width="1920" height="1057" loading="lazy" alt="Locker: capes"><figcaption>Capes</figcaption></figure>
+        <article class="tile t-friends">
+          <img src="/assets/shots/friends-sm.webp" width="960" height="528" loading="lazy" alt="The friends list in game">
+          <div class="tile-text">
+            <h3>Friends and chat</h3>
+            <p>See where your friends play, join them in one click, and chat in game or in the launcher.</p>
+          </div>
+        </article>
+
+        <article class="tile t-page">
+          <img src="/assets/shots/feed-sm.webp" width="960" height="528" loading="lazy" alt="The feed in game">
+          <div class="tile-text">
+            <h3>Your own page</h3>
+            <p>A background, bio, song and socials at comclient.xyz/u/yourname, plus a 24-hour feed.</p>
+          </div>
+        </article>
+
+        <article class="tile t-mods">
+          <h3>Modules</h3>
+          <ul class="chips" aria-label="Some of the modules">
+            <li>Glass Hotbar</li><li>Glass Chat</li><li>Bloom</li><li>Motion Blur</li><li>Custom Sky</li><li>Custom Fog</li>
+            <li>Item Physics</li><li>Trails</li><li>Hit Splash</li><li>Death Animations</li><li>Glint Colour</li><li>Freelook</li>
+            <li>Zoom</li><li>Waypoints</li><li>Keystrokes</li><li>Armor HUD</li><li>Potion HUD</li><li>Auto Reconnect</li>
+            <li>Chunk Borders</li><li>Hitboxes</li><li>Spotify</li><li>Discord Presence</li><li>Emotes</li><li>17 fonts</li>
+          </ul>
+        </article>
+
+        <article class="tile t-fast">
+          <h3>Fast on any PC</h3>
+          <p>Built on Fabric with Sodium and Lithium. The launcher's Auto-optimise picks memory and settings for your hardware.</p>
+        </article>
       </div>
     </section>
 
     <!-- ============================================================ launcher -->
     <section id="launcher" class="section">
       <div class="sec-head">
-        <span class="eyebrow">Launcher</span>
         <h2>One launcher. Zero setup.</h2>
         <p>It installs Minecraft, Fabric, Java and Com Client by itself and keeps them up to date.</p>
       </div>
@@ -192,7 +157,6 @@
     <!-- ============================================================ community -->
     <section id="community" class="section">
       <div class="sec-head">
-        <span class="eyebrow">Community</span>
         <h2>Every player gets a page</h2>
         <p>Your level, play time, badges, PvP tiers and cosmetics on <b>comclient.xyz/u/yourname</b>. Make it private any time in game.</p>
       </div>
@@ -200,7 +164,7 @@
         <div class="glass top-week">
           <h3>Most played this week</h3>
           <div id="top-week"><p class="loading">Loading…</p></div>
-          <a class="more" href="/players">All leaderboards →</a>
+          <a class="more" href="/players">All leaderboards</a>
         </div>
         <div class="glass find-box">
           <h3>Find a player</h3>
@@ -222,17 +186,15 @@
     <!-- ============================================================ news -->
     <section id="news" class="section">
       <div class="sec-head">
-        <span class="eyebrow">News</span>
         <h2>What's happening</h2>
-        <p>The same news you see in the launcher and in game. <a href="/players">See who plays the most →</a></p>
+        <p>The same news you see in the launcher and in game.</p>
       </div>
       <div class="news" id="news-list"><p class="loading">Loading…</p></div>
     </section>
 
     <!-- ============================================================ faq -->
-    <section class="section faq">
+    <section class="section faq" id="faq">
       <div class="sec-head">
-        <span class="eyebrow">Questions</span>
         <h2>Good to know</h2>
       </div>
       <details class="glass"><summary>Is Com Client free?</summary><p>Yes. The client, the launcher and the cosmetics are free.</p></details>
@@ -251,14 +213,14 @@
       <a class="btn primary big" href="https://github.com/troxytele/com-client-launcher/releases/latest" data-download>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7H3zM11.5 4.3 21 3v8.4h-9.5zM3 12.6h7.5v7L3 18.5zM11.5 12.6H21V21l-9.5-1.3z"/></svg>
         Download for Windows
-      </a>
-      <p class="fine"><span data-version>Newest version</span> · <a href="https://github.com/troxytele/com-client-launcher/releases" rel="noopener">all versions</a></p>
+     </a>
+      <p class="fine"><span data-version>Newest version</span>, free. <a href="/download">Requirements and install steps</a></p>
     </section>
   </main>
 
   <footer class="footer">
     <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
-    <nav><a href="/players">Players</a><a href="/help">Help</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/#download">Download</a></nav>
+    <nav><a href="/players">Players</a><a href="/help">Help</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/download">Download</a></nav>
     <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
   </footer>
 </body>

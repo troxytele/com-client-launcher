@@ -8,14 +8,14 @@
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((items) => {
         list.textContent = "";
-        for (const n of items.slice(0, 6)) {
+        for (const n of items.slice(0, 3)) {
           const a = el("article", "glass");
           const meta = el("div", "meta");
           if (n.tag) meta.append(el("span", null, n.tag));
           if (n.date) meta.append(document.createTextNode(n.date));
           a.append(meta, el("h3", null, n.title), el("p", null, n.body));
           if (n.url && /^https:\/\//.test(n.url)) {
-            const link = el("a", null, "Read more →");
+            const link = el("a", null, "Read more");
             link.href = n.url;
             link.rel = "noopener";
             a.append(link);
@@ -108,15 +108,15 @@
     } else start();
   }
 
-  const stat = document.getElementById("live-stat");
-  if (stat) {
+  // ---- live: how many people play right now
+  const pill = document.getElementById("live-pill");
+  if (pill) {
     get("/public/stats")
       .then((s) => {
         if (!s.players) return;
-        stat.textContent = "";
-        const b = el("b", "live");
-        b.append(el("i"), document.createTextNode(s.online.toLocaleString()));
-        stat.append(b, el("span", null, `online now · ${s.players.toLocaleString()} players`));
+        pill.querySelector("span").textContent = s.online > 0 ? `${s.online.toLocaleString()} playing now` : `${s.players.toLocaleString()} players`;
+        if (!s.online) pill.querySelector("i").hidden = true;
+        pill.hidden = false;
       })
       .catch(() => {});
   }
