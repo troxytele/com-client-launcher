@@ -259,7 +259,7 @@ h2 { font-size: clamp(34px, 4.6vw, 56px); line-height: 1.04; letter-spacing: -.0
 
 /* ---------------------------------------------------------------- live Click GUI (assets/clickgui.js) */
 .cg { position: relative; overflow: hidden; height: var(--cg-h, 0); background: #07070a; }
-.cg::before { content: ""; position: absolute; inset: -20px; background: url("/assets/shots/world-sm.webp") center/cover; filter: blur(10px) brightness(.5) saturate(1.1); }
+.cg::before { content: ""; position: absolute; inset: -20px; background: url("/assets/shots/sky-planet-sm.webp") center/cover; filter: blur(10px) brightness(.5) saturate(1.1); }
 .cg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 0%, rgba(0,0,0,.15), rgba(0,0,0,.55)); }
 .cg-screen { position: absolute; z-index: 1; left: 0; top: 0; width: 960px; height: 528px; transform-origin: 0 0; color: #fff; font-family: "Poppins", system-ui, sans-serif; font-weight: 500; user-select: none; -webkit-font-smoothing: antialiased; }
 .cg-screen button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
@@ -322,3 +322,11 @@ h2 { font-size: clamp(34px, 4.6vw, 56px); line-height: 1.04; letter-spacing: -.0
 .cg-empty { grid-column: 1 / -1; text-align: center; padding-top: 40px; font-size: 9px; color: rgba(255,255,255,.5); }
 .cg-hint { position: absolute; left: 0; right: 0; bottom: 9px; text-align: center; font-size: 6.75px; color: rgba(255,255,255,.35); white-space: pre; }
 .shot.cg { height: 100%; }
+
+/* launcher screenshots */
+.launcher-shots { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: 14px; margin-bottom: 14px; }
+.lshot { position: relative; margin: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line2); background: #0a0c14; box-shadow: 0 30px 70px -30px #000; }
+.lshot.main { grid-row: span 2; }
+.lshot img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+.lshot figcaption { position: absolute; left: 12px; bottom: 10px; padding: 3px 11px; border-radius: 99px; font-size: 13px; background: rgba(0,0,0,.6); border: 1px solid var(--line2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+@media (max-width: 860px) { .launcher-shots { grid-template-columns: 1fr 1fr; } .lshot.main { grid-column: 1 / -1; grid-row: auto; } }
