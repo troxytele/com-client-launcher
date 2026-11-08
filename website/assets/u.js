@@ -254,6 +254,7 @@
           m.volume = Math.min(1, Math.max(0, v));
           m.muted = m.volume === 0;
           vfill.style.width = m.volume * 100 + "%";
+          $("vol-num").textContent = String(Math.round(m.volume * 100));
           track.setAttribute("aria-valuenow", String(Math.round(m.volume * 100)));
           box.classList.toggle("muted", m.volume === 0);
           box.classList.toggle("low", m.volume > 0 && m.volume < 0.5);
@@ -275,10 +276,19 @@
         track.addEventListener("pointerdown", (e) => {
           volAt(e.clientX);
           track.setPointerCapture(e.pointerId);
+          track.classList.add("drag");
           const move = (ev) => volAt(ev.clientX);
           track.addEventListener("pointermove", move);
-          track.addEventListener("pointerup", () => track.removeEventListener("pointermove", move), { once: true });
+          track.addEventListener("pointerup", () => {
+            track.removeEventListener("pointermove", move);
+            track.classList.remove("drag");
+          }, { once: true });
         });
+        // scroll over the volume pill to turn it up or down
+        box.addEventListener("wheel", (e) => {
+          e.preventDefault();
+          setVol(m.volume + (e.deltaY < 0 ? 0.05 : -0.05));
+        }, { passive: false });
         track.addEventListener("keydown", (e) => {
           if (e.key === "ArrowRight" || e.key === "ArrowUp") setVol(m.volume + 0.1);
           if (e.key === "ArrowLeft" || e.key === "ArrowDown") setVol(m.volume - 0.1);

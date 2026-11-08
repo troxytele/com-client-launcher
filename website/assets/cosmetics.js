@@ -7,6 +7,8 @@
   const FIELD = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura" };
   const COLOR = { halos: "haloColor", hats: "hatColor", auras: "auraColor" };
   const SWATCHES = [0xffe07a, 0xffffff, 0xff6fae, 0xb9a6ff, 0x5aa9ff, 0x4fe3a0, 0xff5a5a, 0xff9f43, 0x1a1a1a];
+  // cat and dog ears come in real fur colours: white, cream, golden, ginger, brown, dark brown, grey, black
+  const EAR_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 0x8c8782, 0x1e1a19];
   let catalog = null;
   let kind = "capes";
   let viewer = null;
@@ -135,7 +137,7 @@
     const cf = COLOR[kind];
     cbox.hidden = !cf || (kind === "hats" && look.hat === "crown");
     if (cf) {
-      for (const c of SWATCHES) {
+      for (const c of kind === "hats" ? EAR_COLORS : SWATCHES) {
         const s = el("button", "swatch" + (look[cf] === c ? " on" : ""));
         s.style.background = hex(c);
         s.title = hex(c);

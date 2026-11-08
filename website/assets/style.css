@@ -261,7 +261,7 @@ h2 { font-size: clamp(34px, 4.6vw, 56px); line-height: 1.04; letter-spacing: -.0
 .cg { position: relative; overflow: hidden; height: var(--cg-h, 0); background: #07070a; }
 .cg::before { content: ""; position: absolute; inset: -20px; background: url("/assets/shots/sky-planet-sm.webp") center/cover; filter: blur(10px) brightness(.5) saturate(1.1); }
 .cg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 0%, rgba(0,0,0,.15), rgba(0,0,0,.55)); }
-.cg-screen { position: absolute; z-index: 1; left: 0; top: 0; width: 760px; height: 418px; transform-origin: 0 0; color: #fff; font-family: "Poppins", system-ui, sans-serif; font-weight: 500; user-select: none; -webkit-font-smoothing: antialiased; }
+.cg-screen { position: absolute; z-index: 1; left: 0; top: 0; width: 620px; height: 342px; transform-origin: 0 0; color: #fff; font-family: "Poppins", system-ui, sans-serif; font-weight: 500; user-select: none; -webkit-font-smoothing: antialiased; }
 .cg-screen button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
 .cg-ic { display: inline-block; width: var(--s, 12px); height: var(--s, 12px); background: currentColor; -webkit-mask: var(--ic) center / contain no-repeat; mask: var(--ic) center / contain no-repeat; flex: none; }
 .cg-top { position: absolute; left: 0; right: 0; top: 13px; height: 26px; }

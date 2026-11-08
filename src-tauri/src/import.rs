@@ -1,5 +1,6 @@
-//! Import game settings (options.txt: video settings, sensitivity, keybinds ...) and the server list from other
-//! launchers' instances into a Com Client profile. Never mods.
+//! Other launchers' instances (Minecraft Launcher, Modrinth App, Prism, CurseForge, Lunar, NoRisk ...):
+//! copy their settings, keybinds and server list into a profile, or bring a whole instance over as a new profile
+//! (with its packs, shaders, worlds, and its mods when they are Fabric mods for the launcher's Minecraft version).
 
 use serde::Serialize;
 use std::collections::HashSet;
@@ -18,6 +19,91 @@ pub struct Source {
     /// resource packs in its resourcepacks folder, and their size in bytes
     pub packs: usize,
     pub packs_bytes: u64,
+    /// Minecraft version and mod loader when we can tell ("" when not)
+    pub version: String,
+    pub loader: String,
+    pub mods: usize,
+    /// its mods would run in Com Client (Fabric, the launcher's Minecraft version)
+    pub mods_ok: bool,
+    pub shaders: usize,
+    pub worlds: usize,
+    pub worlds_bytes: u64,
+}
+
+fn count_dir(p: &Path, f: impl Fn(&Path) -> bool) -> usize {
+    std::fs::read_dir(p).map(|rd| rd.flatten().filter(|e| f(&e.path())).count()).unwrap_or(0)
+}
+
+fn jars(dir: &Path) -> Vec<PathBuf> {
+    std::fs::read_dir(dir.join("mods"))
+        .map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x.eq_ignore_ascii_case("jar"))).collect())
+        .unwrap_or_default()
+}
+
+/// A mod jar's fabric.mod.json (None for non-Fabric jars).
+fn fabric_meta(jar: &Path) -> Option<serde_json::Value> {
+    use std::io::Read;
+    let mut z = zip::ZipArchive::new(std::fs::File::open(jar).ok()?).ok()?;
+    let mut e = z.by_name("fabric.mod.json").ok()?;
+    let mut t = String::new();
+    e.read_to_string(&mut t).ok()?;
+    serde_json::from_str(&t).ok()
+}
+
+/// Minecraft version and loader of an instance: from the launcher's own instance file when there is one, otherwise
+/// guessed from its mods.
+fn detect(dir: &Path) -> (String, String) {
+    let read = |p: PathBuf| std::fs::read_to_string(p).ok().and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok());
+    let parent = dir.parent().unwrap_or(dir).to_path_buf();
+    // Prism / MultiMC: mmc-pack.json next to the .minecraft folder
+    if let Some(v) = read(parent.join("mmc-pack.json")) {
+        let comps = v["components"].as_array().cloned().unwrap_or_default();
+        let ver = comps.iter().find(|c| c["uid"] == "net.minecraft").and_then(|c| c["version"].as_str()).unwrap_or_default();
+        let loader = comps.iter().find_map(|c| match c["uid"].as_str()? {
+            "net.fabricmc.fabric-loader" => Some("Fabric"),
+            "org.quiltmc.quilt-loader" => Some("Quilt"),
+            "net.minecraftforge" => Some("Forge"),
+            "net.neoforged" => Some("NeoForge"),
+            _ => None,
+        });
+        return (ver.to_string(), loader.unwrap_or("Vanilla").to_string());
+    }
+    // CurseForge: minecraftinstance.json in the instance folder
+    if let Some(v) = read(dir.join("minecraftinstance.json")) {
+        let ver = v["gameVersion"].as_str().unwrap_or_default().to_string();
+        let name = v["baseModLoader"]["name"].as_str().unwrap_or_default().to_lowercase();
+        let loader = if name.starts_with("fabric") { "Fabric" } else if name.starts_with("neoforge") { "NeoForge" } else if name.starts_with("forge") { "Forge" } else if name.starts_with("quilt") { "Quilt" } else { "Vanilla" };
+        return (ver, loader.to_string());
+    }
+    // Modrinth App (older versions): profile.json in the profile folder
+    if let Some(v) = read(dir.join("profile.json")) {
+        let m = &v["metadata"];
+        if let Some(ver) = m["game_version"].as_str() {
+            let l = m["loader"].as_str().unwrap_or("vanilla");
+            let loader = match l { "fabric" => "Fabric", "quilt" => "Quilt", "forge" => "Forge", "neoforge" => "NeoForge", _ => "Vanilla" };
+            return (ver.to_string(), loader.to_string());
+        }
+    }
+    // otherwise: what the mods say
+    let list = jars(dir);
+    if list.is_empty() {
+        return (String::new(), String::new());
+    }
+    let mut fabric = 0;
+    let mut fits = 0;
+    for j in list.iter().take(120) {
+        if let Some(meta) = fabric_meta(j) {
+            fabric += 1;
+            let mc = meta["depends"]["minecraft"].to_string();
+            if mc.contains(crate::config::MC_VERSION) {
+                fits += 1;
+            }
+        }
+    }
+    if fabric == 0 {
+        return (String::new(), "Not Fabric".into());
+    }
+    (if fits * 2 >= fabric.min(10) && fits > 0 { crate::config::MC_VERSION.into() } else { String::new() }, "Fabric".into())
 }
 
 /// Size of a file or a whole folder.
@@ -117,7 +203,18 @@ pub fn scan(own_root: &Path) -> Vec<Source> {
                 &d
             };
             let packs = packs_in(&d);
+            let (version, loader) = detect(&d);
+            let mods = jars(&d).len();
+            let saves = d.join("saves");
+            let worlds = count_dir(&saves, |p| p.join("level.dat").is_file());
             out.push(Source {
+                mods_ok: mods > 0 && loader == "Fabric" && version == crate::config::MC_VERSION,
+                version,
+                loader,
+                mods,
+                shaders: count_dir(&d.join("shaderpacks"), |p| p.is_dir() || p.extension().is_some_and(|x| x.eq_ignore_ascii_case("zip"))),
+                worlds,
+                worlds_bytes: if worlds > 0 { size_of(&saves) } else { 0 },
                 packs: packs.len(),
                 packs_bytes: packs.iter().map(|p| size_of(p)).sum(),
                 launcher: launcher.to_string(),
@@ -237,6 +334,88 @@ pub fn apply(source: &str, target: &Path, settings: bool, keybinds: bool, server
     Ok(format!("Imported {}", done.join(" and ")))
 }
 
+/// What to bring over when an instance becomes a new profile.
+#[derive(serde::Deserialize, Clone, Copy)]
+pub struct Parts {
+    pub settings: bool,
+    pub keybinds: bool,
+    pub servers: bool,
+    pub packs: bool,
+    pub shaders: bool,
+    pub worlds: bool,
+    pub mods: bool,
+}
+
+/// Mods Com Client brings itself: never copied (two copies of the same mod stop the game).
+const OWN_MODS: &[&str] = &["fabric-api", "fabric", "comclient", "replaymod", "fabricloader", "java", "minecraft"];
+/// Speed mods the launcher can add: when the instance brings its own, the profile uses those instead.
+const SPEED_MODS: &[&str] = &["sodium", "lithium", "ferritecore", "entityculling"];
+
+/// Makes a new profile out of another launcher's instance. Returns the new profile's id.
+pub fn instance_to_profile(paths: &crate::paths::Paths, source: &Path, name: &str, parts: Parts, progress: &dyn Fn(u64, u64, &str))
+    -> anyhow::Result<String> {
+    use crate::store::{self, Profile, Profiles};
+    if !source.join("options.txt").is_file() && !source.join("mods").is_dir() {
+        anyhow::bail!("That folder isn't a Minecraft instance");
+    }
+    let mut p = Profile::default();
+    p.id = format!("p{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
+    p.name = name.trim().chars().take(40).collect::<String>();
+    if p.name.is_empty() {
+        p.name = "Imported".into();
+    }
+    p.created = crate::auth::now();
+    let dir = store::game_dir(paths, &p);
+    std::fs::create_dir_all(&dir)?;
+
+    // settings and the server list
+    if parts.settings || parts.keybinds || parts.servers {
+        let _ = apply(&source.to_string_lossy(), &dir, parts.settings, parts.keybinds, parts.servers);
+    }
+    // the folders, all counted for one progress bar
+    let mut todo: Vec<(PathBuf, PathBuf, &str)> = Vec::new();
+    if parts.packs {
+        for f in packs_in(source) {
+            todo.push((f.clone(), dir.join("resourcepacks").join(f.file_name().unwrap_or_default()), "resource packs"));
+        }
+    }
+    if parts.shaders && source.join("shaderpacks").is_dir() {
+        todo.push((source.join("shaderpacks"), dir.join("shaderpacks"), "shader packs"));
+    }
+    if parts.worlds && source.join("saves").is_dir() {
+        todo.push((source.join("saves"), dir.join("saves"), "worlds"));
+    }
+    if parts.mods {
+        for j in jars(source) {
+            let id = fabric_meta(&j).and_then(|m| m["id"].as_str().map(String::from)).unwrap_or_default();
+            if OWN_MODS.contains(&id.as_str()) {
+                continue;
+            }
+            if SPEED_MODS.contains(&id.as_str()) {
+                p.performance_mods = false;
+            }
+            todo.push((j.clone(), dir.join("mods").join(j.file_name().unwrap_or_default()), "mods"));
+        }
+        if source.join("config").is_dir() {
+            todo.push((source.join("config"), dir.join("config"), "mod settings"));
+        }
+    }
+    let total: u64 = todo.iter().map(|(f, _, _)| size_of(f)).sum();
+    let mut done = 0u64;
+    for (from, to, what) in &todo {
+        if let Some(parent) = to.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        copy_counted(from, to, &mut done, total.max(1), what, progress)?;
+    }
+
+    let mut ps = Profiles::load(paths);
+    let id = p.id.clone();
+    ps.list.push(p);
+    ps.save(paths)?;
+    Ok(id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -302,5 +481,39 @@ mod tests {
         find(&base.join("instances"), 2, &mut out);
         assert_eq!(out, vec![inst]);
         let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn whole_instance_becomes_a_profile() {
+        use std::io::Write;
+        let root = std::env::temp_dir().join(format!("cc-inst-{}", uuid::Uuid::new_v4().simple()));
+        let inst = root.join("Prism").join("My Pack");
+        let mc = inst.join(".minecraft");
+        std::fs::create_dir_all(mc.join("mods")).unwrap();
+        std::fs::create_dir_all(mc.join("saves").join("World").join("region")).unwrap();
+        std::fs::write(mc.join("saves").join("World").join("level.dat"), b"x").unwrap();
+        std::fs::write(mc.join("options.txt"), "renderDistance:20\nkey_key.jump:key.keyboard.v\n").unwrap();
+        std::fs::write(inst.join("mmc-pack.json"), format!(r#"{{"components":[{{"uid":"net.minecraft","version":"{}"}},{{"uid":"net.fabricmc.fabric-loader","version":"0.16"}}]}}"#, crate::config::MC_VERSION)).unwrap();
+        for (file, id) in [("sodium.jar", "sodium"), ("fabric-api.jar", "fabric-api"), ("cool.jar", "coolmod")] {
+            let mut z = zip::ZipWriter::new(std::fs::File::create(mc.join("mods").join(file)).unwrap());
+            z.start_file("fabric.mod.json", zip::write::SimpleFileOptions::default()).unwrap();
+            z.write_all(format!(r#"{{"id":"{id}","depends":{{"minecraft":"~{}"}}}}"#, crate::config::MC_VERSION).as_bytes()).unwrap();
+            z.finish().unwrap();
+        }
+        let (v, l) = detect(&mc);
+        assert_eq!((v.as_str(), l.as_str()), (crate::config::MC_VERSION, "Fabric"));
+        let paths = crate::paths::Paths::new(root.join("launcher"));
+        crate::store::Profiles::load(&paths).save(&paths).unwrap();
+        let all = Parts { settings: true, keybinds: true, servers: true, packs: true, shaders: true, worlds: true, mods: true };
+        let id = instance_to_profile(&paths, &mc, "My Pack", all, &|_, _, _| {}).unwrap();
+        let p = crate::store::Profiles::load(&paths).get(&id);
+        let dir = crate::store::game_dir(&paths, &p);
+        assert!(dir.join("mods").join("sodium.jar").is_file());
+        assert!(dir.join("mods").join("cool.jar").is_file());
+        assert!(!dir.join("mods").join("fabric-api.jar").exists());
+        assert!(dir.join("saves").join("World").join("level.dat").is_file());
+        assert!(std::fs::read_to_string(dir.join("options.txt")).unwrap().contains("renderDistance:20"));
+        assert!(!p.performance_mods);
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

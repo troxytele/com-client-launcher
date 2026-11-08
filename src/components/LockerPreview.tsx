@@ -136,7 +136,7 @@ function makeHat(style: string, color: number) {
       const ear = new THREE.Group();
       const outer = box(3, 3, 1, color);
       const inner = box(1.6, 1.8, 0.3, 0xffb3c7);
-      inner.position.set(0, -0.3, -0.6);
+      inner.position.set(0, -0.3, 0.6); // the pink inside faces forward (+z: the face's side)
       ear.add(outer, inner);
       ear.position.set(side * 2.6, 9.6, 0);
       ear.rotation.z = side * -0.25;
@@ -147,7 +147,7 @@ function makeHat(style: string, color: number) {
     for (const side of [-1, 1]) {
       for (const [a0, a1, u0, u1, z0, z1, part] of DOG_EAR) {
         const col = part === "p" ? 0xf6a9bd : part === "d" ? dark : color;
-        // three.js: +z is the front, so the mod's "back" runs the other way
+        // three.js: the face is at +z, so the mod's "back" (+z there) runs the other way
         g.add(box(a1 - a0, u1 - u0, z1 - z0, col, (side * (a0 + a1)) / 2, 8.5 + (u0 + u1) / 2, -(z0 + z1) / 2));
       }
     }

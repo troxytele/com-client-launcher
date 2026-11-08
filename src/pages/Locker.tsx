@@ -15,7 +15,8 @@ const TABS: { id: Tab; label: string; field: keyof Look }[] = [
   { id: "auras", label: "Auras", field: "aura" },
 ];
 const HALO_COLORS = [0xffe07a, 0xffffff, 0x8fd8ff, 0xb98cff, 0xff7ab6, 0xff5a5a, 0x7dff9a, 0xffa048];
-const HAT_COLORS = [0xededed, 0x2b2b30, 0xf2a65a, 0x8a5a3c, 0xffb3c7, 0xb98cff, 0x8fd8ff, 0xff5a5a];
+// ears come in real fur colours: white, cream, golden, ginger, brown, dark brown, grey, black
+const HAT_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 0x8c8782, 0x1e1a19];
 const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a, 0xffffff, 0x4f7bff];
 
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
@@ -166,6 +167,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               colors={tab === "halos" ? HALO_COLORS : tab === "hats" ? HAT_COLORS : AURA_COLORS}
               value={tab === "halos" ? look.haloColor : tab === "hats" ? look.hatColor : look.auraColor}
               rainbow={tab === "auras"}
+              custom={tab !== "hats"}
               onChange={(c) => setLook({ ...look, ...(tab === "halos" ? { haloColor: c } : tab === "hats" ? { hatColor: c } : { auraColor: c }) })}
             />
           )}
@@ -235,7 +237,7 @@ function WingArt({ url }: { url: string | null }) {
   );
 }
 
-function ColourBar({ colors, value, rainbow, onChange }: { colors: number[]; value: number; rainbow: boolean; onChange: (c: number) => void }) {
+function ColourBar({ colors, value, rainbow, custom = true, onChange }: { colors: number[]; value: number; rainbow: boolean; custom?: boolean; onChange: (c: number) => void }) {
   return (
     <div className="colour-bar">
       <span className="muted small">Colour</span>
@@ -245,10 +247,12 @@ function ColourBar({ colors, value, rainbow, onChange }: { colors: number[]; val
       {rainbow && (
         <button className={"swatch rainbow" + (value === -1 ? " on" : "")} onClick={() => onChange(-1)} title="Rainbow" />
       )}
-      <label className="swatch custom" title="Any colour">
-        <input type="color" value={hex(value === -1 ? 0xa77bff : value)} onChange={(e) => onChange(parseInt(e.target.value.slice(1), 16))} />
-        <Icon name="plus" size={12} />
-      </label>
+      {custom && (
+        <label className="swatch custom" title="Any colour">
+          <input type="color" value={hex(value === -1 ? 0xa77bff : value)} onChange={(e) => onChange(parseInt(e.target.value.slice(1), 16))} />
+          <Icon name="plus" size={12} />
+        </label>
+      )}
     </div>
   );
 }

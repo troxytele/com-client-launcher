@@ -4096,3 +4096,112 @@ svg.flip {
   justify-content: space-between;
   gap: 12px;
 }
+.imp-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 2px 0 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+}
+.imp-tabs button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.imp-tabs button.on {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+.imp-scan {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 4px;
+}
+.imp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.imp-inst {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "tag arrow" "name arrow" "meta arrow";
+  align-items: center;
+  text-align: left;
+  gap: 1px 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.imp-inst:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+}
+.imp-inst .imp-launcher {
+  grid-area: tag;
+  font-size: 11px;
+  color: var(--muted);
+}
+.imp-inst b {
+  grid-area: name;
+}
+.imp-inst .small {
+  grid-area: meta;
+}
+.imp-inst svg {
+  grid-area: arrow;
+  color: var(--muted);
+}
+.imp-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.imp-parts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.imp-part {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  cursor: pointer;
+}
+.imp-part small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+.imp-part.off {
+  opacity: 0.45;
+  cursor: default;
+}

@@ -5,6 +5,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.13",
+    items: [
+      ["download", "Bring your old setup", "Profiles → Import → From another launcher: pick an instance from Modrinth App, NoRisk, Lunar, Feather, Prism, CurseForge, ATLauncher, GDLauncher or the Minecraft Launcher, choose what to bring (settings, servers, worlds, packs, shaders, mods) and it becomes a new profile."],
+      ["shirt", "Ears in real fur colours", "Cat and dog ears now come in white, cream, golden, ginger, brown, dark brown, grey and black, and the cat ears' pink inside faces the right way."],
+    ],
+  },
+  {
     version: "0.6.12",
     items: [
       ["download", "Import anything", "Profiles → Import (or Mods → Modpacks): drop a .mrpack or .ccprofile on the launcher, pick it, or paste a Modrinth link. You see what it is before it installs."],

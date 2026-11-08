@@ -46,7 +46,15 @@ export type ImportSource = {
   keybinds: number;
   packs: number;
   packs_bytes: number;
+  version: string;
+  loader: string;
+  mods: number;
+  mods_ok: boolean;
+  shaders: number;
+  worlds: number;
+  worlds_bytes: number;
 };
+export type ImportParts = { settings: boolean; keybinds: boolean; servers: boolean; packs: boolean; shaders: boolean; worlds: boolean; mods: boolean };
 export type ImportProgress = { done: number; total: number; name: string };
 
 export type Info = {
@@ -173,6 +181,7 @@ export const api = {
   crashes: () => invoke<CrashFile[]>("crash_list"),
   crashRead: (path: string) => invoke<string>("crash_read", { path }),
   importScan: () => invoke<ImportSource[]>("import_scan"),
+  importInstance: (source: string, name: string, parts: ImportParts) => invoke<string>("import_instance", { source, name, parts }),
   importApply: (source: string, profile: string, settings: boolean, keybinds: boolean, servers: boolean, packs: boolean) =>
     invoke<string>("import_apply", { source, profile, settings, keybinds, servers, packs }),
 };

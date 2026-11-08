@@ -110,6 +110,24 @@ struct ImportProgress {
 }
 
 #[tauri::command]
+async fn import_instance(app: AppHandle, state: State<'_, AppState>, source: String, name: String, parts: import::Parts) -> Res<String> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || {
+        let last = std::sync::Mutex::new(std::time::Instant::now() - std::time::Duration::from_secs(1));
+        import::instance_to_profile(&paths, std::path::Path::new(&source), &name, parts, &|d, t, what| {
+            let mut l = last.lock().unwrap();
+            if d >= t || l.elapsed().as_millis() >= 50 {
+                *l = std::time::Instant::now();
+                let _ = app.emit("import-progress", ImportProgress { done: d, total: t, name: what.to_string() });
+            }
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+    .map_err(err)
+}
+
+#[tauri::command]
 async fn import_apply(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -1021,6 +1039,7 @@ pub fn run() {
             crash_read,
             import_scan,
             import_apply,
+            import_instance,
             icon_names,
             icons,
             icon_upload,

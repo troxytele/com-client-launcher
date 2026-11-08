@@ -89,23 +89,28 @@ button.chip:hover { background: rgba(255,255,255,.12); }
 .song-bar { position: relative; height: 6px; border-radius: 6px; background: rgba(255,255,255,.1); cursor: pointer; touch-action: none; }
 .song-bar:hover { height: 8px; margin: -1px 0; }
 .song-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #8f7cff, var(--accent)); }
-.song-vol { flex: none; display: flex; align-items: center; gap: 4px; }
-.vol-btn { width: 34px; height: 34px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; display: grid; place-items: center; transition: background .2s, color .2s; }
-.vol-btn:hover { background: rgba(255,255,255,.07); color: var(--text); }
-.vol-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.song-vol { flex: none; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 4px; border-radius: 20px;
+  background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); transition: background .2s, box-shadow .2s; }
+.song-vol:hover { background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
+.vol-btn { width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: var(--text); cursor: pointer; display: grid; place-items: center; transition: background .2s, color .2s; }
+.vol-btn:hover { background: rgba(255,255,255,.1); }
+.vol-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .vol-btn .spk { fill: currentColor; }
 .vol-btn .mute, .song-vol.muted .w1, .song-vol.muted .w2, .song-vol.low .w2 { display: none; }
 .song-vol.muted .mute { display: inline; }
-.vol-track { position: relative; width: 84px; height: 22px; cursor: pointer; touch-action: none; }
-.vol-track::before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 4px; background: rgba(255,255,255,.12); }
-.vol-fill { position: absolute; left: 0; top: 9px; height: 4px; border-radius: 4px; background: var(--text); pointer-events: none; }
-.vol-fill::after { content: ""; position: absolute; right: -6px; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5); transform: scale(0); transition: transform .15s; }
-.vol-track:hover .vol-fill::after, .vol-track:focus-visible .vol-fill::after { transform: scale(1); }
-.vol-track:hover .vol-fill { background: var(--accent); }
-.vol-track:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.song-vol.muted .vol-btn { color: var(--muted); }
+.vol-track { position: relative; width: 96px; height: 24px; cursor: pointer; touch-action: none; }
+.vol-track::before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 6px; border-radius: 6px; background: rgba(255,255,255,.1); }
+.vol-fill { position: absolute; left: 0; top: 9px; height: 6px; min-width: 6px; border-radius: 6px; background: linear-gradient(90deg, #8f7cff, var(--accent)); pointer-events: none; transition: filter .2s; }
+.vol-fill::after { content: ""; position: absolute; right: -7px; top: -4px; width: 14px; height: 14px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 3px rgba(185,166,255,.25), 0 2px 8px rgba(0,0,0,.5); transition: transform .15s, box-shadow .15s; }
+.vol-track:hover .vol-fill::after, .vol-track.drag .vol-fill::after { transform: scale(1.15); box-shadow: 0 0 0 5px rgba(185,166,255,.28), 0 2px 8px rgba(0,0,0,.5); }
+.song-vol.muted .vol-fill { filter: grayscale(1) brightness(.6); }
+.vol-track:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+.vol-num { width: 26px; text-align: right; font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
 .p-song.waiting .song-play { animation: nudge 1.6s ease-in-out infinite; }
 @keyframes nudge { 50% { box-shadow: 0 0 0 7px rgba(185,166,255,.18); } }
-@media (max-width: 520px) { .vol-track { display: none; } }
+@media (max-width: 520px) { .vol-track, .vol-num { display: none; } .song-vol { padding: 0 4px; } }
 
 /* ---------------------------------------------------------------- players */
 .find { display: flex; gap: 10px; max-width: 620px; margin: 0 0 26px; padding: 8px; }
