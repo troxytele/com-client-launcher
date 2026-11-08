@@ -5,6 +5,10 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.16",
+    items: [["users", "Invite button", "Copy your invite link straight from the Friends page or the Locker."]],
+  },
+  {
     version: "0.6.15",
     items: [
       ["sparkle", "Points and unlocks", "Earn points by playing, with a daily streak bonus and by inviting friends, then unlock wings, halos, hats, auras and capes in the Locker. A few capes stay free."],
