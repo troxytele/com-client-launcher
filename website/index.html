@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/assets/pages.css">
   <script src="/assets/main.js" defer></script>
   <script src="/assets/site.js" defer></script>
+  <script src="/assets/viewer.js" defer></script>
   <script src="/assets/home.js" defer></script>
 </head>
 <body>
@@ -34,6 +35,7 @@
       <a href="/changelog">Changelog</a>
     </nav>
     <a class="btn primary small" href="/#download" data-download>Download</a>
+    <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false"><i></i><i></i><i></i></button>
   </header>
 
   <main>
@@ -154,9 +156,14 @@
           <li>Any colour, or rainbow</li>
           <li>Free for everyone right now</li>
         </ul>
+        <a class="btn ghost small cos-link" href="/cosmetics">Open the cosmetics gallery</a>
       </div>
       <div class="cos-shots">
-        <figure class="window shot-frame big"><img src="/assets/shots/locker-wings.webp" srcset="/assets/shots/locker-wings-sm.webp 960w, /assets/shots/locker-wings.webp 1920w" sizes="(max-width: 860px) 100vw, 600px" width="1920" height="1057" loading="lazy" alt="Locker: wings"><figcaption>Wings</figcaption></figure>
+        <figure class="window live3d big" id="live3d">
+          <canvas aria-label="A 3D player trying on Com Client cosmetics"></canvas>
+          <figcaption id="live3d-name">Live preview</figcaption>
+          <a class="btn primary small live3d-cta" href="/cosmetics">Try everything on</a>
+        </figure>
         <figure class="window shot-frame"><img src="/assets/shots/locker-aura.webp" srcset="/assets/shots/locker-aura-sm.webp 960w, /assets/shots/locker-aura.webp 1920w" sizes="(max-width: 860px) 100vw, 300px" width="1920" height="1057" loading="lazy" alt="Locker: auras"><figcaption>Auras</figcaption></figure>
         <figure class="window shot-frame"><img src="/assets/shots/locker-capes.webp" srcset="/assets/shots/locker-capes-sm.webp 960w, /assets/shots/locker-capes.webp 1920w" sizes="(max-width: 860px) 100vw, 300px" width="1920" height="1057" loading="lazy" alt="Locker: capes"><figcaption>Capes</figcaption></figure>
       </div>
@@ -181,6 +188,36 @@
       </div>
     </section>
 
+    <!-- ============================================================ community -->
+    <section id="community" class="section">
+      <div class="sec-head">
+        <span class="eyebrow">Community</span>
+        <h2>Every player gets a page</h2>
+        <p>Your level, play time, badges, PvP tiers and cosmetics on <b>comclient.xyz/u/yourname</b>. Make it private any time in game.</p>
+      </div>
+      <div class="community">
+        <div class="glass top-week">
+          <h3>Most played this week</h3>
+          <div id="top-week"><p class="loading">Loading…</p></div>
+          <a class="more" href="/players">All leaderboards →</a>
+        </div>
+        <div class="glass find-box">
+          <h3>Find a player</h3>
+          <form id="home-find" class="find-inline" role="search">
+            <input id="home-find-name" placeholder="Minecraft name or Com ID" maxlength="32" autocomplete="off" aria-label="Player name">
+            <button class="btn primary small" type="submit">Open</button>
+          </form>
+          <h3 class="badges-title">Badges</h3>
+          <div class="badge-list">
+            <div><img src="/assets/badges/developer.svg" alt=""><b>Developer</b><span>Makes Com Client</span></div>
+            <div><img src="/assets/badges/tester.svg" alt=""><b>Tester</b><span>Tries new versions first</span></div>
+            <div><img src="/assets/badges/early.svg" alt=""><b>Early Supporter</b><span>Joined before 2027</span></div>
+          </div>
+          <p class="fine">Shown next to the Com Client C on name tags, in the tab list and on profiles.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- ============================================================ news -->
     <section id="news" class="section">
       <div class="sec-head">
@@ -201,6 +238,7 @@
       <details class="glass"><summary>Can I get banned for using it?</summary><p>Com Client only has visual and quality-of-life modules: no cheats, no unfair advantages. Some servers have their own rules about client mods, so check the rules of the server you play on.</p></details>
       <details class="glass"><summary>Which Minecraft version?</summary><p>Minecraft Java Edition 1.21.11 with Fabric. You need a Minecraft Java account (Microsoft sign-in).</p></details>
       <details class="glass"><summary>Do I need to install Java or Fabric?</summary><p>No. The launcher downloads Minecraft, Java, Fabric and Com Client by itself and keeps them up to date.</p></details>
+      <details class="glass"><summary>How do I get my profile page?</summary><p>Play with Com Client once: your page is at comclient.xyz/u/ followed by your Minecraft name (or your Com ID). Add a bio, photo, song and socials in game under Profile, or set it to friends only.</p></details>
       <details class="glass"><summary>Can I use my own mods?</summary><p>Yes. Every profile has its own mods folder, and the launcher has a Modrinth browser for mods, resource packs, shaders and whole modpacks.</p></details>
     </section>
 

@@ -4,6 +4,16 @@
   const RELEASES = `https://github.com/${REPO}/releases`;
   const API = `https://api.github.com/repos/${REPO}/releases`;
 
+  // ---------------------------------------------------------------- phone menu
+  const toggle = document.querySelector(".nav-toggle");
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const open = document.body.classList.toggle("menu-open");
+      toggle.setAttribute("aria-expanded", String(open));
+    });
+    document.querySelectorAll(".nav nav a").forEach((a) => a.addEventListener("click", () => document.body.classList.remove("menu-open")));
+  }
+
   // ---------------------------------------------------------------- tabs
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => {
