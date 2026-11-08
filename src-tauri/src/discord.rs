@@ -11,7 +11,7 @@ enum Msg {
 
 static TX: OnceLock<Sender<Msg>> = OnceLock::new();
 
-const DOWNLOAD: &str = concat!("https://github.com/", "troxytele/com-client-launcher", "/releases/latest");
+const DOWNLOAD: &str = "https://comclient.xyz";
 
 /// Starts the Rich Presence thread (no-op without an application id).
 pub fn start(app_id: String) {
@@ -40,7 +40,7 @@ pub fn start(app_id: String) {
                             .state(state)
                             .timestamps(activity::Timestamps::new().start(started))
                             .assets(activity::Assets::new().large_image("logo").large_text("Com Client"))
-                            .buttons(vec![activity::Button::new("Get Com Client", DOWNLOAD)]),
+                            .buttons(vec![activity::Button::new("Download Com Client", DOWNLOAD)]),
                     )
                     .is_ok(),
                 Msg::Clear => c.clear_activity().is_ok(),

@@ -141,8 +141,8 @@ export default function App() {
   if (!updated || !info) {
     return (
       <div className="app">
-        {!updated && <Updater onDone={() => setUpdated(true)} />}
         <Splash leaving={false} />
+        {!updated && <Updater onDone={() => setUpdated(true)} />}
       </div>
     );
   }

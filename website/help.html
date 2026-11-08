@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Help · Com Client</title>
+  <meta name="description" content="How to install Com Client, sign in, and what to do when the game crashes or runs slowly.">
+  <meta name="theme-color" content="#050507">
+  <link rel="canonical" href="https://comclient.xyz/help">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Help · Com Client">
+  <meta property="og:description" content="How to install Com Client, sign in, and what to do when the game crashes or runs slowly.">
+  <meta property="og:image" content="https://comclient.xyz/assets/og.png">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/pages.css">
+  <script src="/assets/main.js" defer></script>
+  <script src="/assets/site.js" defer></script>
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="/"><img src="/assets/logo.png" alt=""><span>Com Client</span></a>
+    <nav>
+      <a href="/#features">Features</a>
+      <a href="/cosmetics">Cosmetics</a>
+      <a href="/players">Players</a>
+      <a href="/#news">News</a>
+      <a href="/help" class="on">Help</a>
+      <a href="/changelog">Changelog</a>
+    </nav>
+    <a class="btn primary small" href="/#download" data-download>Download</a>
+    <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false"><i></i><i></i><i></i></button>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <span class="eyebrow">Help</span>
+      <h2>How can we help?</h2>
+      <p>Installing, signing in, and what to do when something goes wrong.</p>
+    </section>
+    <nav class="help-toc glass">
+      <a href="#install">Install</a><a href="#login">Signing in</a><a href="#start">Game won't start</a><a href="#crash">It crashed</a><a href="#slow">Low FPS</a><a href="#mods">Mods &amp; packs</a><a href="#account">Your page &amp; privacy</a>
+    </nav>
+    <div class="help">
+      <article id="install" class="glass">
+        <h3>Install Com Client</h3>
+        <ol>
+          <li><b>Download</b> the launcher with the button at the top and run <code>Com Client Launcher Setup.exe</code>.</li>
+          <li>Windows may show "Windows protected your PC" because the launcher is new: click <b>More info</b>, then <b>Run anyway</b>.</li>
+          <li>Open the launcher and <b>sign in with Microsoft</b> (the account that owns Minecraft Java).</li>
+          <li>Press <b>Play</b>. The first start downloads Minecraft, Java, Fabric and Com Client (a few hundred MB), later starts are quick.</li>
+        </ol>
+        <p>The launcher updates itself and Com Client. You never need to install Java, Fabric or anything else.</p>
+      </article>
+      <article id="login" class="glass">
+        <h3>Signing in</h3>
+        <ul>
+          <li><b>Launcher:</b> click your face at the bottom left, then <b>Add account</b>. A Microsoft window opens; sign in there. Your password never goes through Com Client.</li>
+          <li><b>In game:</b> Accounts in the main menu. <b>Add account</b> opens Microsoft's login page in your browser; after signing in you land on an almost empty page: copy its address (Ctrl+L, Ctrl+C) and Com Client picks it up by itself.</li>
+          <li><b>Token login</b> (in game): paste a Minecraft access token. It works until the token expires (about 24 hours). Never share tokens with anyone.</li>
+          <li>"This Microsoft account doesn't own Minecraft Java": you signed in with a different Microsoft account than the one you bought Minecraft with.</li>
+          <li>"No Xbox profile": sign in once on <a href="https://www.minecraft.net/login" rel="noopener">minecraft.net</a>, then try again.</li>
+        </ul>
+      </article>
+      <article id="start" class="glass">
+        <h3>The game doesn't start</h3>
+        <ul>
+          <li>Open the launcher's <b>Logs</b> page: the last red lines usually say what's wrong.</li>
+          <li>Too much or too little memory: in <b>Profiles → Game</b> press <b>Auto-optimise</b>, it picks the right amount for your PC.</li>
+          <li>Antivirus: allow the launcher and its folder (<code>%APPDATA%\net.comclient.launcher</code>).</li>
+          <li>Still stuck? Open the <b>Logs window</b> (from the Logs page), press <b>Upload to mclo.gs</b> and send us the link: it shows exactly what happened.</li>
+        </ul>
+      </article>
+      <article id="crash" class="glass">
+        <h3>It crashed: what now?</h3>
+        <ol>
+          <li>The launcher asks <b>"Why did it crash?"</b> after a crash. Click it: the <b>Crashes</b> page explains the cause in plain words and names the mod that broke it.</li>
+          <li>If it's one of your own mods: open <b>Mods</b> and switch it off (or update it with <b>Update all</b>).</li>
+          <li>Shaders or a resource pack after an update? Turn them off once to check.</li>
+          <li>If it keeps happening, upload the log from the <b>Logs window</b> (<b>Upload to mclo.gs</b>) and send us the link.</li>
+        </ol>
+      </article>
+      <article id="slow" class="glass">
+        <h3>Low FPS</h3>
+        <ul>
+          <li><b>Performance mods</b> (Sodium, Lithium, FerriteCore, EntityCulling) are on by default for every profile; keep them on.</li>
+          <li><b>Auto-optimise</b> (Profiles → Game) sets render distance, particles and memory for your PC.</li>
+          <li>Heavy modules: Motion Blur, Bloom and shader skies cost the most. Turn them off in the Click GUI (Right Shift).</li>
+          <li>Laptops: plug in the charger and make sure Minecraft runs on the graphics card (Windows Settings → Display → Graphics).</li>
+        </ul>
+      </article>
+      <article id="mods" class="glass">
+        <h3>Mods, resource packs and shaders</h3>
+        <ul>
+          <li>The launcher's <b>Mods</b> page searches Modrinth: install with one click, into the selected profile only.</li>
+          <li>When updates are available, the Mods tab shows a number and the launch bar an <b>Update all</b> button.</li>
+          <li>Coming from another launcher? The <b>Import</b> section (Profiles or Settings) copies your settings, keybinds, servers and resource packs.</li>
+          <li>Whole modpacks: the <b>Modpacks</b> tab under Mods installs a Modrinth modpack as its own profile.</li>
+        </ul>
+      </article>
+      <article id="account" class="glass">
+        <h3>Your page and privacy</h3>
+        <ul>
+          <li>Every Com Client player has a page at <b>comclient.xyz/u/name</b>. Change your bio, photo, song and links in game under <b>Profile</b>.</li>
+          <li>Set it to <b>friends only</b> in the same place: then it doesn't show on the website or in the leaderboards.</li>
+          <li>Nobody can see which server you are on unless you are friends and <b>Share my server</b> is on.</li>
+        </ul>
+      </article>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
+    <nav><a href="/players">Players</a><a href="/help">Help</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/#download">Download</a></nav>
+    <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+  </footer>
+</body>
+</html>
