@@ -240,7 +240,8 @@ pub struct Current {
 pub async fn current(paths: &Paths) -> Result<Current> {
     let accounts = Accounts::load(paths);
     let Some(acc) = accounts.list.iter().find(|a| Some(&a.uuid) == accounts.active.as_ref()).cloned() else {
-        return Ok(Current::default());
+        // not signed in: show Steve
+        return Ok(steve(paths, String::new()).await);
     };
     let lib = load(paths);
     // the skin we applied (instant, no download), else the account's skin from Mojang
@@ -250,11 +251,30 @@ pub async fn current(paths: &Paths) -> Result<Current> {
         }
     }
     if acc.skin_url.is_empty() {
-        return Ok(Current { data: String::new(), variant: "classic".into(), name: acc.name });
+        return Ok(steve(paths, acc.name).await);
     }
     let png = download(&acc.skin_url).await?;
     let variant = current_variant(&acc.mc_token).await.unwrap_or_else(|_| "classic".into());
     Ok(Current { data: data_url(&png), variant, name: acc.name })
+}
+
+/// Minecraft's default skin, Steve, from Mojang (downloaded once, then kept next to the skin library).
+const STEVE_URL: &str = "https://textures.minecraft.net/texture/1a4af718455d4aab528e7a61f86fa25e6a369d1768dcb13f7df319a713eb810b";
+
+async fn steve(paths: &Paths, name: String) -> Current {
+    let file = dir(paths).join("steve.png");
+    let png = match std::fs::read(&file) {
+        Ok(png) if !png.is_empty() => Some(png),
+        _ => match download(STEVE_URL).await {
+            Ok(png) => {
+                let _ = std::fs::create_dir_all(dir(paths));
+                let _ = std::fs::write(&file, &png);
+                Some(png)
+            }
+            Err(_) => None, // offline: the 3D model shows no skin rather than failing
+        },
+    };
+    Current { data: png.map(|p| data_url(&p)).unwrap_or_default(), variant: "classic".into(), name }
 }
 
 async fn current_variant(token: &str) -> Result<String> {
