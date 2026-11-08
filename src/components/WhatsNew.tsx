@@ -5,6 +5,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.14",
+    items: [
+      ["bug", "Crashes explained", "When Minecraft crashes, the popup now says what most likely went wrong and what to do, in plain words."],
+      ["sparkle", "Quick tour", "New players get three short steps on the first start: sign in, pick a profile, open the Locker."],
+    ],
+  },
+  {
     version: "0.6.13",
     items: [
       ["download", "Bring your old setup", "Profiles → Import → From another launcher: pick an instance from Modrinth App, NoRisk, Lunar, Feather, Prism, CurseForge, ATLauncher, GDLauncher or the Minecraft Launcher, choose what to bring (settings, servers, worlds, packs, shaders, mods) and it becomes a new profile."],

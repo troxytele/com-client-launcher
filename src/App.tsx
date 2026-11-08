@@ -1,5 +1,6 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { api, GameExit, Info, msg, on, Progress } from "./api";
+import { analyze } from "./crash";
 import { getLog, pushLog, toast } from "./stores";
 import SideRail from "./components/SideRail";
 import WindowButtons from "./components/WindowButtons";
@@ -22,6 +23,7 @@ const Locker = lazy(() => import("./pages/Locker"));
 const Crashes = lazy(() => import("./pages/Crashes"));
 import { checkUpdates, updateCount, useUpdates } from "./updates";
 import WhatsNew from "./components/WhatsNew";
+import Tour, { firstRun } from "./components/Tour";
 
 type Page = "home" | "profiles" | "skins" | "locker" | "mods" | "friends" | "gallery" | "settings" | "logs" | "crashes";
 
@@ -40,6 +42,7 @@ export default function App() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [accountsOpen, setAccountsOpen] = useState(false);
+  const [tour, setTour] = useState(firstRun);
   const [skinKey, setSkinKey] = useState(0);
   const [crashFile, setCrashFile] = useState<string | null>(null);
   const [crash, setCrash] = useState<GameExit | null>(null);
@@ -280,15 +283,7 @@ export default function App() {
 
       {crash && (
         <Modal title="Minecraft crashed" onClose={() => setCrash(null)} width={560}>
-          <p className="muted">
-            The game closed with code {crash.code ?? "?"}. The last lines of the log usually say why (look for a mod name).
-          </p>
-          <pre className="crash-tail">
-            {getLog()
-              .filter((l) => /ERROR|FATAL|Exception|Caused by|\tat /.test(l))
-              .slice(-14)
-              .join("\n") || getLog().slice(-14).join("\n")}
-          </pre>
+          <CrashReason exit={crash} log={getLog()} />
           <div className="block-foot">
             <button
               className="btn"
@@ -322,9 +317,55 @@ export default function App() {
           </div>
         </Modal>
       )}
+      {splashGone && tour && !accountsOpen && (
+        <Tour
+          signedIn={!!active}
+          name={active?.name ?? null}
+          onSignIn={() => setAccountsOpen(true)}
+          onProfiles={() => setPage("profiles")}
+          onLocker={() => setPage("locker")}
+          onClose={() => setTour(false)}
+        />
+      )}
       {splashGone && <WhatsNew version={info.version} />}
       <Toasts />
       {!splashGone && <Splash leaving={introOver} />}
     </div>
+  );
+}
+
+/** The crash popup's body: what most likely went wrong, in plain words, with the raw lines folded away. */
+function CrashReason({ exit, log }: { exit: GameExit; log: string[] }) {
+  const [report, setReport] = useState<string | null>(null);
+  useEffect(() => {
+    if (!exit.crash_report) return;
+    api.crashRead(exit.crash_report).then(setReport).catch(() => setReport(null));
+  }, [exit.crash_report]);
+  const text = (report ?? "") + "\n" + log.join("\n");
+  const found = useMemo(() => analyze(text), [text]);
+  const tail = log.filter((l) => /ERROR|FATAL|Exception|Caused by|\tat /.test(l)).slice(-14);
+  const top = found.findings.slice(0, 3);
+  return (
+    <>
+      {top.length ? (
+        <div className="crash-reasons">
+          {top.map((f) => (
+            <div key={f.title} className={`crash-reason ${f.level}`}>
+              <b>{f.title}</b>
+              <p>{f.text}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="muted">
+          Minecraft closed unexpectedly (code {exit.code ?? "?"}) and the crash doesn't match a known problem. If you added mods recently, turn the
+          newest ones off in Mods and play again. “Why did it crash?” shows the whole report.
+        </p>
+      )}
+      <details className="crash-details">
+        <summary>Show the error lines</summary>
+        <pre className="crash-tail">{(tail.length ? tail : log.slice(-14)).join("\n")}</pre>
+      </details>
+    </>
   );
 }
