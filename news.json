@@ -1,5 +1,26 @@
 [
   {
+    "title": "Player profiles on comclient.xyz",
+    "body": "Every public Com Client player now has a page at comclient.xyz/u/name with their 3D skin and cosmetics, level, play time, badges and PvP tiers. Leaderboards are there too.",
+    "date": "Nov 2026",
+    "tag": "Website",
+    "url": "https://comclient.xyz/players"
+  },
+  {
+    "title": "Badges for developers, testers and early supporters",
+    "body": "New icons next to the Com Client C on name tags and in the tab list. Everyone who joins before 2027 gets the Early Supporter star.",
+    "date": "Nov 2026",
+    "tag": "Update",
+    "url": ""
+  },
+  {
+    "title": "Faster start and mod updates",
+    "body": "The launcher checks the game files in the background, so Play starts right away, and tells you when your mods, packs or shaders have updates.",
+    "date": "Nov 2026",
+    "tag": "Launcher",
+    "url": ""
+  },
+  {
     "title": "Welcome to the Com Client launcher",
     "body": "Press Play: Minecraft, Fabric and Com Client are installed and kept up to date for you. Add mods, resource packs and shaders under Mods.",
     "date": "Nov 2026",

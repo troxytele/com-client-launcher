@@ -1,12 +1,13 @@
 {
   "name": "com-client-launcher",
   "private": true,
-  "version": "0.6.3",
+  "version": "0.6.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:web": "npx -y esbuild@0.24.0 website-src/viewer.js --bundle --minify --format=iife --target=es2020 --outfile=website/assets/viewer.js"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.1.0",

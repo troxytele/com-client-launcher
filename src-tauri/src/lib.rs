@@ -407,6 +407,38 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, server: Option<Strin
     result.map_err(err)
 }
 
+/// One file check / download at a time (the background check and Play use the same files).
+fn files_lock() -> &'static tokio::sync::Mutex<()> {
+    static L: std::sync::OnceLock<tokio::sync::Mutex<()>> = std::sync::OnceLock::new();
+    L.get_or_init(|| tokio::sync::Mutex::new(()))
+}
+
+/// Started by the window a few seconds after the launcher opens: checks and downloads Minecraft, Java, Fabric and
+/// Com Client in the background, so pressing Play later starts the game right away. Quiet: errors are ignored
+/// (Play shows them properly).
+#[tauri::command]
+async fn prewarm(state: State<'_, AppState>) -> Res<bool> {
+    if state.running.load(Ordering::SeqCst) || state.busy.load(Ordering::SeqCst) {
+        return Ok(false);
+    }
+    let Ok(_files) = files_lock().try_lock() else { return Ok(false) };
+    let paths = state.paths.clone();
+    let settings = Settings::load(&paths);
+    let profile = Profiles::load(&paths).get(&settings.active_profile);
+    let rep = Reporter::new(|_p: Progress| {});
+    let work = async {
+        let vanilla = minecraft::install(&paths, config::MC_VERSION, &rep).await?;
+        let component = vanilla.json["javaVersion"]["component"].as_str().unwrap_or("java-runtime-delta").to_string();
+        java::ensure(&paths, &component, &rep).await?;
+        fabric::install(&paths, config::MC_VERSION, None, &rep).await?;
+        client::ensure(&paths, config::MC_VERSION, Some(&settings.custom_client_jar), profile.replay_mod, profile.performance_mods, &rep).await?;
+        anyhow::Ok(())
+    };
+    let ok = work.await.is_ok();
+    net::save_checked();
+    Ok(ok)
+}
+
 async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<String>, profile_id: Option<String>, replay: Option<String>) -> anyhow::Result<()> {
     let paths = state.paths.clone();
     let settings = Settings::load(&paths);
@@ -423,11 +455,14 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
 
     rep.stage("Signing in", 0, 0);
     let account = store::fresh_account(&paths).await?;
+    // if the background check is still going, wait for it (it's checking the same files), then this is quick
+    let _files = files_lock().lock().await;
     let vanilla = minecraft::install(&paths, config::MC_VERSION, &rep).await?;
     let component = vanilla.json["javaVersion"]["component"].as_str().unwrap_or("java-runtime-delta").to_string();
     let java = java::ensure(&paths, &component, &rep).await?;
     let fabric = fabric::install(&paths, config::MC_VERSION, None, &rep).await?;
     let jars = client::ensure(&paths, config::MC_VERSION, Some(&settings.custom_client_jar), profile.replay_mod, profile.performance_mods, &rep).await?;
+    drop(_files);
     // don't load a second copy of something the player put in their own mods folder
     let theirs = mods::mod_ids(&game_dir);
     let mut extra_mods = Vec::new();
@@ -908,6 +943,7 @@ pub fn run() {
         .setup(|app| {
             let root = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("ComClientLauncher"));
             let paths = Paths::new(root);
+            net::init_checked(paths.root.join("cache").join("checked.json"));
             if Settings::load(&paths).discord_rpc {
                 start_discord(&paths);
                 discord::set("In the launcher", &format!("Minecraft {}", config::MC_VERSION));
@@ -926,6 +962,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            prewarm,
             get_info,
             login_microsoft,
             device_start,

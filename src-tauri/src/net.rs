@@ -76,6 +76,64 @@ pub fn sha256_file(path: &Path) -> Result<String> {
     Ok(hex::encode(h.finalize()))
 }
 
+// ------------------------------------------------------------------ "already checked" cache
+//
+// Hashing every library and asset (thousands of files, ~600 MB) on each Play is what made starting slow.
+// A file whose hash was checked once is remembered with its size + modified time; while those stay the same
+// it isn't read again. Any change (or a different expected hash) checks it properly.
+
+type Seen = std::collections::HashMap<String, (u64, u128, String)>;
+
+struct Checked {
+    file: Option<PathBuf>,
+    seen: Seen,
+    dirty: bool,
+}
+
+fn checked() -> &'static std::sync::Mutex<Checked> {
+    static C: OnceLock<std::sync::Mutex<Checked>> = OnceLock::new();
+    C.get_or_init(|| std::sync::Mutex::new(Checked { file: None, seen: Seen::new(), dirty: false }))
+}
+
+/// Where the cache lives (called once at start).
+pub fn init_checked(file: PathBuf) {
+    let seen: Seen = std::fs::read(&file).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
+    let mut c = checked().lock().unwrap();
+    c.seen = seen;
+    c.file = Some(file);
+}
+
+/// Writes the cache if something changed.
+pub fn save_checked() {
+    let (file, data) = {
+        let mut c = checked().lock().unwrap();
+        if !c.dirty {
+            return;
+        }
+        c.dirty = false;
+        (c.file.clone(), serde_json::to_vec(&c.seen).unwrap_or_default())
+    };
+    if let Some(f) = file {
+        if let Some(p) = f.parent() {
+            let _ = std::fs::create_dir_all(p);
+        }
+        let tmp = f.with_extension("tmp");
+        if std::fs::write(&tmp, data).is_ok() {
+            let _ = std::fs::rename(tmp, f);
+        }
+    }
+}
+
+fn stamp(meta: &std::fs::Metadata) -> u128 {
+    meta.modified().ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_nanos()).unwrap_or(0)
+}
+
+fn remember(path: &Path, meta: &std::fs::Metadata, hash: &str) {
+    let mut c = checked().lock().unwrap();
+    c.seen.insert(path.to_string_lossy().to_string(), (meta.len(), stamp(meta), hash.to_ascii_lowercase()));
+    c.dirty = true;
+}
+
 /// Is the file there and correct? (No hash: correct size, or just present.)
 pub fn is_valid(d: &Download) -> bool {
     let Ok(meta) = std::fs::metadata(&d.path) else { return false };
@@ -85,11 +143,39 @@ pub fn is_valid(d: &Download) -> bool {
     if d.size > 0 && meta.len() != d.size {
         return false;
     }
-    match &d.hash {
-        Hash::None => true,
-        Hash::Sha1(s) => sha1_file(&d.path).map(|h| h.eq_ignore_ascii_case(s)).unwrap_or(false),
-        Hash::Sha256(s) => sha256_file(&d.path).map(|h| h.eq_ignore_ascii_case(s)).unwrap_or(false),
+    let want = match &d.hash {
+        Hash::None => return true,
+        Hash::Sha1(s) | Hash::Sha256(s) => s.to_ascii_lowercase(),
+    };
+    {
+        let c = checked().lock().unwrap();
+        if let Some((len, at, h)) = c.seen.get(d.path.to_string_lossy().as_ref()) {
+            if *len == meta.len() && *at == stamp(&meta) && *h == want {
+                return true;
+            }
+        }
     }
+    let ok = match &d.hash {
+        Hash::Sha1(_) => sha1_file(&d.path).map(|h| h.eq_ignore_ascii_case(&want)).unwrap_or(false),
+        Hash::Sha256(_) => sha256_file(&d.path).map(|h| h.eq_ignore_ascii_case(&want)).unwrap_or(false),
+        Hash::None => true,
+    };
+    if ok {
+        remember(&d.path, &meta, &want);
+    }
+    ok
+}
+
+/// Checks many files on all CPU cores; returns the ones that are missing or wrong.
+pub fn missing_of(list: Vec<Download>) -> Vec<Download> {
+    let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).clamp(2, 12);
+    let chunk = list.len().div_ceil(threads).max(1);
+    let out: Vec<Download> = std::thread::scope(|s| {
+        let handles: Vec<_> = list.chunks(chunk).map(|part| s.spawn(move || part.iter().filter(|d| !is_valid(d)).cloned().collect::<Vec<_>>())).collect();
+        handles.into_iter().flat_map(|h| h.join().unwrap_or_default()).collect()
+    });
+    save_checked();
+    out
 }
 
 /// Downloads one file to a temporary name, checks it, then moves it into place. Retries 3 times.
@@ -164,7 +250,7 @@ async fn fetch_once(d: &Download, bytes_done: Option<&AtomicU64>) -> Result<()> 
 pub async fn fetch_all(stage: &str, list: Vec<Download>, rep: &Reporter) -> Result<()> {
     rep.stage(stage, 0, 0);
     // checking thousands of files: do it on the blocking pool
-    let missing: Vec<Download> = tokio::task::spawn_blocking(move || list.into_iter().filter(|d| !is_valid(d)).collect())
+    let missing: Vec<Download> = tokio::task::spawn_blocking(move || missing_of(list))
         .await
         .map_err(|e| anyhow!(e))?;
     if missing.is_empty() {

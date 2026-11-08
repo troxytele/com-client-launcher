@@ -5,6 +5,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.4",
+    items: [
+      ["play", "Starts faster", "The launcher checks and downloads the game files in the background and remembers what it already checked, so Play starts right away."],
+      ["refresh", "Mod updates", "When your mods, resource packs or shaders have updates, the Mods tab shows how many and the launch bar has an Update all button."],
+    ],
+  },
+  {
     version: "0.6.3",
     items: [
       ["sparkle", "Locker looks like the game", "Wings are held out to the sides and beat like in Com Client, and every wing, halo, hat and aura card shows the same picture as in the game."],

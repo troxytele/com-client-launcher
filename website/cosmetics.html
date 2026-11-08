@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cosmetics · Com Client</title>
+  <meta name="description" content="Every Com Client cape, wing, halo, hat and aura in 3D.">
+  <meta name="theme-color" content="#050507">
+  <link rel="canonical" href="https://comclient.xyz/cosmetics">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Cosmetics · Com Client">
+  <meta property="og:description" content="Every Com Client cape, wing, halo, hat and aura in 3D.">
+  <meta property="og:image" content="https://comclient.xyz/assets/og.png">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/pages.css">
+  <script src="/assets/main.js" defer></script>
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/viewer.js" defer></script>
+  <script src="/assets/cosmetics.js" defer></script>
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="/"><img src="/assets/logo.png" alt=""><span>Com Client</span></a>
+    <nav>
+      <a href="/#features">Features</a>
+      <a href="/cosmetics" class="on">Cosmetics</a>
+      <a href="/players">Players</a>
+      <a href="/#news">News</a>
+      <a href="/changelog">Changelog</a>
+    </nav>
+    <a class="btn primary small" href="/#download" data-download>Download</a>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <span class="eyebrow">Cosmetics</span>
+      <h2>Try everything on</h2>
+      <p>Every cape, wing, halo, hat and aura in Com Client. Free, and every Com Client player sees what you wear. Pick them in the launcher's Locker or in game.</p>
+    </section>
+    <section class="gallery">
+      <div class="g-stage glass">
+        <canvas id="g-canvas" aria-label="3D preview"></canvas>
+        <form class="g-skin" id="g-skin">
+          <input id="g-skin-name" placeholder="Try it on a player" maxlength="32" aria-label="Com Client player name">
+          <button class="btn ghost small" type="submit">Load</button>
+        </form>
+        <div class="g-wearing" id="g-wearing"></div>
+      </div>
+      <div class="g-pick glass">
+        <div class="tabs g-tabs" role="tablist">
+          <button class="tab on" data-kind="capes">Capes</button>
+          <button class="tab" data-kind="wings">Wings</button>
+          <button class="tab" data-kind="halos">Halos</button>
+          <button class="tab" data-kind="hats">Hats</button>
+          <button class="tab" data-kind="auras">Auras</button>
+        </div>
+        <div class="g-colors" id="g-colors" hidden></div>
+        <div class="g-items" id="g-items"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
+    <nav><a href="/players">Players</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/#download">Download</a></nav>
+    <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+  </footer>
+</body>
+</html>

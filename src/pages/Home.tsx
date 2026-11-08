@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ago, api, fmtTime, CurrentSkin, Info, msg, NewsItem, Progress, Social } from "../api";
 import Icon from "../components/Icon";
+import { updateAll, updateCount, useUpdates } from "../updates";
+import { toast } from "../stores";
 import SkinModel from "../components/SkinModel";
 import { Spinner } from "../components/Ui";
 import logo from "../assets/logo.png";
@@ -20,12 +22,23 @@ type Props = {
   onAccounts: () => void;
   onLogs: () => void;
   onSkins: () => void;
+  onMods: () => void;
   skinKey: number;
 };
 
 // The Play page: a big banner with the latest news and your player, more news below, and the launch bar at the
 // bottom (profile, friends online, progress, PLAY).
-export default function Home({ info, phase, progress, error, onPlay, onProfiles, onStop, onProfile, onAccounts, onLogs, onSkins, skinKey }: Props) {
+export default function Home({ info, phase, progress, error, onPlay, onProfiles, onStop, onProfile, onAccounts, onLogs, onSkins, onMods, skinKey }: Props) {
+  const updates = useUpdates();
+  const nUpdates = updates.profile === info.settings.active_profile ? updateCount(updates) : 0;
+  const [updating, setUpdating] = useState<string | null>(null);
+  async function runUpdates() {
+    setUpdating("Updating…");
+    const r = await updateAll((done, total) => setUpdating(`Updating ${Math.min(done + 1, total)} of ${total}…`));
+    setUpdating(null);
+    if (r.failed.length) toast(`${r.ok} updated, ${r.failed.length} failed: ${r.failed[0]}`, "error");
+    else toast(`${r.ok} update${r.ok === 1 ? "" : "s"} installed`, "ok");
+  }
   const [news, setNews] = useState<NewsItem[]>([]);
   const [social, setSocial] = useState<Social | null>(null);
   const [skin, setSkin] = useState<CurrentSkin | null>(null);
@@ -195,6 +208,18 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
             <button className="lb-error" onClick={onLogs}>
               <Icon name="alert" size={14} /> <span>{error}</span>
             </button>
+          ) : phase === "idle" && (nUpdates > 0 || updating) ? (
+            <div className="lb-updates">
+              <button className="lb-updates-text" onClick={onMods} title="See them under Mods">
+                <Icon name="refresh" size={14} />
+                <span>{updating ?? `${nUpdates} update${nUpdates === 1 ? "" : "s"} for your mods and packs`}</span>
+              </button>
+              {!updating && (
+                <button className="btn small primary" onClick={runUpdates}>
+                  Update all
+                </button>
+              )}
+            </div>
           ) : online.length > 0 ? (
             <div className="lb-friends" title={online.map((f) => f.name).join(", ")}>
               <div className="faces">

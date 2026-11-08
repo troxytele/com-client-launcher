@@ -3,6 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { api, fmtBytes, fmtNum, Hit, Installed, Kind, msg, on, Update } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
+import { markUpdated, useUpdates } from "../updates";
 import { Empty, Spinner, Switch } from "../components/Ui";
 
 const KINDS: { id: Kind; label: string; icon: string; folder: string }[] = [
@@ -89,11 +90,18 @@ function InstalledList({ kind, running, onBrowse }: { kind: Kind; running: boole
     api.modsList(kind).then(setItems).catch((e) => toast(msg(e), "error"));
   }, [kind]);
 
+  const known = useUpdates();
   useEffect(() => {
     setItems(null);
     setUpdates({});
     load();
   }, [load]);
+  // what the background check already found
+  useEffect(() => {
+    if (kind === "modpack") return;
+    const list = known[kind as "mod" | "resourcepack" | "shader"] ?? [];
+    if (list.length) setUpdates((cur) => ({ ...Object.fromEntries(list.map((x) => [x.file, x])), ...cur }));
+  }, [known, kind]);
 
   async function checkUpdates() {
     setChecking(true);
@@ -112,6 +120,7 @@ function InstalledList({ kind, running, onBrowse }: { kind: Kind; running: boole
     setBusy(u.file);
     try {
       await api.modUpdate(kind, u);
+      if (kind !== "modpack") markUpdated(kind as "mod" | "resourcepack" | "shader", u.file);
       const next = { ...updates };
       delete next[u.file];
       setUpdates(next);

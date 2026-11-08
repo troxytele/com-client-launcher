@@ -3681,3 +3681,37 @@ svg.flip {
 .lw-actions .btn.danger {
   justify-content: center;
 }
+
+/* ================================================================ launch bar: mod updates */
+.lb-updates {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.lb-updates-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.lb-updates-text svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.lb-updates-text span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-updates-text:hover span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -16,7 +16,10 @@
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/pages.css">
   <script src="/assets/main.js" defer></script>
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/home.js" defer></script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
@@ -24,13 +27,13 @@
   <header class="nav">
     <a class="brand" href="/"><img src="/assets/logo.png" alt=""><span>Com Client</span></a>
     <nav>
-      <a href="#features">Features</a>
-      <a href="#showcase">Preview</a>
-      <a href="#cosmetics">Cosmetics</a>
-      <a href="#launcher">Launcher</a>
+      <a href="/#features">Features</a>
+      <a href="/cosmetics">Cosmetics</a>
+      <a href="/players">Players</a>
+      <a href="/#news">News</a>
       <a href="/changelog">Changelog</a>
     </nav>
-    <a class="btn primary small" href="#download" data-download>Download</a>
+    <a class="btn primary small" href="/#download" data-download>Download</a>
   </header>
 
   <main>
@@ -63,7 +66,7 @@
       <div><b>60+</b><span>modules</span></div>
       <div><b>17</b><span>fonts</span></div>
       <div><b>100+</b><span>capes &amp; cosmetics</span></div>
-      <div><b>1</b><span>click to play</span></div>
+      <div id="live-stat"><b>1</b><span>click to play</span></div>
     </section>
 
     <!-- ============================================================ features -->
@@ -178,6 +181,16 @@
       </div>
     </section>
 
+    <!-- ============================================================ news -->
+    <section id="news" class="section">
+      <div class="sec-head">
+        <span class="eyebrow">News</span>
+        <h2>What's happening</h2>
+        <p>The same news you see in the launcher and in game. <a href="/players">See who plays the most →</a></p>
+      </div>
+      <div class="news" id="news-list"><p class="loading">Loading…</p></div>
+    </section>
+
     <!-- ============================================================ faq -->
     <section class="section faq">
       <div class="sec-head">
@@ -206,7 +219,7 @@
 
   <footer class="footer">
     <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
-    <nav><a href="/changelog">Changelog</a><a href="#features">Features</a><a href="#download">Download</a></nav>
+    <nav><a href="/players">Players</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/#download">Download</a></nav>
     <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
   </footer>
 </body>

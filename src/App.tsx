@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Logs from "./pages/Logs";
 import Skins from "./pages/Skins";
 import Profiles from "./pages/Profiles";
+import { checkUpdates, updateCount, useUpdates } from "./updates";
 import WhatsNew from "./components/WhatsNew";
 import Gallery from "./pages/Gallery";
 import Friends from "./pages/Friends";
@@ -43,6 +44,26 @@ export default function App() {
   const [crash, setCrash] = useState<GameExit | null>(null);
   const [unread, setUnread] = useState(0);
   const onUnread = useCallback((n: number) => setUnread(n), []);
+  const updates = useUpdates();
+
+  // check / download the game files in the background, so Play starts right away later
+  useEffect(() => {
+    if (!splashGone) return;
+    const t = setTimeout(() => api.prewarm().catch(() => {}), 3500);
+    return () => clearTimeout(t);
+  }, [splashGone]);
+
+  // mod updates: a quiet check a little after start, after switching profile, then every 6 hours
+  const activeProfile = info?.settings.active_profile ?? "";
+  useEffect(() => {
+    if (!splashGone || !activeProfile) return;
+    const first = setTimeout(() => checkUpdates(activeProfile), 6000);
+    const again = setInterval(() => checkUpdates(activeProfile), 6 * 3600_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(again);
+    };
+  }, [splashGone, activeProfile]);
 
   useEffect(() => {
     if (!introOver || !updated || !info) return;
@@ -153,7 +174,7 @@ export default function App() {
         onPage={(p) => setPage(p as Page)}
         account={active}
         onAccounts={() => setAccountsOpen(true)}
-        badge={{ friends: unread }}
+        badge={{ friends: unread, mods: updates.profile === activeProfile ? updateCount(updates) : 0 }}
       />
       <div className="main">
         <div className="topstrip" data-tauri-drag-region>
@@ -182,6 +203,7 @@ export default function App() {
               onAccounts={() => setAccountsOpen(true)}
               onLogs={() => setPage("logs")}
               onSkins={() => setPage("skins")}
+              onMods={() => setPage("mods")}
               skinKey={skinKey}
             />
           )}

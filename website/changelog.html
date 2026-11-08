@@ -16,6 +16,7 @@
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/pages.css">
   <script src="/assets/main.js" defer></script>
 </head>
 <body>
@@ -25,10 +26,10 @@
     <a class="brand" href="/"><img src="/assets/logo.png" alt=""><span>Com Client</span></a>
     <nav>
       <a href="/#features">Features</a>
-      <a href="/#showcase">Preview</a>
-      <a href="/#cosmetics">Cosmetics</a>
-      <a href="/#launcher">Launcher</a>
-      <a href="/changelog">Changelog</a>
+      <a href="/cosmetics">Cosmetics</a>
+      <a href="/players">Players</a>
+      <a href="/#news">News</a>
+      <a href="/changelog" class="on">Changelog</a>
     </nav>
     <a class="btn primary small" href="/#download" data-download>Download</a>
   </header>
@@ -41,7 +42,14 @@
     </section>
     <section class="releases">
       <article class="release glass">
-        <header><h3>Launcher 0.6.3</h3><span class="tag">LATEST</span><time datetime="2026-11-08">November 8, 2026</time></header>
+        <header><h3>Launcher 0.6.4</h3><span class="tag">LATEST</span><time datetime="2026-11-08">November 8, 2026</time></header>
+        <ul>
+          <li><b>Starts faster</b> · The game files are checked and downloaded in the background, and files that were already checked aren't read again, so Play starts right away.</li>
+          <li><b>Mod updates</b> · When your mods, resource packs or shaders have updates, the Mods tab shows how many and the launch bar has an Update all button.</li>
+        </ul>
+      </article>
+      <article class="release glass">
+        <header><h3>Launcher 0.6.3</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Locker looks like the game</b> · Wings are held out to the sides and beat like in Com Client, and every wing, halo, hat and aura card shows the same picture as in the game.</li>
         </ul>
@@ -98,7 +106,7 @@
 
   <footer class="footer">
     <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
-    <nav><a href="/changelog">Changelog</a><a href="/#features">Features</a><a href="/#download">Download</a></nav>
+    <nav><a href="/players">Players</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/#download">Download</a></nav>
     <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
   </footer>
 </body>

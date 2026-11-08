@@ -143,6 +143,7 @@ export const api = {
   profileDuplicate: (id: string) => invoke<Profile[]>("profile_duplicate", { id }),
   profileExport: (id: string, dest: string) => invoke<void>("profile_export", { id, dest }),
   profileImport: (file: string) => invoke<Profile[]>("profile_import", { file }),
+  prewarm: () => invoke<boolean>("prewarm"),
   kill: () => invoke<void>("kill_game"),
   repair: () => invoke<number>("repair"),
   news: () => invoke<NewsItem[]>("news"),

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Players & leaderboards · Com Client</title>
+  <meta name="description" content="Com Client leaderboards: most play time, highest level, longest streaks and most friends.">
+  <meta name="theme-color" content="#050507">
+  <link rel="canonical" href="https://comclient.xyz/players">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Players & leaderboards · Com Client">
+  <meta property="og:description" content="Com Client leaderboards: most play time, highest level, longest streaks and most friends.">
+  <meta property="og:image" content="https://comclient.xyz/assets/og.png">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/pages.css">
+  <script src="/assets/main.js" defer></script>
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/players.js" defer></script>
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="/"><img src="/assets/logo.png" alt=""><span>Com Client</span></a>
+    <nav>
+      <a href="/#features">Features</a>
+      <a href="/cosmetics">Cosmetics</a>
+      <a href="/players" class="on">Players</a>
+      <a href="/#news">News</a>
+      <a href="/changelog">Changelog</a>
+    </nav>
+    <a class="btn primary small" href="/#download" data-download>Download</a>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <span class="eyebrow">Players</span>
+      <h2>Leaderboards</h2>
+      <p id="board-sub">The most dedicated Com Client players. Only public profiles are shown.</p>
+    </section>
+    <form class="find glass" id="find" role="search">
+      <input id="find-name" placeholder="Find a player: Minecraft name or Com ID" autocomplete="off" maxlength="32" aria-label="Player name">
+      <button class="btn primary small" type="submit">Open profile</button>
+    </form>
+    <div class="tabs board-tabs" role="tablist">
+      <button class="tab on" data-by="playtime">Play time</button>
+      <button class="tab" data-by="week">This week</button>
+      <button class="tab" data-by="level">Level</button>
+      <button class="tab" data-by="streak">Best streak</button>
+      <button class="tab" data-by="friends">Friends</button>
+    </div>
+    <section class="board glass" id="board"><p class="loading">Loading…</p></section>
+  </main>
+
+  <footer class="footer">
+    <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
+    <nav><a href="/players">Players</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/#download">Download</a></nav>
+    <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+  </footer>
+</body>
+</html>
