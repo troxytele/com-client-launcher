@@ -3,6 +3,7 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { ago, api, fmtTime, Info, msg, PinnedServer, Profile } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
+import ImportDialog from "../components/ImportDialog";
 import Optimise from "../components/Optimise";
 import ProfileIcon, { iconUrl } from "../components/ProfileIcon";
 import { Modal, Spinner, Switch } from "../components/Ui";
@@ -130,29 +131,29 @@ export default function Profiles({
     }
   }
 
+  const [importing, setImporting] = useState(false);
+
   return (
     <div className="page profiles-page">
+      {importing && (
+        <ImportDialog
+          onClose={() => setImporting(false)}
+          onDone={(id) => {
+            setImporting(false);
+            reload();
+            setEditId(id);
+            toast("Imported as a new profile", "ok");
+          }}
+        />
+      )}
       <div className="page-head">
         <div>
           <h1>Profiles</h1>
           <p className="muted">Each profile has its own name, icon, worlds, mods, options and servers.</p>
         </div>
         <div className="row-gap">
-          <button
-            className="btn"
-            disabled={!!busy}
-            onClick={() =>
-              act("import", async () => {
-                const f = await open({ title: "Import a profile", filters: [{ name: "Com Client profile", extensions: ["ccprofile", "zip"] }] });
-                if (typeof f !== "string") return;
-                const list = await api.profileImport(f);
-                reload();
-                setEditId(list[list.length - 1].id);
-                toast("Profile imported", "ok");
-              })
-            }
-          >
-            {busy === "import" ? <Spinner size={12} /> : <Icon name="download" size={14} />} Import
+          <button className="btn" disabled={!!busy} onClick={() => setImporting(true)}>
+            <Icon name="download" size={14} /> Import
           </button>
           <button className="btn primary" onClick={create}>
             <Icon name="plus" size={14} /> New profile

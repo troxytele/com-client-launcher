@@ -5,6 +5,12 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.12",
+    items: [
+      ["download", "Import anything", "Profiles → Import (or Mods → Modpacks): drop a .mrpack or .ccprofile on the launcher, pick it, or paste a Modrinth link. You see what it is before it installs."],
+    ],
+  },
+  {
     version: "0.6.11",
     items: [
       ["shirt", "Locker: wings and dog ears", "Wings now sit right on your back, and the dog ears are new: floppy, with pink inside."],

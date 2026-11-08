@@ -3928,3 +3928,171 @@ svg.flip {
   margin-top: 14px;
 }
 .page-loading { flex: 1; }
+
+/* ---- import (modpacks, profiles) */
+.imp-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 30px 20px;
+  margin-top: 6px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.imp-drop:hover,
+.imp-drop:focus-visible {
+  border-color: rgba(var(--accent-rgb), 0.6);
+  background: rgba(var(--accent-rgb), 0.05);
+  outline: 0;
+}
+.imp-drop.over {
+  border-color: rgb(var(--accent-rgb));
+  background: rgba(var(--accent-rgb), 0.12);
+  transform: scale(1.01);
+}
+.imp-drop-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+  background: rgba(var(--accent-rgb), 0.15);
+  color: rgb(var(--accent-rgb));
+}
+.imp-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.imp-or::before,
+.imp-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.imp-paste {
+  display: flex;
+  gap: 8px;
+}
+.imp-paste input {
+  flex: 1;
+  min-width: 0;
+}
+.imp-browse {
+  margin-top: 14px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.imp-browse:hover {
+  color: var(--text);
+}
+.imp-error {
+  margin-top: 10px;
+  color: #ff8a9a;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.imp-card {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  margin: 6px 0 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+}
+.imp-card img,
+.imp-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  flex: none;
+  object-fit: cover;
+}
+.imp-icon {
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+}
+.imp-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.imp-main b {
+  font-size: 16px;
+}
+.imp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.imp-tags span {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #cfcfda;
+}
+.imp-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.imp-progress {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.imp-bar {
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.imp-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: rgb(var(--accent-rgb));
+  transition: width 0.3s;
+}
+.imp-bar i.indeterminate {
+  animation: imp-slide 1.2s ease-in-out infinite;
+}
+@keyframes imp-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+.hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}

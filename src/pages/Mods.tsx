@@ -3,6 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { api, fmtBytes, fmtNum, Hit, Installed, Kind, msg, on, Update } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
+import ImportDialog from "../components/ImportDialog";
 import { markUpdated, useUpdates } from "../updates";
 import { Empty, Spinner, Switch } from "../components/Ui";
 
@@ -22,6 +23,7 @@ const SORTS = [
 ];
 
 export default function Mods({ profileName, running, onModpack }: { profileName: string; running: boolean; onModpack: (id: string) => void }) {
+  const [importing, setImporting] = useState(false);
   const [kind, setKind] = useState<Kind>("mod");
   const [tab, setTab] = useState<"installed" | "browse">("installed");
   const k = KINDS.find((x) => x.id === kind)!;
@@ -64,9 +66,24 @@ export default function Mods({ profileName, running, onModpack }: { profileName:
         </p>
       )}
       {kind === "modpack" && (
-        <p className="hint">
-          <Icon name="box" size={14} /> A modpack installs as a new profile of its own (your other profiles stay as they are).
+        <p className="hint hint-row">
+          <span>
+            <Icon name="box" size={14} /> A modpack installs as a new profile of its own (your other profiles stay as they are).
+          </span>
+          <button className="btn small" onClick={() => setImporting(true)}>
+            <Icon name="download" size={13} /> Import a file or link
+          </button>
         </p>
+      )}
+      {importing && (
+        <ImportDialog
+          onClose={() => setImporting(false)}
+          onDone={(id) => {
+            setImporting(false);
+            toast("Imported as a new profile", "ok");
+            onModpack(id);
+          }}
+        />
       )}
       {kind === "modpack" ? (
         <Browse kind={kind} onModpack={onModpack} />

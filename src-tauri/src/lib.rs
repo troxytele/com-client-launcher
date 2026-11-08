@@ -779,6 +779,30 @@ async fn cosmetics_save(state: State<'_, AppState>, look: cosmetics::Look) -> Re
 // ------------------------------------------------------------------ modpacks + auto-optimise
 
 #[tauri::command]
+fn pack_inspect(file: String) -> Res<modpacks::Inspect> {
+    modpacks::inspect(std::path::Path::new(&file)).map_err(err)
+}
+
+#[tauri::command]
+async fn modpack_lookup(input: String) -> Res<modpacks::Project> {
+    modpacks::lookup(&input).await.map_err(err)
+}
+
+#[tauri::command]
+async fn modpack_install_file(app: AppHandle, state: State<'_, AppState>, file: String) -> Res<String> {
+    if state.busy.swap(true, Ordering::SeqCst) {
+        return Err("Wait until the launcher has finished what it's doing".into());
+    }
+    let app_ = app.clone();
+    let rep = Reporter::new(move |p: Progress| {
+        let _ = app_.emit("modpack-progress", p);
+    });
+    let res = modpacks::install_file(&state.paths, std::path::Path::new(&file), "Modpack", "", &rep).await;
+    state.busy.store(false, Ordering::SeqCst);
+    res.map_err(err)
+}
+
+#[tauri::command]
 async fn modpack_install(app: AppHandle, state: State<'_, AppState>, project: String, title: String, icon: String) -> Res<String> {
     if state.busy.swap(true, Ordering::SeqCst) {
         return Err("Wait until the launcher has finished what it's doing".into());
@@ -1015,6 +1039,9 @@ pub fn run() {
             cosmetics_get,
             cosmetics_save,
             modpack_install,
+            modpack_install_file,
+            modpack_lookup,
+            pack_inspect,
             optimise_scan,
             optimise_apply,
             open_logs_window,

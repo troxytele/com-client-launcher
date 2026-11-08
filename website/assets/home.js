@@ -114,7 +114,7 @@
     get("/public/stats")
       .then((s) => {
         if (!s.players) return;
-        pill.querySelector("span").textContent = s.online > 0 ? `${s.online.toLocaleString()} playing now` : `${s.players.toLocaleString()} players`;
+        pill.querySelector("span").textContent = s.online > 0 ? `${s.online.toLocaleString()} playing right now` : `${s.players.toLocaleString()} players on Com Client`;
         if (!s.online) pill.querySelector("i").hidden = true;
         pill.hidden = false;
       })

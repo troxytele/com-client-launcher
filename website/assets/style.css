@@ -62,7 +62,7 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; flex: 1 0 auto; }
 h1 { font-size: clamp(52px, 8.4vw, 116px); line-height: .94; letter-spacing: -.055em; font-weight: 700; }
 .lead { color: #c4c3cf; font-size: 18px; line-height: 1.6; max-width: 34em; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0 16px; }
-.live-pill { display: inline-flex; align-items: center; gap: 7px; margin-right: 12px; color: var(--text); }
+.live-pill { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 6px 13px; border-radius: 99px; font-size: 13px; color: var(--text); background: rgba(255,255,255,.05); border: 1px solid var(--line); }
 .live-pill i { width: 7px; height: 7px; border-radius: 50%; background: #7dffb0; box-shadow: 0 0 10px #7dffb0; animation: pulse 2.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .35; } }
 
