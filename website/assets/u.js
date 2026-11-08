@@ -3,18 +3,26 @@
 (() => {
   const { API, el, get, hours, roleBadges, face, avatarUrl, ROLES } = window.CC;
   const $ = (id) => document.getElementById(id);
-  // the kit's icon, like the Tier Tags module in game (MCTiers, PvPTiers and SubTiers use different names)
+  // the kit's icon: the same item pictures as the Tier Tags module in game (MCTiers, PvPTiers and SubTiers use different names)
   const tierIcon = (mode) => {
     const k = mode.toLowerCase();
     if (k.includes("neth")) return "nethpot";
     if (k.includes("sword")) return "sword";
     if (k.includes("axe")) return "axe";
+    if (k.includes("debuff")) return "debuff";
     if (k.includes("pot")) return "pot";
     if (k.includes("mace")) return "mace";
     if (k.includes("uhc")) return "uhc";
     if (k.includes("crystal") || k.includes("vanilla")) return "vanilla";
+    if (k.includes("trident")) return "trident";
+    if (k.includes("minecart") || k.includes("cart")) return "minecart";
     if (k.includes("creeper")) return "creeper";
-    if (k.includes("smp")) return "smp";
+    if (k.includes("elytra")) return "elytra";
+    if (k.includes("bow")) return "bow";
+    if (k.includes("speed")) return "speed";
+    if (k.includes("manhunt")) return "manhunt";
+    if (k.includes("bed")) return "bed";
+    if (k.includes("smp")) return k.includes("dia") ? "diasmp" : "smp";
     return "other";
   };
   const path = location.pathname.startsWith("/u/") ? location.pathname.slice(3).replace(/\/$/, "") : "";
