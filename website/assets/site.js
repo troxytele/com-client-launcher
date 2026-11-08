@@ -28,9 +28,16 @@ window.CC = (() => {
     return Math.max(0, Math.round(secs / 60)) + " min";
   };
 
+  // in the order they're shown (the same as the server sends them)
   const ROLES = {
     developer: { name: "Developer", desc: "Makes Com Client" },
+    moderator: { name: "Moderator", desc: "Keeps chat, the feed and pages friendly" },
+    creator: { name: "Content Creator", desc: "Makes videos or streams with Com Client" },
+    partner: { name: "Partner", desc: "A server or team Com Client works with" },
+    bughunter: { name: "Bug Hunter", desc: "Found and reported a real bug" },
     tester: { name: "Tester", desc: "Tries new versions before everyone else" },
+    supporter: { name: "Supporter", desc: "Supports Com Client" },
+    booster: { name: "Booster", desc: "Boosts the Com Client Discord" },
     early: { name: "Early Supporter", desc: "Joined Com Client in its first months" },
   };
 
