@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { api, GameExit, Info, msg, on, Progress } from "./api";
 import { getLog, pushLog, toast } from "./stores";
 import SideRail from "./components/SideRail";
 import WindowButtons from "./components/WindowButtons";
-import Crashes from "./pages/Crashes";
 import Splash from "./components/Splash";
 import Backdrop from "./components/Backdrop";
 import Icon from "./components/Icon";
@@ -11,16 +10,18 @@ import Accounts from "./components/Accounts";
 import Updater from "./components/Updater";
 import { Modal, Toasts } from "./components/Ui";
 import Home from "./pages/Home";
-import Mods from "./pages/Mods";
-import Settings from "./pages/Settings";
-import Logs from "./pages/Logs";
-import Skins from "./pages/Skins";
-import Profiles from "./pages/Profiles";
+// every page except Home loads the first time it's opened: a faster start and less memory
+const Mods = lazy(() => import("./pages/Mods"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Logs = lazy(() => import("./pages/Logs"));
+const Skins = lazy(() => import("./pages/Skins"));
+const Profiles = lazy(() => import("./pages/Profiles"));
+const Gallery = lazy(() => import("./pages/Gallery"));
+const Friends = lazy(() => import("./pages/Friends"));
+const Locker = lazy(() => import("./pages/Locker"));
+const Crashes = lazy(() => import("./pages/Crashes"));
 import { checkUpdates, updateCount, useUpdates } from "./updates";
 import WhatsNew from "./components/WhatsNew";
-import Gallery from "./pages/Gallery";
-import Friends from "./pages/Friends";
-import Locker from "./pages/Locker";
 
 type Page = "home" | "profiles" | "skins" | "locker" | "mods" | "friends" | "gallery" | "settings" | "logs" | "crashes";
 
@@ -47,9 +48,21 @@ export default function App() {
   const updates = useUpdates();
 
   // check / download the game files in the background, so Play starts right away later
+  // (starts while the splash is still showing; Play waits for it instead of checking everything twice)
+  const ready = info !== null;
+  useEffect(() => {
+    if (!ready) return;
+    const t = setTimeout(() => api.prewarm().catch(() => {}), 200);
+    return () => clearTimeout(t);
+  }, [ready]);
+
+  // load the other pages in the background once the start is done, so opening them is instant too
   useEffect(() => {
     if (!splashGone) return;
-    const t = setTimeout(() => api.prewarm().catch(() => {}), 3500);
+    const t = setTimeout(() => {
+      for (const load of [() => import("./pages/Mods"), () => import("./pages/Friends"), () => import("./pages/Locker"), () => import("./pages/Skins"), () => import("./pages/Settings")])
+        load().catch(() => {});
+    }, 2500);
     return () => clearTimeout(t);
   }, [splashGone]);
 
@@ -190,6 +203,7 @@ export default function App() {
         </div>
       <div className="layout">
         <main className="content" key={page}>
+          <Suspense fallback={<div className="page-loading" />}>
           {page === "home" && (
             <Home
               info={info}
@@ -251,6 +265,7 @@ export default function App() {
           {page === "settings" && <Settings info={info} reload={reload} running={phase !== "idle"} />}
           {page === "logs" && <Logs />}
           {page === "crashes" && <Crashes initial={crashFile} />}
+          </Suspense>
         </main>
       </div>
       </div>

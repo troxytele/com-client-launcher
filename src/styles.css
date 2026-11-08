@@ -3927,3 +3927,4 @@ svg.flip {
   gap: 8px;
   margin-top: 14px;
 }
+.page-loading { flex: 1; }

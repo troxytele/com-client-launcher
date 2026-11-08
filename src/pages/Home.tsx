@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ago, api, fmtTime, CurrentSkin, Info, msg, NewsItem, Progress, Social } from "../api";
 import Icon from "../components/Icon";
 import { updateAll, updateCount, useUpdates } from "../updates";
 import { toast } from "../stores";
-import SkinModel from "../components/SkinModel";
 import { Spinner } from "../components/Ui";
 import logo from "../assets/logo.png";
 import ProfileIcon from "../components/ProfileIcon";
 import { ServerIcon } from "./Profiles";
+const SkinModel = lazy(() => import("../components/SkinModel")); // the 3D viewer (three.js) loads after the page shows
 
 type Props = {
   info: Info;
@@ -119,7 +119,9 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
             {active?.name ?? "Sign in"}
           </button>
           {skin ? (
-            <SkinModel skin={skin.data} slim={skin.variant === "slim"} animate className="banner-canvas" zoom={0.74} />
+            <Suspense fallback={null}>
+              <SkinModel skin={skin.data} slim={skin.variant === "slim"} animate className="banner-canvas" zoom={0.74} />
+            </Suspense>
           ) : (
             <div className="banner-canvas center">
               <Spinner />
