@@ -4284,3 +4284,121 @@ svg.flip {
   width: 22px;
   background: #fff;
 }
+
+/* points + shop */
+.points-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  background: rgba(var(--accent-rgb), 0.12);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.points-pill:hover {
+  background: rgba(var(--accent-rgb), 0.2);
+}
+.shop-card.locked .shop-art {
+  opacity: 0.85;
+}
+.shop-card .price.cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text);
+}
+.locker-unlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 12px 0;
+}
+.unlock-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px 7px 11px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 12.5px;
+}
+.unlock-row > span {
+  flex: 1;
+  min-width: 0;
+}
+.earn {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.earn-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.earn-balance b {
+  font-size: 26px;
+}
+.earn-row {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+}
+.earn-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.earn-row p {
+  margin: 2px 0 0;
+}
+.earn-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-top: 7px;
+  overflow: hidden;
+}
+.earn-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.earn-link {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 7px;
+}
+.earn-link code,
+.earn-link input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.earn-history div {
+  padding: 3px 0;
+}
+.earn-history .plus {
+  color: var(--ok);
+  font-weight: 700;
+}
+.earn-history .minus {
+  color: var(--err, #ff6b6b);
+  font-weight: 700;
+}

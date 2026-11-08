@@ -789,7 +789,7 @@ async fn cosmetics_get(state: State<'_, AppState>) -> Res<cosmetics::Look> {
 }
 
 #[tauri::command]
-async fn cosmetics_save(state: State<'_, AppState>, look: cosmetics::Look) -> Res<()> {
+async fn cosmetics_save(state: State<'_, AppState>, look: cosmetics::Look) -> Res<cosmetics::Look> {
     let acc = store::fresh_account(&state.paths).await.map_err(err)?;
     cosmetics::save(&state.paths, &acc, &look).await.map_err(err)
 }

@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, Catalog, CosmeticItem, CurrentSkin, Look, msg } from "../api";
+import { api, Catalog, CosmeticItem, CurrentSkin, Look, msg, Shop, ShopKind, Wallet } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import LockerPreview from "../components/LockerPreview";
 import { AuraArt, HaloArt, HatArt } from "../components/CosmeticArt";
-import { Empty, Spinner } from "../components/Ui";
+import { Empty, Modal, Spinner } from "../components/Ui";
 
 type Tab = "capes" | "wings" | "halos" | "hats" | "auras";
-const TABS: { id: Tab; label: string; field: keyof Look }[] = [
+const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "capes", label: "Capes", field: "cape" },
   { id: "wings", label: "Wings", field: "wings" },
   { id: "halos", label: "Halos", field: "halo" },
   { id: "hats", label: "Hats", field: "hat" },
   { id: "auras", label: "Auras", field: "aura" },
 ];
+const CAPE_DEFAULT_PRICE = 300; // capes the server has no price for
 const HALO_COLORS = [0xffe07a, 0xffffff, 0x8fd8ff, 0xb98cff, 0xff7ab6, 0xff5a5a, 0x7dff9a, 0xffa048];
 // ears come in real fur colours: white, cream, golden, ginger, brown, dark brown, grey, black
 const HAT_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 0x8c8782, 0x1e1a19];
@@ -22,8 +23,8 @@ const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a,
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
 const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff };
 
-// Locker + shop: everything you can wear on Com Client (all free for now), tried on your own skin in 3D. Saving
-// wears it in game for everyone with Com Client.
+// Locker + shop: everything you can wear on Com Client, tried on your own skin in 3D. Most items cost points
+// (earned by playing, daily streaks and invites); staff own everything. Saving wears it in game for everyone.
 export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: boolean; onAccounts: () => void; skinKey: number }) {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [saved, setSaved] = useState<Look | null>(null);
@@ -33,6 +34,9 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   const [skin, setSkin] = useState<CurrentSkin | null>(null);
   const [textures, setTextures] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [shop, setShop] = useState<Shop | null>(null);
+  const [buying, setBuying] = useState("");
+  const [earnOpen, setEarnOpen] = useState(false);
 
   useEffect(() => {
     api.catalog().then(setCatalog).catch((e) => toast(msg(e), "error"));
@@ -46,7 +50,32 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
         setLook(l);
       })
       .catch((e) => toast(msg(e), "error"));
+    api.shop().then(setShop).catch(() => setShop(null));
   }, [signedIn]);
+
+  // price and ownership of one item ("none" is always yours)
+  const priceOf = (kind: ShopKind, id: string) => shop?.items.find((i) => i.kind === kind && i.id === id)?.price ?? (kind === "cape" ? CAPE_DEFAULT_PRICE : 0);
+  const ownsIt = (kind: ShopKind, id: string) => {
+    if (id === "none" || !shop || shop.wallet.everything) return true;
+    const it = shop.items.find((i) => i.kind === kind && i.id === id);
+    return it ? it.owned : false;
+  };
+  const locked = TABS.filter((x) => !ownsIt(x.field, look[x.field] as string));
+  const setWallet = (w: Wallet) => setShop((s) => (s ? { ...s, wallet: w } : s));
+  async function buy(kind: ShopKind, id: string) {
+    setBuying(kind + ":" + id);
+    try {
+      const r = await api.shopBuy(kind, id);
+      setShop((s) => (s ? { wallet: r.wallet, items: s.items.map((i) => (i.kind === kind && i.id === id ? { ...i, owned: true } : i)) } : s));
+      if (kind === "cape" && !shop?.items.some((i) => i.kind === kind && i.id === id))
+        setShop((s) => (s ? { ...s, items: [...s.items, { kind, id, name: "Cape", price: CAPE_DEFAULT_PRICE, owned: true }] } : s));
+      toast("Unlocked! It's yours to wear", "ok");
+    } catch (e) {
+      toast(msg(e), "error");
+    } finally {
+      setBuying("");
+    }
+  }
   useEffect(() => {
     api.skinCurrent().then(setSkin).catch(() => setSkin({ data: "", variant: "classic", name: "" }));
   }, [skinKey]);
@@ -72,8 +101,9 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   async function save() {
     setSaving(true);
     try {
-      await api.lookSave(look);
-      setSaved(look);
+      const kept = await api.lookSave(look);
+      setSaved(kept);
+      setLook(kept);
       toast("Saved: everyone with Com Client sees it next time you play", "ok");
     } catch (e) {
       toast(msg(e), "error");
@@ -113,15 +143,21 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       <div className="page-head">
         <div>
           <h1>Locker</h1>
-          <p className="muted">Capes, wings, halos, hats and auras. Everything is free for now: try it on, then save.</p>
+          <p className="muted">Capes, wings, halos, hats and auras. Try anything on, unlock it with points, then save.</p>
         </div>
         <div className="row-gap">
+          {shop && (
+            <button className="points-pill" onClick={() => setEarnOpen(true)} title="How to earn points">
+              <Icon name="gem" size={15} />
+              {shop.wallet.everything ? "Everything unlocked" : `${shop.wallet.points.toLocaleString()} points`}
+            </button>
+          )}
           {dirty && (
             <button className="btn" onClick={() => saved && setLook(saved)}>
               <Icon name="refresh" size={15} /> Undo
             </button>
           )}
-          <button className="btn primary" disabled={!dirty || saving} onClick={save}>
+          <button className="btn primary" disabled={!dirty || saving || locked.length > 0} title={locked.length ? "Unlock what you're trying on first" : undefined} onClick={save}>
             {saving ? <Spinner size={13} /> : <Icon name="check" size={15} />} {dirty ? "Save & wear" : "Saved"}
           </button>
         </div>
@@ -144,6 +180,33 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               );
             })}
           </div>
+          {locked.length > 0 && shop && (
+            <div className="locker-unlock">
+              {locked.map((x) => {
+                const id = look[x.field] as string;
+                const price = priceOf(x.field, id);
+                const name = catalog?.[x.id].find((i) => i.id === id)?.name ?? x.label;
+                const short = Math.max(0, price - shop.wallet.points);
+                return (
+                  <div key={x.id} className="unlock-row">
+                    <Icon name="lock" size={14} />
+                    <span>
+                      <b>{name}</b> <span className="muted">{x.label.replace(/s$/, "").toLowerCase()}</span>
+                    </span>
+                    {short > 0 ? (
+                      <button className="btn small" onClick={() => setEarnOpen(true)} title="How to earn points">
+                        {short.toLocaleString()} more points needed
+                      </button>
+                    ) : (
+                      <button className="btn small primary" disabled={buying !== ""} onClick={() => buy(x.field, id)}>
+                        {buying === x.field + ":" + id ? <Spinner size={12} /> : <Icon name="gem" size={13} />} Unlock for {price.toLocaleString()}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <p className="muted small locker-tip">Drag to turn</p>
         </div>
         <div className="locker-shop">
@@ -186,7 +249,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                 </button>
               )}
               {items.map((i) => (
-                <button key={i.id} className={"shop-card" + (current === i.id ? " on" : "")} onClick={() => pick(i.id)}>
+                <button key={i.id} className={"shop-card" + (current === i.id ? " on" : "") + (ownsIt(t.field, i.id) ? "" : " locked")} onClick={() => pick(i.id)}>
                   <div className="shop-art">
                     {tab === "capes" ? (
                       <CapeFront url={texture("cape", i.id)} />
@@ -201,14 +264,126 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                     )}
                   </div>
                   <b>{i.name}</b>
-                  <span className="price">{current === i.id ? "Wearing" : "Free"}</span>
+                  <PriceTag wearing={saved?.[t.field] === i.id} owned={ownsIt(t.field, i.id)} free={priceOf(t.field, i.id) === 0} price={priceOf(t.field, i.id)} />
                 </button>
               ))}
             </div>
           )}
         </div>
       </div>
+      {earnOpen && shop && <EarnPoints wallet={shop.wallet} onWallet={setWallet} onClose={() => setEarnOpen(false)} />}
     </div>
+  );
+}
+
+function PriceTag({ wearing, owned, free, price }: { wearing: boolean; owned: boolean; free: boolean; price: number }) {
+  if (wearing) return <span className="price">Wearing</span>;
+  if (free) return <span className="price">Free</span>;
+  if (owned) return <span className="price">Owned</span>;
+  return (
+    <span className="price cost">
+      <Icon name="gem" size={11} /> {price.toLocaleString()}
+    </span>
+  );
+}
+
+/** How to earn points: play time today, the streak bonus, your invite link and "who invited you". */
+function EarnPoints({ wallet: w, onWallet, onClose }: { wallet: Wallet; onWallet: (w: Wallet) => void; onClose: () => void }) {
+  const [who, setWho] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function claim() {
+    setBusy(true);
+    try {
+      const r = await api.inviteClaim(who.trim());
+      onWallet(r.wallet);
+      toast("Thanks! You both get points once you've played an hour", "ok");
+    } catch (e) {
+      toast(msg(e), "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+  const copy = () => navigator.clipboard.writeText(w.invite_link).then(() => toast("Invite link copied", "ok"));
+  return (
+    <Modal title="Earn points" onClose={onClose} width={480}>
+      <div className="earn">
+        <div className="earn-balance">
+          <Icon name="gem" size={20} />
+          <b>{w.points.toLocaleString()}</b>
+          <span className="muted">points{w.everything ? " · you have everything unlocked" : ""}</span>
+        </div>
+        <div className="earn-row">
+          <Icon name="clock" size={17} />
+          <div>
+            <b>Play</b>
+            <p className="muted small">
+              1 point for every {w.per_minutes} minutes in game, up to {w.today_cap} a day.
+            </p>
+            <div className="earn-bar">
+              <span style={{ width: `${Math.min(100, (w.today / w.today_cap) * 100)}%` }} />
+            </div>
+            <p className="muted small">
+              {w.today} / {w.today_cap} today
+            </p>
+          </div>
+        </div>
+        <div className="earn-row">
+          <Icon name="bolt" size={17} />
+          <div>
+            <b>Daily streak</b>
+            <p className="muted small">
+              {w.streak_claimed_today
+                ? `Today's bonus is yours (${w.streak} day streak). Play tomorrow for +${w.streak_bonus_next}.`
+                : `Play today for +${w.streak_bonus_next}. The bonus grows every day in a row.`}
+            </p>
+          </div>
+        </div>
+        <div className="earn-row">
+          <Icon name="users" size={17} />
+          <div>
+            <b>Invite friends</b>
+            <p className="muted small">
+              +{w.invite_reward} for you and +{w.invite_welcome} for them once they've played an hour.
+              {w.invited > 0 && ` ${w.invited} joined with your link so far.`}
+            </p>
+            <div className="earn-link">
+              <code>{w.invite_link.replace("https://", "")}</code>
+              <button className="btn small" onClick={copy}>
+                <Icon name="copy" size={13} /> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+        {w.referred_by ? (
+          <p className="muted small">Invited by {w.referred_by.name}</p>
+        ) : (
+          w.can_claim_invite && (
+            <div className="earn-row">
+              <Icon name="user" size={17} />
+              <div>
+                <b>Did a friend invite you?</b>
+                <div className="earn-link">
+                  <input placeholder="Their name or Com ID" value={who} onChange={(e) => setWho(e.target.value)} maxLength={40} />
+                  <button className="btn small primary" disabled={busy || !who.trim()} onClick={claim}>
+                    {busy ? <Spinner size={12} /> : "Add"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        )}
+        {w.history.length > 0 && (
+          <details className="earn-history">
+            <summary className="muted small">Recent</summary>
+            {w.history.map((h, i) => (
+              <div key={i} className="small">
+                <span className={h.n >= 0 ? "plus" : "minus"}>{h.n >= 0 ? "+" + h.n : h.n}</span> {h.why}
+              </div>
+            ))}
+          </details>
+        )}
+      </div>
+    </Modal>
   );
 }
 

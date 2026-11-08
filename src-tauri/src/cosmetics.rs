@@ -213,14 +213,16 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
 
 /// Wears it: tells the server (everyone with Com Client sees it) and writes it into every profile's Com Client
 /// config, so the game wears the same thing next time it starts.
-pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<()> {
+pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
     if !(look.cape == "none" || is_hash(&look.cape)) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
         || !valid(&look.hat, HATS) || !valid(&look.aura, AURAS)
     {
         bail!("Unknown cosmetic");
     }
     let body = serde_json::to_value(look)?;
-    social::request(acc, "POST", "/cosmetics", Some(body)).await?;
+    // the server takes off anything you haven't unlocked, so wear what it kept
+    let v = social::request(acc, "POST", "/cosmetics", Some(body)).await?;
+    let look = &serde_json::from_value::<Look>(v).unwrap_or_else(|_| look.clone());
     for p in Profiles::load(paths).list {
         let file = store::game_dir(paths, &p).join("config").join("comclient").join("client.json");
         let mut cfg: Value = std::fs::read_to_string(&file).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_else(|| json!({}));
@@ -244,5 +246,5 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<()> {
         }
         let _ = std::fs::write(&file, serde_json::to_string_pretty(&cfg)?);
     }
-    Ok(())
+    Ok(look.clone())
 }
