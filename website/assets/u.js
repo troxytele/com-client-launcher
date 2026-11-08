@@ -323,15 +323,61 @@
       if (look.halo && look.halo !== "none") worn.push("Halo: " + look.halo);
       if (look.hat && look.hat !== "none") worn.push("Hat: " + look.hat.replace(/_/g, " "));
       if (look.aura && look.aura !== "none") worn.push("Aura: " + look.aura);
+      wear.id = "wears";
       if (worn.length) {
-        wear.append(el("h3", null, "Wearing"));
+        const head = el("div", "wear-head");
+        head.append(el("h3", null, "Wears"));
+        const share = el("button", "btn ghost small", "Share");
+        share.type = "button";
+        share.addEventListener("click", async () => {
+          const url = location.origin + location.pathname + "#wears";
+          try {
+            if (navigator.share) await navigator.share({ title: `${p.name}'s look on Com Client`, url });
+            else {
+              await navigator.clipboard.writeText(url);
+              share.textContent = "Link copied";
+              setTimeout(() => (share.textContent = "Share"), 1600);
+            }
+          } catch {}
+        });
+        head.append(share);
+        wear.append(head);
         const list = el("div", "chips");
         worn.forEach((w) => list.append(el("span", "chip", w)));
         wear.append(list);
+        wear.hidden = false;
+      }
+      // points and unlocked items (players can hide these in the client's settings)
+      if (p.shop) {
+        const box = el("div", "p-shop");
+        const pts = el("div", "pts");
+        const stat = (n, label) => {
+          const d = el("div");
+          d.append(el("b", null, "◆ " + n.toLocaleString()), el("small", null, label));
+          return d;
+        };
+        pts.append(stat(p.shop.points, "points"), stat(p.shop.earned, "earned in total"));
+        box.append(pts);
+        const NAMES = { cape: "Cape", wings: "Wings", halo: "Halo", hat: "Hat", aura: "Aura", emote: "Emote" };
+        if (p.shop.everything) box.append(el("p", "muted", "Has every cosmetic unlocked (Com Client team)."));
+        else if (p.shop.owned.length) {
+          box.append(el("h3", null, `Unlocked (${p.shop.owned.length})`));
+          const grid = el("div", "p-owned");
+          for (const o of p.shop.owned) {
+            const t = el("span");
+            t.append(el("small", null, NAMES[o.kind] || o.kind), document.createTextNode(o.name));
+            grid.append(t);
+          }
+          box.append(grid);
+        }
+        wear.append(box);
+        wear.hidden = false;
+      }
+      if (!wear.hidden) {
         const a = el("a", "more", "See all cosmetics →");
         a.href = "/cosmetics";
         wear.append(a);
-        wear.hidden = false;
+        if (location.hash === "#wears") setTimeout(() => wear.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
       }
       const canvas = $("p-canvas");
       if (window.CCViewer && canvas) {

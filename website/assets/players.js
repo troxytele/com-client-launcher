@@ -11,6 +11,8 @@
     streak: ["Best streak", (r) => r.streak + (r.streak === 1 ? " day" : " days")],
     friends: ["Friends", (r) => r.friends.toLocaleString()],
     newest: ["Joined", (r) => joined(r.created)],
+    earned: ["Earned", (r) => "◆ " + (r.earned || 0).toLocaleString()],
+    points: ["Points", (r) => "◆ " + (r.points || 0).toLocaleString()],
   };
   let by = "playtime";
   const fq = document.getElementById("f-q");
@@ -97,4 +99,31 @@
   frole.addEventListener("change", show);
   ftier.addEventListener("change", show);
   show();
+
+  // top inviters this month
+  get("/public/inviters")
+    .then((d) => {
+      if (!d.rows.length) return;
+      document.getElementById("inv-month").textContent = "· " + d.month;
+      const list = document.getElementById("inv-list");
+      d.rows.forEach((r, i) => {
+        const a = el("a", "row" + (i < 3 ? " top top" + (i + 1) : ""));
+        a.href = profileUrl(r);
+        a.append(el("span", "rank", String(i + 1)));
+        if (r.avatar) {
+          const img = el("img", "face");
+          img.src = avatarUrl(r.uuid, r.avatar);
+          img.alt = "";
+          a.append(img);
+        } else a.append(face(r.uuid, 36));
+        const names = el("span", "names");
+        const n = el("b", null, r.name);
+        n.append(roleBadges(r.roles));
+        names.append(n, el("small", null, r.username ? "@" + r.username : ""));
+        a.append(names, el("span", "value", r.invites + (r.invites === 1 ? " friend" : " friends")));
+        list.append(a);
+      });
+      document.getElementById("inviters").hidden = false;
+    })
+    .catch(() => {});
 })();

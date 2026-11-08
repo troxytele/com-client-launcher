@@ -12,15 +12,40 @@
   let catalog = null;
   let prices = null; // "cape:<hash>" -> points (0 = free), from the server's shop
   const SHOP_KIND = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura" };
+  let deal = null; // today's deal: one item 30% off for a day
   get("/public/shop").then((s) => {
     prices = new Map(s.items.map((i) => [i.kind + ":" + i.id, i.price]));
+    deal = s.deal || null;
+    showDeal();
     if (catalog) render();
   }).catch(() => {});
   function priceTag(id) {
     if (!prices) return null;
     const p = prices.get(SHOP_KIND[kind] + ":" + id) ?? (kind === "capes" ? 300 : null);
     if (p === null) return null;
+    if (deal && deal.kind === SHOP_KIND[kind] && deal.id === id) {
+      const t = el("span", "g-price deal");
+      t.append(el("s", null, deal.full_price.toLocaleString()), document.createTextNode(` ◆ ${deal.price.toLocaleString()}`));
+      return t;
+    }
     return el("span", "g-price" + (p ? "" : " free"), p ? `◆ ${p.toLocaleString()}` : "Free");
+  }
+  function showDeal() {
+    if (!deal) return;
+    const kindTab = Object.keys(SHOP_KIND).find((k) => SHOP_KIND[k] === deal.kind);
+    if (!kindTab) return;
+    const b = el("button", "deal-banner");
+    b.type = "button";
+    const txt = el("span", "grow");
+    txt.append(document.createTextNode("Today's deal: "), el("b", null, deal.name), document.createTextNode(` (${deal.kind}) · ends in ${Math.max(1, Math.round((deal.ends - Date.now() / 1000) / 3600))} h`));
+    const pr = el("span", null);
+    pr.append(el("s", null, String(deal.full_price)), document.createTextNode(` ◆ ${deal.price}`));
+    b.append(el("span", "off", `-${deal.off}%`), txt, pr);
+    b.addEventListener("click", () => {
+      document.querySelector(`.g-tabs .tab[data-kind="${kindTab}"]`)?.click();
+      if (catalog) pick(deal.id);
+    });
+    document.querySelector(".gallery").before(b);
   }
   let kind = "capes";
   let viewer = null;
