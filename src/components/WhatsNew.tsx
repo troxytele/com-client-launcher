@@ -5,6 +5,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.17",
+    items: [
+      ["sparkle", "Daily deal", "One cosmetic is 30% off every day. You'll find it at the top of the Locker."],
+      ["clock", "Daily reward", "Claim points every day in the game's main menu. The longer your streak, the more you get."],
+    ],
+  },
+  {
     version: "0.6.16",
     items: [["users", "Invite button", "Copy your invite link straight from the Friends page or the Locker."]],
   },

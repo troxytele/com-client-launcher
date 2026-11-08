@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, Catalog, CosmeticItem, CurrentSkin, Look, msg, Shop, ShopKind, Wallet } from "../api";
+import { api, Catalog, CosmeticItem, CurrentSkin, Deal, Look, msg, Shop, ShopKind, Wallet } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import LockerPreview from "../components/LockerPreview";
@@ -243,6 +243,28 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               onChange={(c) => setLook({ ...look, ...(tab === "halos" ? { haloColor: c } : tab === "hats" ? { hatColor: c } : { auraColor: c }) })}
             />
           )}
+          {shop?.wallet.deal && !ownsIt(shop.wallet.deal.kind, shop.wallet.deal.id) && (
+            <button
+              className="deal-banner"
+              onClick={() => {
+                const d = shop.wallet.deal!;
+                const tb = TABS.find((x) => x.field === d.kind);
+                if (tb) {
+                  setTab(tb.id);
+                  setQuery("");
+                  setLook((l) => ({ ...l, [tb.field]: d.id }));
+                }
+              }}
+            >
+              <span className="deal-off">-{shop.wallet.deal.off}%</span>
+              <span>
+                Today's deal: <b>{shop.wallet.deal.name}</b> <span className="muted">({shop.wallet.deal.kind === "wings" ? "wings" : shop.wallet.deal.kind})</span>
+              </span>
+              <span className="deal-price">
+                <s>{shop.wallet.deal.full_price}</s> <Icon name="gem" size={12} /> {shop.wallet.deal.price}
+              </span>
+            </button>
+          )}
           {!catalog ? (
             <div className="center pad">
               <Spinner />
@@ -273,7 +295,13 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                     )}
                   </div>
                   <b>{i.name}</b>
-                  <PriceTag wearing={saved?.[t.field] === i.id} owned={ownsIt(t.field, i.id)} free={priceOf(t.field, i.id) === 0} price={priceOf(t.field, i.id)} />
+                  <PriceTag
+                    wearing={saved?.[t.field] === i.id}
+                    owned={ownsIt(t.field, i.id)}
+                    free={priceOf(t.field, i.id) === 0}
+                    price={priceOf(t.field, i.id)}
+                    deal={shop?.wallet.deal && shop.wallet.deal.kind === t.field && shop.wallet.deal.id === i.id ? shop.wallet.deal : undefined}
+                  />
                 </button>
               ))}
             </div>
@@ -285,10 +313,16 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   );
 }
 
-function PriceTag({ wearing, owned, free, price }: { wearing: boolean; owned: boolean; free: boolean; price: number }) {
+function PriceTag({ wearing, owned, free, price, deal }: { wearing: boolean; owned: boolean; free: boolean; price: number; deal?: Deal }) {
   if (wearing) return <span className="price">Wearing</span>;
   if (free) return <span className="price">Free</span>;
   if (owned) return <span className="price">Owned</span>;
+  if (deal)
+    return (
+      <span className="price cost deal">
+        <s>{deal.full_price.toLocaleString()}</s> <Icon name="gem" size={11} /> {deal.price.toLocaleString()}
+      </span>
+    );
   return (
     <span className="price cost">
       <Icon name="gem" size={11} /> {price.toLocaleString()}
@@ -339,12 +373,22 @@ function EarnPoints({ wallet: w, onWallet, onClose }: { wallet: Wallet; onWallet
         <div className="earn-row">
           <Icon name="bolt" size={17} />
           <div>
-            <b>Daily streak</b>
+            <b>Daily reward</b>
             <p className="muted small">
               {w.streak_claimed_today
-                ? `Today's bonus is yours (${w.streak} day streak). Play tomorrow for +${w.streak_bonus_next}.`
-                : `Play today for +${w.streak_bonus_next}. The bonus grows every day in a row.`}
+                ? `Claimed today (${w.streak} day streak). Come back tomorrow for +${w.streak_bonus_next}.`
+                : `Claim +${w.streak_bonus_next} in the game's main menu today. Grows every day up to 25, and higher every week you keep it. Miss a day and it starts over.`}
             </p>
+            {w.calendar && (
+              <div className="cal-row">
+                {w.calendar.days.map((d) => (
+                  <span key={d.day} className={"cal-day" + (d.claimed ? " done" : "") + (d.today ? " today" : "")}>
+                    <small>D{d.day}</small>
+                    {d.claimed ? <Icon name="check" size={12} /> : <b>+{d.points}</b>}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="earn-row">
