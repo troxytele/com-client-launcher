@@ -12,11 +12,11 @@
   <meta property="og:description" content="Com Client leaderboards: most play time, highest level, longest streaks and most friends.">
   <meta property="og:image" content="https://comclient.xyz/assets/og.png">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
-  <link rel="stylesheet" href="/assets/style.css?v=b0f27c13">
-  <link rel="stylesheet" href="/assets/pages.css?v=5a747fd3">
+  <link rel="stylesheet" href="/assets/style.css?v=6216696c">
+  <link rel="stylesheet" href="/assets/pages.css?v=478837f1">
   <script src="/assets/main.js?v=73ad29da" defer></script>
   <script src="/assets/site.js?v=7a479379" defer></script>
-  <script src="/assets/players.js?v=05ffbc09" defer></script>
+  <script src="/assets/players.js?v=9014f983" defer></script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
@@ -50,6 +50,30 @@
       <button class="tab" data-by="level">Level</button>
       <button class="tab" data-by="streak">Best streak</button>
       <button class="tab" data-by="friends">Friends</button>
+      <button class="tab" data-by="newest">Newest</button>
+    </div>
+    <div class="board-filters">
+      <input id="f-q" class="glass" type="search" placeholder="Search players" autocomplete="off" maxlength="32" aria-label="Search players">
+      <select id="f-role" class="glass" aria-label="Filter by badge">
+        <option value="">All badges</option>
+        <option value="developer">Developer</option>
+        <option value="moderator">Moderator</option>
+        <option value="creator">Content Creator</option>
+        <option value="partner">Partner</option>
+        <option value="bughunter">Bug Hunter</option>
+        <option value="tester">Tester</option>
+        <option value="supporter">Supporter</option>
+        <option value="booster">Booster</option>
+        <option value="early">Early Supporter</option>
+      </select>
+      <select id="f-tier" class="glass" aria-label="Filter by PvP tier">
+        <option value="0">Any tier</option>
+        <option value="1">Tier 1</option>
+        <option value="2">Tier 2 or better</option>
+        <option value="3">Tier 3 or better</option>
+        <option value="4">Tier 4 or better</option>
+        <option value="5">Tier 5 or better</option>
+      </select>
     </div>
     <section class="board glass" id="board"><p class="loading">Loading…</p></section>
   </main>

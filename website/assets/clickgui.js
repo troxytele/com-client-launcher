@@ -31,9 +31,11 @@ window.CCClickGui = (() => {
     const screen = h("div", "cg-screen");
     root.append(screen);
     const fit = () => {
-      const s = root.clientWidth / W;
+      // on phones it would shrink to unreadable text: keep it at game size there and let it scroll sideways instead
+      const s = Math.max(root.clientWidth / W, root.clientWidth < 560 && !root.classList.contains("shot") ? 1 : 0);
       screen.style.transform = `scale(${s})`;
       root.style.setProperty("--cg-h", H * s + "px");
+      root.classList.toggle("cg-swipe", W * s > root.clientWidth + 1);
     };
     new ResizeObserver(fit).observe(root);
     fit();
