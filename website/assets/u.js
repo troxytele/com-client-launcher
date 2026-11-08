@@ -278,5 +278,5 @@
         v.setLook(look, cape, wings);
       }
     })
-    .catch((e) => fail(e.message === "This player's profile is private" ? "This profile is private" : e.message || "Player not found"));
+    .catch((e) => fail(/^No public/.test(e.message || "") ? "No public page with that name" : e.message || "Player not found"));
 })();

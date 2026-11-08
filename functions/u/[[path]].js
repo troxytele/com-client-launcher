@@ -2,6 +2,8 @@
 // level and skin in the link preview (Discord, X, WhatsApp...). If the API is asleep it just serves the page.
 const API = "https://com-client.onrender.com";
 
+const PREVIEW_BOTS = /discordbot|twitterbot|facebookexternalhit|whatsapp|telegrambot|slackbot|linkedinbot|skypeuripreview|redditbot|embedly|googlebot|bingbot|applebot|iframely|vkshare|pinterest/i;
+
 const esc = (s) => String(s).replace(/[<>"&]/g, "");
 
 function hours(secs) {
@@ -14,12 +16,16 @@ export async function onRequest({ request, env, params }) {
   const page = await env.ASSETS.fetch(new URL("/u", url));
   const name = decodeURIComponent((params.path || [])[0] || "").slice(0, 40);
   if (!name || !/^[\w@.-]+$/.test(name)) return page;
+  // only link-preview bots need the player's details in the HTML; browsers load them themselves
+  if (!PREVIEW_BOTS.test(request.headers.get("user-agent") || "")) return page;
 
   let p = null;
   try {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 4000);
-    const r = await fetch(`${API}/public/player/${encodeURIComponent(name)}`, { signal: ctl.signal, cf: { cacheTtl: 300, cacheEverything: true } });
+    // with the shared key the server limits each visitor on their own (set EDGE_KEY in Cloudflare and on Render)
+    const headers = env.EDGE_KEY ? { "X-Edge-Key": env.EDGE_KEY, "X-Visitor-IP": request.headers.get("cf-connecting-ip") || "" } : {};
+    const r = await fetch(`${API}/public/player/${encodeURIComponent(name)}`, { signal: ctl.signal, headers, cf: { cacheTtl: 300, cacheEverything: true } });
     clearTimeout(timer);
     if (r.ok) p = await r.json();
   } catch {
@@ -27,7 +33,7 @@ export async function onRequest({ request, env, params }) {
   }
   if (!p) return page;
 
-  const roles = { developer: "Developer", tester: "Tester", early: "Early Supporter" };
+  const roles = { developer: "Developer", moderator: "Moderator", creator: "Content Creator", partner: "Partner", bughunter: "Bug Hunter", tester: "Tester", supporter: "Supporter", booster: "Booster", early: "Early Supporter" };
   const badge = (p.roles || []).map((r) => roles[r]).filter(Boolean)[0];
   const title = esc(`${p.name} · Level ${p.level}${badge ? " · " + badge : ""} · Com Client`);
   const bio = String(p.bio || "").split("\n")[0].slice(0, 90);
