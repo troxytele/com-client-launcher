@@ -176,7 +176,7 @@
             const wrap = el("span", "tier-mode t" + r.tier + (r.retired ? " retired" : ""));
             wrap.title = `${label}: ${r.high ? "High" : "Low"} Tier ${r.tier}${r.retired ? " (retired)" : ""}`;
             const icon = el("img", "tier-icon");
-            icon.src = `/assets/tiers/${tierIcon(mode)}.png`;
+            icon.src = `/assets/tiers/${tierIcon(mode)}.png?v=items`; // ?v: new link so old cached pictures aren't reused
             icon.alt = "";
             icon.width = icon.height = 20;
             const text = el("span", "tier-text");
