@@ -9,7 +9,8 @@ const WING_SPREAD = (76 * Math.PI) / 180;
 const WING_FLAP = (20 * Math.PI) / 180;
 const WING_SCALE = 0.65;
 const WING_UP = 0.08 * 16;
-const WING_BACK = 0.18 * 16;
+// right against the back (just behind the jacket layer), so no gap shows from any side
+const WING_BACK = 2.3;
 
 const loadImage = (url, ms) =>
   new Promise((resolve) => {

@@ -73,11 +73,45 @@
     return c;
   }
 
+  // halos, hats and auras: a real 3D picture of each one on Steve (rendered once, one after another, then kept)
+  const thumbs = new Map();
+  let thumbViewer = null;
+  let thumbQueue = Promise.resolve();
+  const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   function iconArt(k, id) {
-    const s = el("span", `art icon ${k} ${id}`);
-    const col = COLOR[k] ? look[COLOR[k]] : 0;
-    s.style.color = k === "hats" && id === "crown" ? "#f2c230" : col === -1 ? "#ffffff" : hex(col);
-    return s;
+    const color = COLOR[k] ? look[COLOR[k]] : 0;
+    const key = `${k}:${id}:${color}`;
+    const img = el("img", `art thumb ${k}`);
+    img.alt = "";
+    if (thumbs.has(key)) {
+      img.src = thumbs.get(key);
+      return img;
+    }
+    if (!window.CCViewer) return img;
+    thumbQueue = thumbQueue.then(async () => {
+      if (!thumbs.has(key)) {
+        if (!thumbViewer) {
+          thumbViewer = window.CCViewer.create(document.createElement("canvas"), { width: 160, height: 160, rotate: false, fromBehind: false });
+          await thumbViewer.setSkin(window.CC.STEVE, false);
+          thumbViewer.viewer.animation = null;
+        }
+        const v = thumbViewer.viewer;
+        const lk = { cape: "none", wings: "none", halo: "none", haloColor: look.haloColor, hat: "none", hatColor: look.hatColor, aura: "none", auraColor: look.auraColor };
+        lk[FIELD[k]] = id;
+        thumbViewer.setLook(lk, null, null);
+        const head = k !== "auras";
+        v.playerWrapper.rotation.y = head ? 0.6 : 0.45;
+        v.zoom = head ? 2.3 : 1.05;
+        v.camera.position.y = head ? 14 : 2;
+        v.controls.target.set(0, head ? 12.5 : 0, 0);
+        v.controls.update();
+        await frame();
+        v.render();
+        thumbs.set(key, v.canvas.toDataURL("image/png"));
+      }
+      img.src = thumbs.get(key);
+    }).catch(() => {});
+    return img;
   }
 
   function render() {
@@ -139,18 +173,30 @@
     }),
   );
 
+  // any Minecraft name: see how your own skin looks with the cosmetics
   $("g-skin").addEventListener("submit", (e) => {
     e.preventDefault();
-    const name = $("g-skin-name").value.trim().replace(/^@/, "");
-    if (!name) return;
-    get("/public/player/" + encodeURIComponent(name))
+    const input = $("g-skin-name");
+    const name = input.value.trim().replace(/^@/, "");
+    if (!name) {
+      viewer.setSkin(window.CC.STEVE, false);
+      return;
+    }
+    const btn = $("g-skin").querySelector("button");
+    btn.disabled = true;
+    btn.textContent = "Loading…";
+    get("/public/mc/" + encodeURIComponent(name))
       .then((p) => {
-        viewer.setSkin([`${API}/public/skin/${p.uuid}`, ...window.CC.STEVE], p.model === "slim");
-        $("g-skin-name").value = p.name;
+        viewer.setSkin([p.skin, ...window.CC.STEVE], p.model === "slim");
+        input.value = p.name;
       })
       .catch((err) => {
-        $("g-skin-name").value = "";
-        $("g-skin-name").placeholder = err.message;
+        input.value = "";
+        input.placeholder = err.message;
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.textContent = "Try on";
       });
   });
 

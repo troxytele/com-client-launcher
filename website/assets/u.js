@@ -216,9 +216,8 @@
       if (p.music) {
         const m = $("p-music");
         m.src = `${API}/page/${p.uuid}/music?v=${p.music}`;
-        m.volume = 0.6;
         $("song-name").textContent = p.music_name || "Their song";
-        const play = $("song-play"), bar = $("song-bar"), fill = $("song-fill"), vol = $("song-vol");
+        const play = $("song-play"), bar = $("song-bar"), fill = $("song-fill");
         const fmt = (t) => (isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "0:00");
         const draw = () => {
           const d = m.duration || 0;
@@ -244,8 +243,65 @@
           if (e.key === "ArrowRight") m.currentTime += 5;
           if (e.key === "ArrowLeft") m.currentTime -= 5;
         });
-        vol.addEventListener("input", () => (m.volume = +vol.value));
+        // volume: a speaker to mute and a slim bar you click or drag (remembered on this device)
+        const box = $("song-vol"), track = $("vol-track"), vfill = $("vol-fill");
+        let saved = 0.6;
+        try {
+          saved = Math.min(1, Math.max(0, parseFloat(localStorage.getItem("cc-song-volume") ?? "0.6")));
+        } catch {}
+        let before = saved || 0.6;
+        const setVol = (v) => {
+          m.volume = Math.min(1, Math.max(0, v));
+          m.muted = m.volume === 0;
+          vfill.style.width = m.volume * 100 + "%";
+          track.setAttribute("aria-valuenow", String(Math.round(m.volume * 100)));
+          box.classList.toggle("muted", m.volume === 0);
+          box.classList.toggle("low", m.volume > 0 && m.volume < 0.5);
+          try {
+            localStorage.setItem("cc-song-volume", String(m.volume));
+          } catch {}
+        };
+        setVol(saved);
+        $("vol-btn").addEventListener("click", () => {
+          if (m.volume > 0) {
+            before = m.volume;
+            setVol(0);
+          } else setVol(before || 0.6);
+        });
+        const volAt = (x) => {
+          const r = track.getBoundingClientRect();
+          setVol((x - r.left) / r.width);
+        };
+        track.addEventListener("pointerdown", (e) => {
+          volAt(e.clientX);
+          track.setPointerCapture(e.pointerId);
+          const move = (ev) => volAt(ev.clientX);
+          track.addEventListener("pointermove", move);
+          track.addEventListener("pointerup", () => track.removeEventListener("pointermove", move), { once: true });
+        });
+        track.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight" || e.key === "ArrowUp") setVol(m.volume + 0.1);
+          if (e.key === "ArrowLeft" || e.key === "ArrowDown") setVol(m.volume - 0.1);
+        });
         $("p-song").hidden = false;
+
+        // play right away. Browsers only allow sound after the visitor did something on the page, so if that's
+        // blocked the song starts with their first click or key press
+        m.play().catch(() => {
+          $("p-song").classList.add("waiting");
+          const start = (e) => {
+            if (e.target.closest && e.target.closest("#p-song")) return; // the player's own buttons handle it
+            m.play().catch(() => {});
+          };
+          const done = () => {
+            $("p-song").classList.remove("waiting");
+            document.removeEventListener("pointerdown", start, true);
+            document.removeEventListener("keydown", start, true);
+          };
+          document.addEventListener("pointerdown", start, true);
+          document.addEventListener("keydown", start, true);
+          m.addEventListener("play", done, { once: true });
+        });
       }
 
       // ---- 3D model with cosmetics

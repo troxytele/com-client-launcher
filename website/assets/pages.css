@@ -89,8 +89,23 @@ button.chip:hover { background: rgba(255,255,255,.12); }
 .song-bar { position: relative; height: 6px; border-radius: 6px; background: rgba(255,255,255,.1); cursor: pointer; touch-action: none; }
 .song-bar:hover { height: 8px; margin: -1px 0; }
 .song-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #8f7cff, var(--accent)); }
-.song-vol { flex: none; width: 80px; accent-color: var(--accent); cursor: pointer; }
-@media (max-width: 520px) { .song-vol { display: none; } }
+.song-vol { flex: none; display: flex; align-items: center; gap: 4px; }
+.vol-btn { width: 34px; height: 34px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; display: grid; place-items: center; transition: background .2s, color .2s; }
+.vol-btn:hover { background: rgba(255,255,255,.07); color: var(--text); }
+.vol-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.vol-btn .spk { fill: currentColor; }
+.vol-btn .mute, .song-vol.muted .w1, .song-vol.muted .w2, .song-vol.low .w2 { display: none; }
+.song-vol.muted .mute { display: inline; }
+.vol-track { position: relative; width: 84px; height: 22px; cursor: pointer; touch-action: none; }
+.vol-track::before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 4px; background: rgba(255,255,255,.12); }
+.vol-fill { position: absolute; left: 0; top: 9px; height: 4px; border-radius: 4px; background: var(--text); pointer-events: none; }
+.vol-fill::after { content: ""; position: absolute; right: -6px; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5); transform: scale(0); transition: transform .15s; }
+.vol-track:hover .vol-fill::after, .vol-track:focus-visible .vol-fill::after { transform: scale(1); }
+.vol-track:hover .vol-fill { background: var(--accent); }
+.vol-track:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.p-song.waiting .song-play { animation: nudge 1.6s ease-in-out infinite; }
+@keyframes nudge { 50% { box-shadow: 0 0 0 7px rgba(185,166,255,.18); } }
+@media (max-width: 520px) { .vol-track { display: none; } }
 
 /* ---------------------------------------------------------------- players */
 .find { display: flex; gap: 10px; max-width: 620px; margin: 0 0 26px; padding: 8px; }
@@ -216,3 +231,4 @@ button.chip:hover { background: rgba(255,255,255,.12); }
 
 [hidden] { display: none !important; }
 button.btn.ghost { color: var(--text); font: inherit; font-weight: 700; }
+.art.thumb { width: 64px; height: 64px; image-rendering: auto; object-fit: contain; }

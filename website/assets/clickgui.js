@@ -1,7 +1,7 @@
 "use strict";
 // A live copy of Com Client's Click GUI (Right Shift in game), built from the client's own layout:
-// the same categories, modules, icons, sizes and glass. It's laid out in game units (a 960 x 528 screen at GUI
-// scale 2) and scaled to fit, so it stays sharp at any size. Click a card to switch it, use the tabs and search.
+// the same categories, modules, icons, sizes and glass. It's laid out in game units (a 760 x 418 screen, a bit
+// closer than GUI scale 2 so the text reads well) and scaled to fit, so it stays sharp at any size. Click a card to switch it, use the tabs and search.
 window.CCClickGui = (() => {
   const CATS = [
     ["RENDER", "Render", "See the world in a different light", "cat_render"],
@@ -10,8 +10,8 @@ window.CCClickGui = (() => {
     ["PLAYER", "Player", "Little things that feel good", "cat_player"],
     ["CLIENT", "Client", "Menu, HUD layout and the rest", "settings"],
   ];
-  const W = 960;
-  const H = 528;
+  const W = 760;
+  const H = 418;
   let modulesPromise = null;
   const loadModules = () => (modulesPromise ||= fetch("/assets/gui/modules.json").then((r) => r.json()));
 

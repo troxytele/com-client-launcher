@@ -15,12 +15,12 @@
   <meta property="og:site_name" content="Com Client">
   <meta name="twitter:card" content="summary">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
-  <link rel="stylesheet" href="/assets/style.css?v=08f54c55">
-  <link rel="stylesheet" href="/assets/pages.css?v=fd9c5351">
+  <link rel="stylesheet" href="/assets/style.css?v=6c2aa118">
+  <link rel="stylesheet" href="/assets/pages.css?v=066f0437">
   <script src="/assets/main.js?v=73ad29da" defer></script>
   <script src="/assets/site.js?v=7a479379" defer></script>
-  <script src="/assets/viewer.js?v=5b4a0e87" defer></script>
-  <script src="/assets/u.js?v=cbbef65e" defer></script>
+  <script src="/assets/viewer.js?v=c32dc480" defer></script>
+  <script src="/assets/u.js?v=229e960a" defer></script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
@@ -70,7 +70,10 @@
               <div class="song-top"><b id="song-name">Their song</b><span id="song-time">0:00 / 0:00</span></div>
               <div class="song-bar" id="song-bar" role="slider" aria-label="Position" tabindex="0"><div class="song-fill" id="song-fill"></div></div>
             </div>
-            <input class="song-vol" id="song-vol" type="range" min="0" max="1" step="0.01" value="0.6" aria-label="Volume">
+            <div class="song-vol" id="song-vol">
+              <button class="vol-btn" id="vol-btn" type="button" aria-label="Mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path class="w1" d="M14.6 9.4a3.6 3.6 0 0 1 0 5.2"/><path class="w2" d="M17 7a7 7 0 0 1 0 10"/><path class="mute" d="m15 9.5 5 5m0-5-5 5"/></svg></button>
+              <div class="vol-track" id="vol-track" role="slider" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" tabindex="0"><div class="vol-fill" id="vol-fill"></div></div>
+            </div>
             <audio id="p-music" preload="none"></audio>
           </div>
         </div>

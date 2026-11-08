@@ -5,6 +5,12 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.11",
+    items: [
+      ["shirt", "Locker: wings and dog ears", "Wings now sit right on your back, and the dog ears are new: floppy, with pink inside."],
+    ],
+  },
+  {
     version: "0.6.10",
     items: [
       ["user", "Steve when signed out", "Without an account (or without a skin) Home and the Locker show Steve instead of an empty spot."],

@@ -95,6 +95,20 @@ function makeHalo(style, color) {
   return g;
 }
 
+// Floppy dog ears (the same boxes as the mod's WingsFeature.dogEars): each ear rises from the top of the head,
+// arches over and hangs down beside it, pink inside. [out from, out to, up from, up to, back from, back to, part]
+// in skin pixels; "out" from the middle of the head, "up" from the top of the hat layer, part c = colour, d = darker, p = pink
+const DOG_EAR = [
+  [1.2, 2.4, 0.0, 1.0, -1.2, 1.5, "c"],
+  [1.8, 3.2, 0.7, 1.7, -1.3, 1.5, "c"],
+  [2.6, 4.6, 1.3, 2.1, -1.3, 1.6, "c"],
+  [4.2, 5.6, 0.5, 1.8, -1.3, 1.6, "c"],
+  [4.8, 5.8, -2.2, 0.8, -1.3, 1.6, "c"],
+  [4.95, 5.65, -2.8, -2.2, -1.0, 1.3, "d"],
+  [2.4, 4.5, 0.0, 1.3, -0.9, 1.2, "p"],
+  [4.5, 4.85, -1.9, 0.5, -0.9, 1.2, "p"],
+];
+
 /** Blocky hats, like the mod's. */
 function makeHat(style, color) {
   const g = new THREE.Group();
@@ -125,11 +139,13 @@ function makeHat(style, color) {
       g.add(ear);
     }
   } else if (style === "dog_ears") {
+    const dark = new THREE.Color(color).multiplyScalar(0.72).getHex();
     for (const side of [-1, 1]) {
-      const ear = box(1, 4.2, 2.6, color);
-      ear.position.set(side * 4.6, 5.8, 0.4);
-      ear.rotation.z = side * 0.15;
-      g.add(ear);
+      for (const [a0, a1, u0, u1, z0, z1, part] of DOG_EAR) {
+        const col = part === "p" ? 0xf6a9bd : part === "d" ? dark : color;
+        // three.js: +z is the front, so the mod's "back" runs the other way
+        g.add(box(a1 - a0, u1 - u0, z1 - z0, col, (side * (a0 + a1)) / 2, 8.5 + (u0 + u1) / 2, -(z0 + z1) / 2));
+      }
     }
   }
   g.userData.kind = "hat";
