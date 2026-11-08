@@ -10,7 +10,7 @@ function colourAt(c: number, t: number, now: number) {
 }
 
 /** The same aura shapes as the mod (Auras.java), in blocks around the feet. */
-function auraPoints(style: string, now: number, out: (x: number, y: number, z: number, size: number, bright: number, t: number) => void) {
+export function auraPoints(style: string, now: number, out: (x: number, y: number, z: number, size: number, bright: number, t: number) => void) {
   const time = now / 1000;
   if (style === "sparkles") {
     for (let ring = 0; ring < 3; ring++) {
@@ -140,6 +140,15 @@ function makeHat(style: string, color: number) {
   return g;
 }
 
+// the client's wing pose: vanilla elytra rest angle, spread 76 degrees, 20 degree flap every 2 s, 0.65 size,
+// a little up and back (skin pixels: 1 block = 16)
+const ELYTRA_REST = 0.2617994;
+const WING_SPREAD = (76 * Math.PI) / 180;
+const WING_FLAP = (20 * Math.PI) / 180;
+const WING_SCALE = 0.65;
+const WING_UP = 0.08 * 16;
+const WING_BACK = 0.18 * 16;
+
 // A 3D player wearing the look: cape or wings on the back, halo and hat on the head, the aura around the body.
 export default function LockerPreview({ skin, slim, look, cape, wings }: { skin: string; slim: boolean; look: Look; cape: string | null; wings: string | null }) {
   const box_ = useRef<HTMLDivElement>(null);
@@ -197,6 +206,15 @@ export default function LockerPreview({ skin, slim, look, cape, wings }: { skin:
         });
       }
       for (; i < dots.length; i++) dots[i].visible = false;
+      // wings: the elytra shape held out to the sides and beating, like the client (WingsFeature.java)
+      const el = v.playerObject.elytra;
+      if (el.visible) {
+        const flap = Math.sin((now / 2000) * Math.PI * 2) * WING_FLAP;
+        el.leftWing.rotation.set(ELYTRA_REST + flap, 0.01, ELYTRA_REST + WING_SPREAD);
+        el.updateRightWing();
+        el.scale.setScalar(WING_SCALE);
+        el.position.set(0, 8 + WING_UP, -2 - WING_BACK);
+      }
       // orbiting sparks of the halo
       const halo = extras.current.halo;
       if (halo) {

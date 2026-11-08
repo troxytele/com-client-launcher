@@ -3,6 +3,7 @@ import { api, Catalog, CosmeticItem, CurrentSkin, Look, msg } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import LockerPreview from "../components/LockerPreview";
+import { AuraArt, HaloArt, HatArt } from "../components/CosmeticArt";
 import { Empty, Spinner } from "../components/Ui";
 
 type Tab = "capes" | "wings" | "halos" | "hats" | "auras";
@@ -13,7 +14,7 @@ const TABS: { id: Tab; label: string; field: keyof Look }[] = [
   { id: "hats", label: "Hats", field: "hat" },
   { id: "auras", label: "Auras", field: "aura" },
 ];
-const HALO_COLORS = [0xffe07a, 0xffffff, 0xa77bff, 0x8fd8ff, 0xff5aa8, 0x6bffb0, 0xff6b4a, 0x4f7bff];
+const HALO_COLORS = [0xffe07a, 0xffffff, 0x8fd8ff, 0xb98cff, 0xff7ab6, 0xff5a5a, 0x7dff9a, 0xffa048];
 const HAT_COLORS = [0xededed, 0x2b2b30, 0xf2a65a, 0x8a5a3c, 0xffb3c7, 0xb98cff, 0x8fd8ff, 0xff5a5a];
 const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a, 0xffffff, 0x4f7bff];
 
@@ -142,7 +143,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               );
             })}
           </div>
-          <p className="muted small locker-tip">Drag to turn · wings hide the cape, like in game</p>
+          <p className="muted small locker-tip">Drag to turn</p>
         </div>
         <div className="locker-shop">
           <div className="toolbar">
@@ -189,8 +190,12 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                       <CapeFront url={texture("cape", i.id)} />
                     ) : tab === "wings" ? (
                       <WingArt url={texture("wings", i.id)} />
+                    ) : tab === "halos" ? (
+                      <HaloArt id={i.id} color={look.haloColor} />
+                    ) : tab === "hats" ? (
+                      <HatArt id={i.id} color={look.hatColor} />
                     ) : (
-                      <Icon name={tab === "halos" ? "sun" : tab === "hats" ? "shirt" : "sparkle"} size={26} />
+                      <AuraArt id={i.id} color={look.auraColor} />
                     )}
                   </div>
                   <b>{i.name}</b>
@@ -217,15 +222,15 @@ function CapeFront({ url }: { url: string | null }) {
   );
 }
 
-/** One wing (elytra layout: the outer side of a wing sits at 22..32 x 2..22). */
+/** The two wings as the card picture, like the client: the elytra's back face (u 36..46, v 2..22), leaning out. */
 function WingArt({ url }: { url: string | null }) {
-  const s = 3;
+  const s = 2.5;
   if (!url) return <span className="cape-front loading" style={{ width: 20 * s, height: 20 * s }} />;
-  const wing = { width: 10 * s, height: 20 * s, backgroundImage: `url("${url}")`, backgroundSize: `${64 * s}px auto`, backgroundPosition: `-${22 * s}px -${2 * s}px` };
+  const wing = { width: 10 * s, height: 20 * s, backgroundImage: `url("${url}")`, backgroundSize: `${64 * s}px auto`, backgroundPosition: `-${36 * s}px -${2 * s}px` };
   return (
     <span className="wing-art">
-      <span className="cape-front" style={{ ...wing, transform: "scaleX(-1)" }} />
-      <span className="cape-front" style={wing} />
+      <span className="cape-front" style={{ ...wing, transform: "rotate(12.6deg) scaleX(-1)", transformOrigin: "100% 0" }} />
+      <span className="cape-front" style={{ ...wing, transform: "rotate(-12.6deg)", transformOrigin: "0 0" }} />
     </span>
   );
 }
