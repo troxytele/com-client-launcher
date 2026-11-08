@@ -147,6 +147,15 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
         </div>
         <div className="row-gap">
           {shop && (
+            <button
+              className="btn"
+              title="Copy your invite link: you both get points once they've played an hour"
+              onClick={() => navigator.clipboard.writeText(shop.wallet.invite_link).then(() => toast("Invite link copied", "ok"))}
+            >
+              <Icon name="share" size={15} /> Invite
+            </button>
+          )}
+          {shop && (
             <button className="points-pill" onClick={() => setEarnOpen(true)} title="How to earn points">
               <Icon name="gem" size={15} />
               {shop.wallet.everything ? "Everything unlocked" : `${shop.wallet.points.toLocaleString()} points`}

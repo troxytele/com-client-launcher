@@ -19,6 +19,17 @@ function Head({ uuid, size = 34, online }: { uuid: string; size?: number; online
 
 const display = (f: { name: string; username?: string }) => (f.username ? "@" + f.username : f.name);
 
+/** Copies your invite link (comclient.xyz/r/<you>). */
+async function copyInvite() {
+  try {
+    const { wallet } = await api.shop();
+    await navigator.clipboard.writeText(wallet.invite_link);
+    toast(`Invite link copied: +${wallet.invite_reward} points for you and +${wallet.invite_welcome} for them after an hour of play`, "ok");
+  } catch (e) {
+    toast(msg(e), "error");
+  }
+}
+
 // Friends: who's online and where (with quick join), friend requests, and chat with them (same chats as in game).
 export default function Friends({ signedIn, running, onJoin, onAccounts, onUnread }: {
   signedIn: boolean;
@@ -111,6 +122,9 @@ export default function Friends({ signedIn, running, onJoin, onAccounts, onUnrea
           </div>
           <button className="btn primary" disabled={!add.trim() || adding} onClick={request}>
             {adding ? <Spinner size={13} /> : <Icon name="plus" size={15} />} Add
+          </button>
+          <button className="btn" onClick={copyInvite} title="Copy your invite link: you both get points once they've played an hour">
+            <Icon name="share" size={15} /> Invite
           </button>
         </div>
       </div>
