@@ -5,6 +5,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.15",
+    items: [
+      ["sparkle", "Points and unlocks", "Earn points by playing, with a daily streak bonus and by inviting friends, then unlock wings, halos, hats, auras and capes in the Locker. A few capes stay free."],
+      ["users", "Invite friends", "Your own invite link is in the Locker: you get points when a friend joins with it and plays an hour, and so do they."],
+    ],
+  },
+  {
     version: "0.6.14",
     items: [
       ["bug", "Crashes explained", "When Minecraft crashes, the popup now says what most likely went wrong and what to do, in plain words."],
