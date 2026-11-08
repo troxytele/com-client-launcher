@@ -5,6 +5,12 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.3",
+    items: [
+      ["sparkle", "Locker looks like the game", "Wings are held out to the sides and beat like in Com Client, and every wing, halo, hat and aura card shows the same picture as in the game."],
+    ],
+  },
+  {
     version: "0.6.2",
     items: [
       ["sparkle", "Locker fixed", "Cape names and pictures show properly again, and picking one of the official capes works."],

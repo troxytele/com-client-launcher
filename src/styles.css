@@ -3269,7 +3269,10 @@ svg.flip {
 }
 .wing-art {
   display: flex;
-  gap: 2px;
+  gap: 4px;
+}
+.cosmetic-art {
+  display: block;
 }
 @keyframes pulse {
   50% {
