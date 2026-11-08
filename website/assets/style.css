@@ -346,3 +346,7 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
   -webkit-text-fill-color: var(--text); caret-color: var(--text);
   -webkit-box-shadow: 0 0 0 1000px #121218 inset; box-shadow: 0 0 0 1000px #121218 inset; transition: background-color 9999s; }
 :root { color-scheme: dark; }
+
+/* points coin */
+.coin { display: inline-block; vertical-align: -0.18em; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+.coins { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }

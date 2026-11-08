@@ -11,8 +11,8 @@
     streak: ["Best streak", (r) => r.streak + (r.streak === 1 ? " day" : " days")],
     friends: ["Friends", (r) => r.friends.toLocaleString()],
     newest: ["Joined", (r) => joined(r.created)],
-    earned: ["Earned", (r) => "◆ " + (r.earned || 0).toLocaleString()],
-    points: ["Points", (r) => "◆ " + (r.points || 0).toLocaleString()],
+    earned: ["Earned", (r) => window.CC.coins(r.earned || 0, 17)],
+    points: ["Points", (r) => window.CC.coins(r.points || 0, 17)],
   };
   let by = "playtime";
   const fq = document.getElementById("f-q");
@@ -68,7 +68,10 @@
             n.append(t);
           }
           names.append(n, el("small", null, (r.username ? "@" + r.username + " · " : "") + "Level " + r.level));
-          a.append(names, el("span", "value", COLS[by][1](r)));
+          const v = COLS[by][1](r);
+          const cell = el("span", "value");
+          cell.append(v);
+          a.append(names, cell);
           board.append(a);
         });
       })

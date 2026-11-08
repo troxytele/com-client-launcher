@@ -353,7 +353,9 @@
         const pts = el("div", "pts");
         const stat = (n, label) => {
           const d = el("div");
-          d.append(el("b", null, "◆ " + n.toLocaleString()), el("small", null, label));
+          const b = el("b");
+          b.append(window.CC.coins(n, 20));
+          d.append(b, el("small", null, label));
           return d;
         };
         pts.append(stat(p.shop.points, "points"), stat(p.shop.earned, "earned in total"));

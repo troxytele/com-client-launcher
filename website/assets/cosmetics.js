@@ -25,10 +25,13 @@
     if (p === null) return null;
     if (deal && deal.kind === SHOP_KIND[kind] && deal.id === id) {
       const t = el("span", "g-price deal");
-      t.append(el("s", null, deal.full_price.toLocaleString()), document.createTextNode(` ◆ ${deal.price.toLocaleString()}`));
+      t.append(el("s", null, deal.full_price.toLocaleString()), document.createTextNode(" "), window.CC.coins(deal.price, 13));
       return t;
     }
-    return el("span", "g-price" + (p ? "" : " free"), p ? `◆ ${p.toLocaleString()}` : "Free");
+    if (!p) return el("span", "g-price free", "Free");
+    const t = el("span", "g-price");
+    t.append(window.CC.coins(p, 13));
+    return t;
   }
   function showDeal() {
     if (!deal) return;
@@ -39,7 +42,7 @@
     const txt = el("span", "grow");
     txt.append(document.createTextNode("Today's deal: "), el("b", null, deal.name), document.createTextNode(` (${deal.kind}) · ends in ${Math.max(1, Math.round((deal.ends - Date.now() / 1000) / 3600))} h`));
     const pr = el("span", null);
-    pr.append(el("s", null, String(deal.full_price)), document.createTextNode(` ◆ ${deal.price}`));
+    pr.append(el("s", null, String(deal.full_price)), document.createTextNode(" "), window.CC.coins(deal.price, 16));
     b.append(el("span", "off", `-${deal.off}%`), txt, pr);
     b.addEventListener("click", () => {
       document.querySelector(`.g-tabs .tab[data-kind="${kindTab}"]`)?.click();
