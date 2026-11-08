@@ -4483,3 +4483,87 @@ svg.flip {
 .points-pill .coin {
   margin-left: -3px;
 }
+
+/* play time graphs (Profiles page) */
+.playtime {
+  padding: 14px 16px 10px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+.pt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pt-head > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pt-head select {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+}
+.pt-bars {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  height: 130px;
+  margin-top: 12px;
+}
+.pt-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  cursor: default;
+}
+.pt-bar i {
+  width: 100%;
+  max-width: 34px;
+  border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.95), rgba(var(--accent-rgb), 0.45));
+  transition: filter 0.15s, transform 0.15s;
+}
+.pt-bar i.zero {
+  background: rgba(255, 255, 255, 0.08);
+}
+.pt-bar.now i:not(.zero) {
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.45);
+}
+.pt-bar.hover i {
+  filter: brightness(1.25);
+}
+.pt-val {
+  font-size: 10px;
+  opacity: 0;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.pt-bar.hover .pt-val,
+.pt-bar.now .pt-val {
+  opacity: 0.8;
+}
+.pt-label {
+  font-size: 10px;
+  opacity: 0.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.pt-bar.now .pt-label {
+  opacity: 0.9;
+  color: var(--accent);
+}

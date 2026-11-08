@@ -241,6 +241,7 @@ impl Profiles {
     }
     /// Adds the time of one game session to a profile.
     pub fn record(paths: &Paths, id: &str, start: i64, secs: u64, server: &str) {
+        let _ = PlayLog::load(paths); // copies the old sessions in first (once), so this one isn't counted twice
         let mut ps = Profiles::load(paths);
         if let Some(p) = ps.list.iter_mut().find(|p| p.id == id) {
             p.playtime_secs += secs;
@@ -248,9 +249,56 @@ impl Profiles {
             p.sessions.truncate(30);
             let _ = ps.save(paths);
         }
+        PlayLog::add(paths, id, start, secs);
     }
     pub fn get(&self, id: &str) -> Profile {
         self.list.iter().find(|p| p.id == id).cloned().unwrap_or_else(|| self.list[0].clone())
+    }
+}
+
+/// Every game session for the play time graphs (days and weeks), all profiles, newest last. Kept separately from
+/// the profiles so it can grow (up to 5000 sessions, years of playing).
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct PlayLog {
+    pub sessions: Vec<LogEntry>,
+    /// The old per-profile session lists were copied in once.
+    pub seeded: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct LogEntry {
+    pub profile: String,
+    pub start: i64,
+    pub secs: u64,
+}
+
+impl PlayLog {
+    pub fn load(paths: &Paths) -> Self {
+        let mut log: PlayLog = load(paths, "playlog.json");
+        if !log.seeded {
+            // first start with the tracker: take what the profiles remember (their last 30 sessions each)
+            for p in Profiles::load(paths).list {
+                for s in p.sessions {
+                    log.sessions.push(LogEntry { profile: p.id.clone(), start: s.start, secs: s.secs });
+                }
+            }
+            log.sessions.sort_by_key(|e| e.start);
+            log.seeded = true;
+            let _ = save(paths, "playlog.json", &log);
+        }
+        log
+    }
+
+    pub fn add(paths: &Paths, profile: &str, start: i64, secs: u64) {
+        let mut log = PlayLog::load(paths);
+        log.sessions.push(LogEntry { profile: profile.to_string(), start, secs });
+        let n = log.sessions.len();
+        if n > 5000 {
+            log.sessions.drain(0..n - 5000);
+        }
+        let _ = save(paths, "playlog.json", &log);
     }
 }
 

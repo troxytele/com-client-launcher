@@ -34,6 +34,7 @@ export type Profile = {
 
 export type PinnedServer = { name: string; address: string };
 export type Session = { start: number; secs: number; server: string };
+export type LogEntry = { profile: string; start: number; secs: number };
 
 export type CrashFile = { path: string; name: string; profile: string; kind: "crash" | "jvm" | "log"; modified: number; size: number };
 
@@ -149,6 +150,7 @@ export type CurrentSkin = { data: string; variant: "classic" | "slim"; name: str
 
 export const api = {
   info: () => invoke<Info>("get_info"),
+  playLog: () => invoke<LogEntry[]>("play_log"),
   login: () => invoke<Account[]>("login_microsoft"),
   deviceStart: () => invoke<DeviceCode>("device_start"),
   devicePoll: (deviceCode: string) => invoke<Account[] | null>("device_poll", { deviceCode }),

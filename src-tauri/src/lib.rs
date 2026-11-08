@@ -921,6 +921,12 @@ struct GameStats {
 }
 
 /// The running game's memory and CPU (measured between two calls, so call it every second or two).
+/// Every game session (all profiles) for the play time graphs.
+#[tauri::command]
+fn play_log(state: State<'_, AppState>) -> Vec<store::LogEntry> {
+    store::PlayLog::load(&state.paths).sessions
+}
+
 #[tauri::command]
 fn game_stats(state: State<'_, AppState>) -> GameStats {
     static SYS: std::sync::OnceLock<Mutex<sysinfo::System>> = std::sync::OnceLock::new();
@@ -1067,6 +1073,7 @@ pub fn run() {
             log_backlog,
             log_clear,
             game_stats,
+            play_log,
             upload_log
         ])
         .run(tauri::generate_context!())

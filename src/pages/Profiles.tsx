@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import PlayTime from "../components/PlayTime";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { ago, api, fmtTime, Info, msg, PinnedServer, Profile } from "../api";
 import { toast } from "../stores";
@@ -179,6 +180,8 @@ export default function Profiles({
           <b>{[...info.profiles].sort((a, b) => (b.playtime_secs || 0) - (a.playtime_secs || 0))[0]?.name ?? "–"}</b>
         </div>
       </div>
+
+      <PlayTime profiles={info.profiles} version={total} />
 
       <div className="profiles-split">
         <div className="pcards">
