@@ -1,6 +1,41 @@
 {
  "capes": [
   {
+   "id": "cc_aurora",
+   "name": "Aurora",
+   "own": true
+  },
+  {
+   "id": "cc_galaxy",
+   "name": "Galaxy",
+   "own": true
+  },
+  {
+   "id": "cc_lava",
+   "name": "Lava",
+   "own": true
+  },
+  {
+   "id": "cc_glitch",
+   "name": "Glitch",
+   "own": true
+  },
+  {
+   "id": "cc_snowfall",
+   "name": "Snowfall",
+   "own": true
+  },
+  {
+   "id": "cc_lights",
+   "name": "Christmas Lights",
+   "own": true
+  },
+  {
+   "id": "cc_candy_cane",
+   "name": "Candy Cane",
+   "own": true
+  },
+  {
    "id": "2340c0e03dd24a11b15a8b33c2a7e9e32abb2051b2481d0ba7defd635ca7a933",
    "name": "Migrator"
   },
@@ -141,6 +176,14 @@
   {
    "id": "blue_dragon",
    "name": "Blue Dragon"
+  },
+  {
+   "id": "frost",
+   "name": "Frost"
+  },
+  {
+   "id": "candy_cane",
+   "name": "Candy Cane"
   }
  ],
  "halos": [
@@ -159,6 +202,10 @@
   {
    "id": "orbit",
    "name": "Orbit sparks"
+  },
+  {
+   "id": "wreath",
+   "name": "Holly wreath"
   }
  ],
  "hats": [
@@ -173,6 +220,14 @@
   {
    "id": "dog_ears",
    "name": "Dog ears"
+  },
+  {
+   "id": "santa",
+   "name": "Santa hat"
+  },
+  {
+   "id": "antlers",
+   "name": "Reindeer antlers"
   }
  ],
  "auras": [
@@ -187,6 +242,138 @@
   {
    "id": "helix",
    "name": "Helix"
+  },
+  {
+   "id": "snow",
+   "name": "Snowfall"
+  }
+ ],
+ "pets": [
+  {
+   "id": "bee",
+   "name": "Bee",
+   "flies": true
+  },
+  {
+   "id": "ender_dragon",
+   "name": "Mini Ender Dragon",
+   "flies": true
+  },
+  {
+   "id": "allay",
+   "name": "Allay",
+   "flies": true
+  },
+  {
+   "id": "bat",
+   "name": "Bat",
+   "flies": true
+  },
+  {
+   "id": "parrot",
+   "name": "Parrot",
+   "flies": false
+  },
+  {
+   "id": "fox",
+   "name": "Fox",
+   "flies": false
+  },
+  {
+   "id": "cat",
+   "name": "Cat",
+   "flies": false
+  },
+  {
+   "id": "frog",
+   "name": "Frog",
+   "flies": false
+  },
+  {
+   "id": "axolotl",
+   "name": "Axolotl",
+   "flies": false
+  },
+  {
+   "id": "chicken",
+   "name": "Chicken",
+   "flies": false
+  },
+  {
+   "id": "slime",
+   "name": "Slime",
+   "flies": false
+  }
+ ],
+ "nametags": [
+  {
+   "id": "fire",
+   "name": "Fire",
+   "stops": [
+    16769126,
+    16742938,
+    15212586
+   ],
+   "moving": true
+  },
+  {
+   "id": "ocean",
+   "name": "Ocean",
+   "stops": [
+    9434879,
+    3054591,
+    4868848
+   ],
+   "moving": true
+  },
+  {
+   "id": "gold",
+   "name": "Gold",
+   "stops": [
+    12092939,
+    15909424,
+    16774320,
+    15909424,
+    12092939
+   ],
+   "moving": true
+  },
+  {
+   "id": "toxic",
+   "name": "Toxic",
+   "stops": [
+    14221114,
+    3860590,
+    958318
+   ],
+   "moving": false
+  },
+  {
+   "id": "candy",
+   "name": "Candy",
+   "stops": [
+    16736162,
+    16757721,
+    9427199
+   ],
+   "moving": false
+  },
+  {
+   "id": "galaxy",
+   "name": "Galaxy",
+   "stops": [
+    11893759,
+    5991423,
+    16739285,
+    11893759
+   ],
+   "moving": true
+  },
+  {
+   "id": "rainbow",
+   "name": "Rainbow",
+   "stops": [],
+   "moving": true
   }
  ]
 }

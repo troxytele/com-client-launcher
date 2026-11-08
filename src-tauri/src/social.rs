@@ -87,7 +87,7 @@ async fn get(acc: &Account, path: &str) -> Result<Value> {
 }
 
 /// Paths the window may call on the Com Client server (friends, chats, cosmetics), signed in as you.
-const ALLOWED: &[&str] = &["/state", "/chats", "/friends/", "/cosmetics", "/profile/me", "/shop", "/ref/claim"];
+const ALLOWED: &[&str] = &["/state", "/chats", "/friends/", "/cosmetics", "/profile/me", "/shop", "/ref/claim", "/gifts"];
 
 fn check(path: &str) -> Result<()> {
     if path.contains("..") || !ALLOWED.iter().any(|p| path.starts_with(p)) {

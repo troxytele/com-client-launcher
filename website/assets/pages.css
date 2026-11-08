@@ -142,6 +142,16 @@ button.chip:hover { background: rgba(255,255,255,.12); }
 .g-stage { position: relative; height: 600px; overflow: hidden; display: flex; flex-direction: column;
   background: radial-gradient(70% 55% at 50% 40%, rgba(185,166,255,.18), transparent 70%), var(--glass); }
 .g-stage canvas { flex: 1; width: 100%; min-height: 0; cursor: grab; }
+.g-nametag { position: absolute; z-index: 2; top: 6px; left: 50%; transform: translateX(-50%); padding: 3px 10px; border-radius: 4px; background: rgba(0,0,0,.4);
+  font: 600 18px/1.3 "Minecraft", "Poppins", monospace; letter-spacing: .02em; pointer-events: none; text-shadow: 2px 2px 0 rgba(0,0,0,.35); }
+.g-pet { position: absolute; left: 14px; bottom: 86px; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; max-width: calc(100% - 28px);
+  background: rgba(0,0,0,.45); border: 1px solid var(--line); font-size: 12.5px; color: var(--muted); pointer-events: none; }
+.g-pet img { width: 24px; height: 24px; image-rendering: pixelated; }
+.art.pet { width: 48px; height: 48px; margin: 8px 0; image-rendering: pixelated; }
+.art.nametag { display: flex; align-items: center; justify-content: center; width: auto; height: 64px; font: 700 20px/1 "Poppins", sans-serif; }
+.g-season { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.g-season small { font-size: 10px; color: #9fd8ff; text-transform: uppercase; letter-spacing: .05em; }
+.g-season:not(.open) small { color: var(--dim); }
 .g-skin { display: flex; gap: 6px; margin: 0 12px; padding: 6px; border-radius: 12px; background: rgba(0,0,0,.35); border: 1px solid var(--line); }
 .g-wearing { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 12px; min-height: 50px; align-items: center; }
 .g-pick { padding: 16px; height: 600px; display: flex; flex-direction: column; gap: 12px; }

@@ -48,10 +48,25 @@ const BUILT_IN_CAPES: &[(&str, &str)] = &[
 ];
 
 /// Ids and names, in the order the mod's Locker shows them.
-const WINGS: &[(&str, &str)] = &[("heaven", "Heaven"), ("purple", "Purple"), ("dragon", "Dragon"), ("devil", "Devil"), ("blue_dragon", "Blue Dragon")];
-const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks")];
-const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears")];
-const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix")];
+const WINGS: &[(&str, &str)] = &[
+    ("heaven", "Heaven"), ("purple", "Purple"), ("dragon", "Dragon"), ("devil", "Devil"), ("blue_dragon", "Blue Dragon"),
+    ("frost", "Frost"), ("candy_cane", "Candy Cane"),
+];
+const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
+const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers")];
+const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix"), ("snow", "Snowfall")];
+const PETS: &[(&str, &str)] = &[
+    ("bee", "Bee"), ("ender_dragon", "Mini Ender Dragon"), ("allay", "Allay"), ("bat", "Bat"), ("parrot", "Parrot"), ("fox", "Fox"),
+    ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"),
+];
+const NAMETAGS: &[(&str, &str)] = &[
+    ("fire", "Fire"), ("ocean", "Ocean"), ("gold", "Gold"), ("toxic", "Toxic"), ("candy", "Candy"), ("galaxy", "Galaxy"), ("rainbow", "Rainbow"),
+];
+/// Com Client's own capes (bundled in the mod, animated). Shown first.
+const CUSTOM_CAPES: &[(&str, &str)] = &[
+    ("cc_aurora", "Aurora"), ("cc_galaxy", "Galaxy"), ("cc_lava", "Lava"), ("cc_glitch", "Glitch"),
+    ("cc_snowfall", "Snowfall"), ("cc_lights", "Christmas Lights"), ("cc_candy_cane", "Candy Cane"),
+];
 
 #[derive(Serialize, Clone, Debug)]
 pub struct Item {
@@ -66,6 +81,8 @@ pub struct Catalog {
     pub halos: Vec<Item>,
     pub hats: Vec<Item>,
     pub auras: Vec<Item>,
+    pub pets: Vec<Item>,
+    pub nametags: Vec<Item>,
 }
 
 fn items(list: &[(&str, &str)]) -> Vec<Item> {
@@ -106,7 +123,9 @@ pub async fn catalog(paths: &Paths) -> Catalog {
         capes.push(Item { id: hash, name });
     }
     capes.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
-    Catalog { capes, wings: items(WINGS), halos: items(HALOS), hats: items(HATS), auras: items(AURAS) }
+    let mut all = items(CUSTOM_CAPES);
+    all.extend(capes);
+    Catalog { capes: all, wings: items(WINGS), halos: items(HALOS), hats: items(HATS), auras: items(AURAS), pets: items(PETS), nametags: items(NAMETAGS) }
 }
 
 fn data_url(bytes: &[u8]) -> String {
@@ -161,6 +180,9 @@ pub struct Look {
     pub hat_color: i64,
     pub aura: String,
     pub aura_color: i64,
+    pub pet: String,
+    pub pet_left: bool,
+    pub nametag: String,
 }
 
 impl Default for Look {
@@ -174,6 +196,9 @@ impl Default for Look {
             hat_color: 0xEDEDED,
             aura: "none".into(),
             aura_color: 0xA77BFF,
+            pet: "none".into(),
+            pet_left: false,
+            nametag: "none".into(),
         }
     }
 }
@@ -205,6 +230,9 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
     l.halo = st("halo", "none");
     l.hat = st("hat", "none");
     l.aura = st("aura", "none");
+    l.pet = st("pet", "none");
+    l.nametag = st("nametag", "none");
+    l.pet_left = cfg["petLeft"].as_bool().unwrap_or(false);
     l.halo_color = cfg["haloColor"].as_i64().unwrap_or(l.halo_color);
     l.hat_color = cfg["hatColor"].as_i64().unwrap_or(l.hat_color);
     l.aura_color = if cfg["auraRainbow"].as_bool().unwrap_or(false) { -1 } else { cfg["auraColor"].as_i64().unwrap_or(l.aura_color) };
@@ -214,8 +242,8 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
 /// Wears it: tells the server (everyone with Com Client sees it) and writes it into every profile's Com Client
 /// config, so the game wears the same thing next time it starts.
 pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
-    if !(look.cape == "none" || is_hash(&look.cape)) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
-        || !valid(&look.hat, HATS) || !valid(&look.aura, AURAS)
+    if !(look.cape == "none" || is_hash(&look.cape) || valid(&look.cape, CUSTOM_CAPES)) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
+        || !valid(&look.hat, HATS) || !valid(&look.aura, AURAS) || !valid(&look.pet, PETS) || !valid(&look.nametag, NAMETAGS)
     {
         bail!("Unknown cosmetic");
     }
@@ -237,6 +265,9 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
         o.insert("hat".into(), json!(look.hat));
         o.insert("hatColor".into(), json!(look.hat_color & 0xFFFFFF));
         o.insert("aura".into(), json!(look.aura));
+        o.insert("pet".into(), json!(look.pet));
+        o.insert("petLeft".into(), json!(look.pet_left));
+        o.insert("nametag".into(), json!(look.nametag));
         o.insert("auraRainbow".into(), json!(look.aura_color == -1));
         if look.aura_color != -1 {
             o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));

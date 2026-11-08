@@ -6,15 +6,30 @@ import Coin from "../components/Coin";
 import LockerPreview from "../components/LockerPreview";
 import { AuraArt, HaloArt, HatArt } from "../components/CosmeticArt";
 import { Empty, Modal, Spinner } from "../components/Ui";
+import GiftDialog from "../components/GiftDialog";
+import { CUSTOM_CAPES } from "../../website-src/helpers.js";
 
-type Tab = "capes" | "wings" | "halos" | "hats" | "auras";
+type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "nametags";
 const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "capes", label: "Capes", field: "cape" },
   { id: "wings", label: "Wings", field: "wings" },
   { id: "halos", label: "Halos", field: "halo" },
   { id: "hats", label: "Hats", field: "hat" },
   { id: "auras", label: "Auras", field: "aura" },
+  { id: "pets", label: "Pets", field: "pet" },
+  { id: "nametags", label: "Name tags", field: "nametag" },
 ];
+// name tag styles (NameStyles.java): gradient stops; moving ones flow along the name
+const NAME_STYLES: Record<string, { stops: number[]; moving: boolean }> = {
+  fire: { stops: [0xffe066, 0xff7a1a, 0xe8202a], moving: true },
+  ocean: { stops: [0x8ff6ff, 0x2e9bff, 0x4a4af0], moving: true },
+  gold: { stops: [0xb8860b, 0xf2c230, 0xfff4b0, 0xf2c230, 0xb8860b], moving: true },
+  toxic: { stops: [0xd8ff3a, 0x3ae86e, 0x0e9f6e], moving: false },
+  candy: { stops: [0xff5fa2, 0xffb3d9, 0x8fd8ff], moving: false },
+  galaxy: { stops: [0xb57bff, 0x5b6bff, 0xff6bd5, 0xb57bff], moving: true },
+  rainbow: { stops: [], moving: true },
+};
+const FLYING_PETS = new Set(["bee", "ender_dragon", "allay", "bat"]);
 const CAPE_DEFAULT_PRICE = 300; // capes the server has no price for
 const HALO_COLORS = [0xffe07a, 0xffffff, 0x8fd8ff, 0xb98cff, 0xff7ab6, 0xff5a5a, 0x7dff9a, 0xffa048];
 // ears come in real fur colours: white, cream, golden, ginger, brown, dark brown, grey, black
@@ -22,7 +37,7 @@ const HAT_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 
 const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a, 0xffffff, 0x4f7bff];
 
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
-const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff };
+const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none" };
 
 // Locker + shop: everything you can wear on Com Client, tried on your own skin in 3D. Most items cost points
 // (earned by playing, daily streaks and invites); staff own everything. Saving wears it in game for everyone.
@@ -38,6 +53,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   const [shop, setShop] = useState<Shop | null>(null);
   const [buying, setBuying] = useState("");
   const [earnOpen, setEarnOpen] = useState(false);
+  const [giftOpen, setGiftOpen] = useState(false);
 
   useEffect(() => {
     api.catalog().then(setCatalog).catch((e) => toast(msg(e), "error"));
@@ -82,12 +98,13 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   }, [skinKey]);
 
   // textures for the cards and the 3D model, loaded once each
-  const texture = (kind: "cape" | "wings", id: string) => (id === "none" ? null : textures[kind + ":" + id] || null);
+  const texture = (kind: "cape" | "wings", id: string) =>
+    id === "none" ? null : kind === "wings" ? `/cosmetics/wings/${id}.png` : CUSTOM_CAPES[id] ? `/cosmetics/capes/${id.slice(3)}.png` : textures[kind + ":" + id] || null;
   const [asked] = useState(() => new Set<string>());
   function want(kind: "cape" | "wings", ids: string[]) {
     for (const id of ids) {
       const key = kind + ":" + id;
-      if (id === "none" || asked.has(key)) continue;
+      if (id === "none" || asked.has(key) || kind === "wings" || CUSTOM_CAPES[id]) continue;
       asked.add(key);
       api
         .cosmeticTexture(kind, id)
@@ -127,6 +144,9 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
     if (tab === "wings") want("wings", items.map((i) => i.id));
   }, [look.cape, look.wings, tab, items]);
   const pick = (id: string) => setLook({ ...look, [t.field]: id });
+  // what can be gifted from this tab: the item picked here, if it costs points
+  const giftName = catalog?.[tab].find((i) => i.id === current)?.name;
+  const canGift = !!shop && current !== "none" && !!giftName && priceOf(t.field, current) > 0;
 
   if (!signedIn)
     return (
@@ -144,7 +164,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       <div className="page-head">
         <div>
           <h1>Locker</h1>
-          <p className="muted">Capes, wings, halos, hats and auras. Try anything on, unlock it with points, then save.</p>
+          <p className="muted">Capes, wings, halos, hats, auras, pets and name tags. Try anything on, unlock it with points (or gift it to a friend), then save.</p>
         </div>
         <div className="row-gap">
           {shop && (
@@ -162,6 +182,11 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               {shop.wallet.everything ? "Everything unlocked" : `${shop.wallet.points.toLocaleString()} points`}
             </button>
           )}
+          {canGift && (
+            <button className="btn" onClick={() => setGiftOpen(true)} title={`Buy ${giftName} for a friend`}>
+              <Icon name="gift" size={15} /> Gift
+            </button>
+          )}
           {dirty && (
             <button className="btn" onClick={() => saved && setLook(saved)}>
               <Icon name="refresh" size={15} /> Undo
@@ -175,6 +200,16 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       <div className="locker-layout">
         <div className="locker-stage glass">
           <LockerPreview skin={skin?.data ?? ""} slim={skin?.variant === "slim"} look={look} cape={capeTex} wings={wingTex} />
+          {look.nametag !== "none" && <NameTag style={look.nametag} name={skin?.name || "You"} className="locker-nametag" />}
+          {look.pet !== "none" && (
+            <div className="locker-pet">
+              <img src={`/cosmetics/pets/${look.pet}.png`} alt="" />
+              <span>
+                {catalog?.pets.find((p) => p.id === look.pet)?.name ?? "Pet"} {FLYING_PETS.has(look.pet) ? "flies beside" : "sits on"} your{" "}
+                {look.petLeft ? "left" : "right"} shoulder in game
+              </span>
+            </div>
+          )}
           <div className="locker-wearing">
             {TABS.map((x) => {
               const v = look[x.field] as string;
@@ -235,7 +270,20 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               </div>
             )}
           </div>
-          {(tab === "halos" || tab === "hats" || tab === "auras") && (
+          {tab === "pets" && (
+            <div className="colour-bar">
+              <span className="muted small">Side</span>
+              <div className="seg small">
+                <button className={look.petLeft ? "on" : ""} onClick={() => setLook({ ...look, petLeft: true })}>
+                  Left shoulder
+                </button>
+                <button className={!look.petLeft ? "on" : ""} onClick={() => setLook({ ...look, petLeft: false })}>
+                  Right shoulder
+                </button>
+              </div>
+            </div>
+          )}
+          {((tab === "halos" && look.halo !== "wreath") || (tab === "hats" && !["crown", "santa", "antlers"].includes(look.hat)) || (tab === "auras" && look.aura !== "snow")) && (
             <ColourBar
               colors={tab === "halos" ? HALO_COLORS : tab === "hats" ? HAT_COLORS : AURA_COLORS}
               value={tab === "halos" ? look.haloColor : tab === "hats" ? look.hatColor : look.auraColor}
@@ -291,12 +339,17 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                       <HaloArt id={i.id} color={look.haloColor} />
                     ) : tab === "hats" ? (
                       <HatArt id={i.id} color={look.hatColor} />
+                    ) : tab === "pets" ? (
+                      <img className="pet-art" src={`/cosmetics/pets/${i.id}.png`} alt="" />
+                    ) : tab === "nametags" ? (
+                      <NameTag style={i.id} name={skin?.name || "Name"} className="nametag-art" still />
                     ) : (
                       <AuraArt id={i.id} color={look.auraColor} />
                     )}
                   </div>
                   <b>{i.name}</b>
                   <PriceTag
+                    giftFrom={shop?.items.find((x) => x.kind === t.field && x.id === i.id)?.gift_from}
                     wearing={saved?.[t.field] === i.id}
                     owned={ownsIt(t.field, i.id)}
                     free={priceOf(t.field, i.id) === 0}
@@ -309,14 +362,23 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
           )}
         </div>
       </div>
+      {giftOpen && canGift && (
+        <GiftDialog kind={t.field} id={current} name={giftName!} onClose={() => setGiftOpen(false)} onSent={setWallet} />
+      )}
       {earnOpen && shop && <EarnPoints wallet={shop.wallet} onWallet={setWallet} onClose={() => setEarnOpen(false)} />}
     </div>
   );
 }
 
-function PriceTag({ wearing, owned, free, price, deal }: { wearing: boolean; owned: boolean; free: boolean; price: number; deal?: Deal }) {
+function PriceTag({ wearing, owned, free, price, deal, giftFrom }: { wearing: boolean; owned: boolean; free: boolean; price: number; deal?: Deal; giftFrom?: string }) {
   if (wearing) return <span className="price">Wearing</span>;
   if (free) return <span className="price">Free</span>;
+  if (owned && giftFrom)
+    return (
+      <span className="price gift-from" title={`A gift from ${giftFrom}`}>
+        <Icon name="gift" size={12} /> From {giftFrom}
+      </span>
+    );
   if (owned) return <span className="price">Owned</span>;
   if (deal)
     return (
@@ -483,5 +545,50 @@ function ColourBar({ colors, value, rainbow, custom = true, onChange }: { colors
         </label>
       )}
     </div>
+  );
+}
+
+const mixRgb = (a: number, b: number, t: number) => {
+  const ch = (sh: number) => Math.round(((a >> sh) & 255) + (((b >> sh) & 255) - ((a >> sh) & 255)) * t);
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+};
+
+function nameColour(style: { stops: number[]; moving: boolean }, i: number, n: number, now: number) {
+  let t = n <= 1 ? 0 : i / (n - 1);
+  if (!style.stops.length) return `hsl(${(((t * 0.8 + now / 2500) % 1) * 360).toFixed(0)}, 100%, 70%)`;
+  if (style.moving) {
+    t = (t * 0.7 + now / 1800) % 1;
+    t = t < 0.5 ? t * 2 : 2 - t * 2;
+  }
+  const st = style.stops;
+  const f = t * (st.length - 1);
+  const k = Math.min(st.length - 2, Math.floor(f));
+  return hex(mixRgb(st[k], st[k + 1], f - k));
+}
+
+/** A name in a name tag style, letter by letter like the game (moving styles flow unless `still`). */
+function NameTag({ style, name, className, still }: { style: string; name: string; className?: string; still?: boolean }) {
+  const s = NAME_STYLES[style];
+  const [now, setNow] = useState(900);
+  useEffect(() => {
+    if (!s || still || !s.moving) return;
+    let f = 0;
+    const loop = (t: number) => {
+      setNow(t);
+      f = requestAnimationFrame(loop);
+    };
+    f = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(f);
+  }, [style, still]);
+  if (!s) return null;
+  const letters = [...name];
+  return (
+    <span className={className}>
+      {letters.map((ch, i) => (
+        <span key={i} style={{ color: nameColour(s, i, letters.length, now) }}>
+          {ch}
+        </span>
+      ))}
+    </span>
   );
 }

@@ -92,5 +92,56 @@ window.CC = (() => {
     return s;
   };
 
-  return { STEVE, API, NEWS, el, get, hours, ROLES, roleBadges, face, avatarUrl, profileUrl, coin, coins };
+  // name tag styles (NameStyles.java): gradients over the letters of the name, the moving ones flow along it
+  const NAME_STYLES = {
+    fire: { name: "Fire", stops: [0xffe066, 0xff7a1a, 0xe8202a], moving: true },
+    ocean: { name: "Ocean", stops: [0x8ff6ff, 0x2e9bff, 0x4a4af0], moving: true },
+    gold: { name: "Gold", stops: [0xb8860b, 0xf2c230, 0xfff4b0, 0xf2c230, 0xb8860b], moving: true },
+    toxic: { name: "Toxic", stops: [0xd8ff3a, 0x3ae86e, 0x0e9f6e], moving: false },
+    candy: { name: "Candy", stops: [0xff5fa2, 0xffb3d9, 0x8fd8ff], moving: false },
+    galaxy: { name: "Galaxy", stops: [0xb57bff, 0x5b6bff, 0xff6bd5, 0xb57bff], moving: true },
+    rainbow: { name: "Rainbow", stops: [], moving: true },
+  };
+  const mixRgb = (a, b, t) => {
+    const ch = (sh) => Math.round(((a >> sh) & 255) + (((b >> sh) & 255) - ((a >> sh) & 255)) * t);
+    return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+  };
+  function nameColour(style, i, n, now) {
+    let t = n <= 1 ? 0 : i / (n - 1);
+    if (!style.stops.length) return `hsl(${(((t * 0.8 + now / 2500) % 1) * 360).toFixed(0)}, 100%, 70%)`;
+    if (style.moving) {
+      t = (t * 0.7 + now / 1800) % 1;
+      t = t < 0.5 ? t * 2 : 2 - t * 2;
+    }
+    const st = style.stops;
+    const f = t * (st.length - 1);
+    const k = Math.min(st.length - 2, Math.floor(f));
+    return "#" + mixRgb(st[k], st[k + 1], f - k).toString(16).padStart(6, "0");
+  }
+  /** Colours the letters of `target` (an element holding the name) with a name tag style; animates moving ones.
+   *  Returns a function that stops it. */
+  function styleName(target, styleId, still = false) {
+    const style = NAME_STYLES[styleId];
+    const text = target.textContent;
+    if (!style || !text) return () => {};
+    target.textContent = "";
+    const letters = [...text].map((ch) => {
+      const s = el("span", null, ch);
+      target.append(s);
+      return s;
+    });
+    let frame = 0;
+    const paint = (now) => letters.forEach((s, i) => (s.style.color = nameColour(style, i, letters.length, now)));
+    paint(900);
+    if (!still && style.moving) {
+      const loop = (now) => {
+        paint(now);
+        frame = requestAnimationFrame(loop);
+      };
+      frame = requestAnimationFrame(loop);
+    }
+    return () => cancelAnimationFrame(frame);
+  }
+
+  return { STEVE, API, NEWS, el, get, hours, ROLES, roleBadges, face, avatarUrl, profileUrl, coin, coins, NAME_STYLES, styleName };
 })();

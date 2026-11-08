@@ -92,9 +92,10 @@ export type Replay = Shot & { duration_ms: number; server: string; mc_version: s
 export type PackInfo = { kind: "mrpack" | "ccprofile"; name: string; version: string; minecraft: string; loader: string; mods: number; files: number; size: number; icon: string; problem: string };
 export type ModrinthPack = { id: string; slug: string; title: string; description: string; icon: string; downloads: number; version: string; problem: string };
 export type CosmeticItem = { id: string; name: string };
-export type Catalog = { capes: CosmeticItem[]; wings: CosmeticItem[]; halos: CosmeticItem[]; hats: CosmeticItem[]; auras: CosmeticItem[] };
-export type ShopKind = "cape" | "wings" | "halo" | "hat" | "aura";
-export type ShopItem = { kind: ShopKind; id: string; name: string; price: number; owned: boolean; full_price?: number; deal?: boolean };
+export type Catalog = { capes: CosmeticItem[]; wings: CosmeticItem[]; halos: CosmeticItem[]; hats: CosmeticItem[]; auras: CosmeticItem[]; pets: CosmeticItem[]; nametags: CosmeticItem[] };
+export type ShopKind = "cape" | "wings" | "halo" | "hat" | "aura" | "pet" | "nametag";
+export type ShopItem = { kind: ShopKind; id: string; name: string; price: number; owned: boolean; full_price?: number; deal?: boolean; gift_from?: string; season?: { start: number; end: number } | null };
+export type GiftFriend = { uuid: string; name: string; username: string; avatar: number; has: boolean };
 export type Deal = { kind: ShopKind; id: string; name: string; price: number; full_price: number; off: number; ends: number };
 export type CalendarDay = { day: number; points: number; claimed: boolean; today: boolean };
 export type Calendar = { streak: number; best: number; claimed_today: boolean; today_reward: number; week: number; days: CalendarDay[]; next_at: number };
@@ -121,7 +122,7 @@ export type Wallet = {
 };
 export type Shop = { wallet: Wallet; items: ShopItem[] };
 /** Same fields as the mod's config. auraColor -1 = rainbow. */
-export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number };
+export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number; pet: string; petLeft: boolean; nametag: string };
 
 export type OptimisePlan = {
   ram_total_mb: number; cpu: string; cores: number; gpu: string; gpu_kind: "dedicated" | "integrated" | "unknown";
@@ -174,6 +175,9 @@ export const api = {
   lookSave: (look: Look) => invoke<Look>("cosmetics_save", { look }),
   shop: () => invoke<Shop>("server_get", { path: "/shop" }),
   shopBuy: (kind: ShopKind, id: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/shop/buy", body: { kind, id } }),
+  giftable: (kind: ShopKind, id: string) =>
+    invoke<{ friends: GiftFriend[]; price: number; points: number }>("server_get", { path: `/shop/giftable?kind=${kind}&id=${encodeURIComponent(id)}` }),
+  gift: (to: string, kind: ShopKind, id: string, note: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/shop/gift", body: { to, kind, id, note } }),
   inviteClaim: (who: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/ref/claim", body: { who } }),
   modpackInstall: (project: string, title: string, icon: string) => invoke<string>("modpack_install", { project, title, icon }),
   openLogsWindow: () => invoke<void>("open_logs_window"),

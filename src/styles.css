@@ -4567,3 +4567,38 @@ svg.flip {
   opacity: 0.9;
   color: var(--accent);
 }
+
+/* ---- Locker: name tag above the model, pet note, pet + name tag cards ---- */
+.locker-stage { position: relative; }
+.locker-nametag { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 2; padding: 3px 10px; border-radius: 4px;
+  background: rgba(0, 0, 0, 0.42); font-weight: 700; font-size: 16px; letter-spacing: 0.02em; pointer-events: none; text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+.locker-pet { position: absolute; top: 14px; left: 14px; z-index: 2; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 28px);
+  padding: 5px 12px 5px 5px; border-radius: 999px; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--line); font-size: 12px; color: var(--muted); pointer-events: none; }
+.locker-pet img { width: 22px; height: 22px; image-rendering: pixelated; }
+.locker-nametag + .locker-pet { top: 50px; }
+.pet-art { width: 44px; height: 44px; image-rendering: pixelated; }
+.nametag-art { font-weight: 700; font-size: 17px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop-card .price.gift-from { display: inline-flex; align-items: center; gap: 4px; color: #ff9fc4; }
+.seg.small button { padding: 4px 10px; font-size: 12px; }
+
+/* ---- gift dialog ---- */
+.gift { display: flex; flex-direction: column; gap: 12px; }
+.gift h4 { margin: 4px 0 0; font-size: 13px; }
+.gift-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; color: #ff9fc4;
+  border: 1px solid rgba(255, 143, 184, 0.35); background: rgba(255, 143, 184, 0.07); }
+.gift-item > div { flex: 1; min-width: 0; display: flex; flex-direction: column; color: var(--text); }
+.gift-price { display: inline-flex; align-items: center; gap: 5px; color: var(--text); font-weight: 700; }
+.gift-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
+.gift-friend { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03);
+  color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.gift-friend span { flex: 1; }
+.gift-friend:hover:not(:disabled) { border-color: var(--line-hi); }
+.gift-friend.on { border-color: #ff8fb8; background: rgba(255, 143, 184, 0.1); }
+.gift-friend:disabled { opacity: 0.5; cursor: default; }
+.btn.wide { width: 100%; justify-content: center; }
+
+/* the 3D model keeps its room however many locked items are listed under it */
+.locker-stage { height: auto; min-height: 470px; max-height: calc(100vh - 150px); }
+.locker-model { flex: 1 1 320px; min-height: 300px; }
+.locker-unlock { max-height: 170px; overflow-y: auto; flex: none; }
+.points-pill { white-space: nowrap; }

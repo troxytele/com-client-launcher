@@ -500,7 +500,7 @@ dependencies = [
 
 [[package]]
 name = "com-client-launcher"
-version = "0.6.19"
+version = "0.6.20"
 dependencies = [
  "anyhow",
  "base64 0.22.1",

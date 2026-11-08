@@ -2,7 +2,7 @@
 // Built into website/assets/viewer.js with:  npm run build:web
 import * as THREE from "three";
 import { IdleAnimation, SkinViewer } from "skinview3d";
-import { auraPoints, colourAt, glow, makeHalo, makeHat } from "./helpers.js";
+import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape } from "./helpers.js";
 
 const ELYTRA_REST = 0.2617994;
 const WING_SPREAD = (76 * Math.PI) / 180;
@@ -42,6 +42,8 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
   let look = { cape: "none", wings: "none", halo: "none", haloColor: 0, hat: "none", hatColor: 0, aura: "none", auraColor: 0 };
   const extras = {};
   let skinCall = 0;
+  let capeCall = 0;
+  let stopCape = null;
   const aura = new THREE.Group();
   const dots = [];
   for (let i = 0; i < 70; i++) {
@@ -63,7 +65,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
         d.visible = true;
         d.position.set(x * 16, -16 + y * 16, z * 16);
         d.scale.setScalar(Math.max(0.35, size * 16 * 0.8));
-        d.material.color = colourAt(look.auraColor, t, now);
+        d.material.color = auraColour(look.aura, look.auraColor, t, now);
         d.material.opacity = Math.max(0, Math.min(1, bright));
       });
     }
@@ -92,6 +94,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
     const halo = extras.halo;
     if (halo) {
       halo.position.y = 11 + Math.sin(now / 700) * 0.25;
+      if (halo.userData.spin) halo.rotation.y = -(now / 1000) * 0.21; // the wreath turns slowly, like in game
       halo.children.forEach((c) => {
         if (c.userData.orbit !== undefined) {
           const a = now / 600 + (c.userData.orbit * Math.PI * 2) / 3;
@@ -122,9 +125,19 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
     /** look as the backend stores it; capeUrl / wingUrl are texture URLs (or null). */
     setLook(next, capeUrl, wingUrl) {
       look = { ...look, ...(next || {}) };
+      const mine = ++capeCall;
+      if (stopCape) {
+        stopCape();
+        stopCape = null;
+      }
       try {
         if (wingUrl) v.loadCape(wingUrl, { backEquipment: "elytra" });
-        else if (capeUrl) v.loadCape(capeUrl, { backEquipment: "cape" });
+        else if (CUSTOM_CAPES[look.cape]) {
+          // Com Client's own capes are animated strips that come with the website
+          loadImage(`/assets/cosmetics/capes/${look.cape.slice(3)}.png`, 7000).then((img) => {
+            if (img && mine === capeCall) stopCape = playCape(v, img, look.cape);
+          });
+        } else if (capeUrl) v.loadCape(capeUrl, { backEquipment: "cape" });
         else v.loadCape(null);
       } catch {
         v.loadCape(null);
@@ -141,6 +154,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
     },
     dispose() {
       cancelAnimationFrame(frame);
+      if (stopCape) stopCape();
       v.dispose();
     },
   };

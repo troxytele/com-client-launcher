@@ -5,6 +5,14 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.20",
+    items: [
+      ["gift", "Gifts", "Buy a cosmetic for a friend with your points: pick it in the Locker and press Gift. They own it right away and see who it's from."],
+      ["sparkle", "Pets and name tags in the Locker", "Pets and name tag styles are now in the launcher's Locker too, and saving here no longer takes off your pet or name style."],
+      ["shirt", "Christmas items and Com Client capes", "Santa hat, reindeer antlers, holly wreath, snowfall aura, frost and candy cane wings, and the animated Com Client capes, all in 3D."],
+    ],
+  },
+  {
     version: "0.6.19",
     items: [["clock", "Play time graphs", "See how long you played each day and each week on the Profiles page, for all profiles or just one."]],
   },

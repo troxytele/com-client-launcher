@@ -5,6 +5,11 @@ function colourAt(c, t, now) {
   return new THREE.Color(c & 0xffffff);
 }
 
+/** The colour of an aura point: snow is always snow-white, the rest use the chosen colour. */
+function auraColour(style, c, t, now) {
+  return style === "snow" ? new THREE.Color(0xeef6ff) : colourAt(c, t, now);
+}
+
 /** The same aura shapes as the mod (Auras.java), in blocks around the feet. */
 function auraPoints(style, now, out) {
   const time = now / 1000;
@@ -33,6 +38,18 @@ function auraPoints(style, now, out) {
       const r = 0.35 + (((i * 37) % 10) / 10) * 0.3;
       const sway = Math.sin(time * 1.7 + i) * 0.08;
       out(Math.cos(angle) * r + sway, 0.05 + phase * 2.1, Math.sin(angle) * r - sway, 0.06 * (1 - phase * 0.5), Math.sin(Math.PI * phase) * 0.9, phase);
+    }
+  } else if (style === "snow") {
+    // flakes drifting down around the player, swaying, fading in at the top and out at the feet
+    for (let i = 0; i < 26; i++) {
+      const life = 3.2 + (i % 4) * 0.4;
+      const cyc = (time + i * 0.61803 * life) / life;
+      const phase = cyc % 1;
+      const angle = i * 2.39996 + Math.floor(cyc) * 1.7;
+      const r = 0.45 + (((i * 53) % 10) / 10) * 0.4;
+      const sway = Math.sin(time * 1.3 + i * 1.7) * 0.12;
+      const fade = Math.min(1, Math.min(phase * 5, (1 - phase) * 4));
+      out(Math.cos(angle) * r + sway, 2.35 - phase * 2.3, Math.sin(angle) * r + sway * 0.5, i % 5 === 0 ? 0.06 : 0.04, fade * 0.95, phase);
     }
   } else if (style === "helix") {
     const n = 26;
@@ -80,6 +97,18 @@ function makeHalo(style, color) {
       spike.position.set(Math.cos(a) * 4.5, h / 2, Math.sin(a) * 4.5);
       g.add(spike);
     }
+  } else if (style === "wreath") {
+    // holly wreath: a ring of leafy blocks with red berries and a little gold bell (WingsFeature.wreath)
+    const n = 18, r = 4.6;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const x = Math.cos(a) * r, z = Math.sin(a) * r;
+      const y = -((i % 3) - 1) * 0.25;
+      g.add(box(1.8, 1.2, 1.8, i % 2 === 0 ? 0x1e7a3a : 0x2e9a4a, x, y, -z));
+      if (i % 3 === 0) g.add(box(0.8, 0.6, 0.8, 0xe0262e, Math.cos(a) * (r + 0.4), y + 0.7, -Math.sin(a) * (r + 0.4)));
+    }
+    g.add(box(1.2, 1.2, 0.9, 0xf2c230, 0, -0.2, r + 0.75));
+    g.userData.spin = true;
   } else if (style === "orbit") {
     ring(4.6).children.forEach((c) => (c.material.opacity *= 0.45));
     for (let i = 0; i < 3; i++) {
@@ -95,19 +124,62 @@ function makeHalo(style, color) {
   return g;
 }
 
-// Floppy dog ears (the same boxes as the mod's WingsFeature.dogEars): each ear rises from the top of the head,
-// arches over and hangs down beside it, pink inside. [out from, out to, up from, up to, back from, back to, part]
-// in skin pixels; "out" from the middle of the head, "up" from the top of the hat layer, part c = colour, d = darker, p = pink
-const DOG_EAR = [
-  [1.2, 2.4, 0.0, 1.0, -1.2, 1.5, "c"],
-  [1.8, 3.2, 0.7, 1.7, -1.3, 1.5, "c"],
-  [2.6, 4.6, 1.3, 2.1, -1.3, 1.6, "c"],
-  [4.2, 5.6, 0.5, 1.8, -1.3, 1.6, "c"],
-  [4.8, 5.8, -2.2, 0.8, -1.3, 1.6, "c"],
-  [4.95, 5.65, -2.8, -2.2, -1.0, 1.3, "d"],
-  [2.4, 4.5, 0.0, 1.3, -0.9, 1.2, "p"],
-  [4.5, 4.85, -1.9, 0.5, -0.9, 1.2, "p"],
+// Ears in the skin's own pixel style, the same as the mod (WingsFeature.Ear): a flat pixel-art piece standing on the
+// head and leaning outward. rows: top first, columns from the middle of the head outward. B base, L light, D dark,
+// P pink (front only), . empty. x/y/z: where the bottom middle sits (mod pixels: -y up, -z front); out/back: degrees.
+const EARS = {
+  dog_ears: { rows: [".BB.", "BPPL", "BPPB", "DPPD", "DBBD"], thick: 1, x: 2.4, y: -7.6, z: 0.6, out: 30, back: 6, fallback: 0x7a4a2a },
+  cat_ears: { rows: ["LLB", "LBB", "LBD", "BBD"], thick: 1.6, x: 2.6, y: -7.9, z: 0.4, out: 22, back: 12, fallback: 0xededed },
+  antlers: { rows: ["..L.L", "L.B.B", "BBBB.", ".BB..", ".B...", ".D..."], thick: 1, x: 3.0, y: -7.7, z: 0.6, out: 34, back: 8, fallback: 0x6e4a2c, fixed: true },
+};
+
+const mixRgb = (a, b, t) => {
+  const ch = (s) => Math.round(((a >> s) & 255) + (((b >> s) & 255) - ((a >> s) & 255)) * t);
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+};
+
+/** base, light, dark, pink. Ears in the default white are their natural colour; antlers are always antler brown. */
+function earPalette(ear, color) {
+  const c = ear.fixed || (color & 0xffffff) === 0xededed ? ear.fallback : color & 0xffffff;
+  return [c, mixRgb(c, 0xffffff, 0.28), mixRgb(c, 0x000000, 0.25), 0xf6a9bd];
+}
+
+function makeEar(ear, pal, side) {
+  const g = new THREE.Group();
+  const n = ear.rows.length, w = ear.rows[0].length, half = w / 2;
+  const col = (ch, front) => (ch === "L" ? pal[1] : ch === "D" ? pal[2] : ch === "P" ? (front ? pal[3] : pal[0]) : pal[0]);
+  for (let r = 0; r < n; r++) {
+    const row = ear.rows[r];
+    // mod y runs from -(n - r) to -(n - r) + 1; three.js has +y up
+    const yMid = n - r - 0.5;
+    for (let c = 0; c < w; c++) {
+      const ch = row[c];
+      if (ch === ".") continue;
+      const x = side * (c + 0.5 - half);
+      g.add(box(1, 1, ear.thick, col(ch, false), x, yMid, 0));
+      if (ch === "P" || ch === "L" || ch === "D") g.add(box(1, 1, 0.04, col(ch, true), x, yMid, ear.thick / 2 + 0.03)); // the front (+z: the face's side)
+    }
+  }
+  // place and lean it like the mod: translate, then roll outward (Z), then tip back (X); mod -> three.js flips y and z
+  g.position.set(side * ear.x, -ear.y, -ear.z);
+  g.rotation.order = "ZYX";
+  g.rotation.set((-ear.back * Math.PI) / 180, 0, -((side * ear.out * Math.PI) / 180));
+  return g;
+}
+
+// Santa hat (WingsFeature.SANTA): white fur brim, a red cone in steps that bends back and to the side, white pom-pom
+const SANTA = [
+  [-4.7, -9.4, -4.7, 4.7, -7.4, 4.7, 0],
+  [-4.1, -11.2, -4.0, 4.1, -9.4, 4.2, 1],
+  [-3.3, -12.9, -2.8, 3.5, -11.2, 4.0, 2],
+  [-2.2, -14.3, -1.2, 3.0, -12.9, 3.8, 1],
+  [-0.6, -15.3, 0.6, 3.4, -14.3, 3.6, 2],
+  [1.6, -15.6, 1.4, 4.6, -14.6, 3.2, 1],
+  [3.8, -15.4, 1.0, 6.4, -12.8, 3.6, 0],
 ];
+
+/** A box given in mod pixels (x0..x1, y0..y1 with -y up, z0..z1 with -z front), placed in three.js head space. */
+const modBox = (x0, y0, z0, x1, y1, z1, color) => box(x1 - x0, y1 - y0, z1 - z0, color, (x0 + x1) / 2, -(y0 + y1) / 2, -(z0 + z1) / 2);
 
 /** Blocky hats, like the mod's. */
 function makeHat(style, color) {
@@ -127,25 +199,15 @@ function makeHat(style, color) {
     const ruby = box(1, 1, 0.4, 0xe0304a);
     ruby.position.set(0, 9.6, -o - 0.1);
     g.add(ruby);
-  } else if (style === "cat_ears") {
-    for (const side of [-1, 1]) {
-      const ear = new THREE.Group();
-      const outer = box(3, 3, 1, color);
-      const inner = box(1.6, 1.8, 0.3, 0xffb3c7);
-      inner.position.set(0, -0.3, 0.6); // the pink inside faces forward (+z: the face's side)
-      ear.add(outer, inner);
-      ear.position.set(side * 2.6, 9.6, 0);
-      ear.rotation.z = side * -0.25;
-      g.add(ear);
-    }
-  } else if (style === "dog_ears") {
-    const dark = new THREE.Color(color).multiplyScalar(0.72).getHex();
-    for (const side of [-1, 1]) {
-      for (const [a0, a1, u0, u1, z0, z1, part] of DOG_EAR) {
-        const col = part === "p" ? 0xf6a9bd : part === "d" ? dark : color;
-        // three.js: the face is at +z, so the mod's "back" (+z there) runs the other way
-        g.add(box(a1 - a0, u1 - u0, z1 - z0, col, (side * (a0 + a1)) / 2, 8.5 + (u0 + u1) / 2, -(z0 + z1) / 2));
-      }
+  } else if (EARS[style]) {
+    const ear = EARS[style];
+    const pal = earPalette(ear, color);
+    for (const side of [-1, 1]) g.add(makeEar(ear, pal, side));
+  } else if (style === "santa") {
+    for (const [x0, y0, z0, x1, y1, z1, c] of SANTA) g.add(modBox(x0, y0, z0, x1, y1, z1, c === 0 ? 0xf4f4f2 : c === 1 ? 0xd42a2a : 0xb01e22));
+    for (let i = 0; i < 6; i++) {
+      const x = -4.2 + i * 1.6;
+      g.add(modBox(x, -8.8, -4.78, x + 0.8, -8.0, -4.7, 0xd8d8d6));
     }
   }
   g.userData.kind = "hat";
@@ -162,4 +224,41 @@ const WING_UP = 0.08 * 16;
 const WING_BACK = 0.18 * 16;
 
 
-export { auraPoints, colourAt, glow, makeHalo, makeHat };
+// Com Client's own capes (CustomCapes.java): an animated strip of 128x64 frames, top to bottom. [frames, ms per frame]
+const CUSTOM_CAPES = {
+  cc_snowfall: [12, 140], cc_lights: [8, 260], cc_candy_cane: [10, 90],
+  cc_aurora: [16, 110], cc_galaxy: [16, 130], cc_lava: [16, 100], cc_glitch: [12, 90],
+};
+
+/** Cuts a cape strip into one canvas per frame. */
+function capeFrames(img, n) {
+  const h = Math.floor(img.height / n);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement("canvas");
+    c.width = img.width;
+    c.height = h;
+    c.getContext("2d").drawImage(img, 0, i * h, img.width, h, 0, 0, img.width, h);
+    out.push(c);
+  }
+  return out;
+}
+
+/** Plays an animated cape on a skinview3d viewer (everyone's cape on the same clock, like in game). Returns stop(). */
+function playCape(viewer, img, id, backEquipment = "cape") {
+  const [n, ms] = CUSTOM_CAPES[id] || [1, 1000];
+  const frames = capeFrames(img, n);
+  let last = -1;
+  const step = () => {
+    const f = Math.floor(Date.now() / ms) % frames.length;
+    if (f !== last) {
+      last = f;
+      viewer.loadCape(frames[f], { backEquipment });
+    }
+  };
+  step();
+  const t = setInterval(step, Math.min(ms, 100));
+  return () => clearInterval(t);
+}
+
+export { CUSTOM_CAPES, EARS, earPalette, SANTA, capeFrames, playCape, auraColour, auraPoints, colourAt, glow, makeHalo, makeHat };
