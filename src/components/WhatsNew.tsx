@@ -5,6 +5,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.6",
+    items: [
+      ["download", "New update screen", "Updates now show a progress ring, download speed, time left and what's new, with Try again if something goes wrong."],
+      ["sparkle", "Discord", "Your Discord status has a Download Com Client button now."],
+    ],
+  },
+  {
     version: "0.6.5",
     items: [["sparkle", "Wings fixed in the Locker", "The wings now sit on your back and spread out like in the game, instead of floating flat away from you."]],
   },
