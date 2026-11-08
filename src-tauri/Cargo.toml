@@ -1,6 +1,6 @@
 [package]
 name = "com-client-launcher"
-version = "0.6.6"
+version = "0.6.7"
 description = "Com Client Launcher"
 authors = ["Com Client"]
 edition = "2021"

@@ -3842,3 +3842,88 @@ svg.flip {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* ---- report / block */
+.msg-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+.msg-wrap.mine .msg-line {
+  flex-direction: row-reverse;
+}
+.msg-line .msg {
+  max-width: 75%;
+}
+.msg-report {
+  opacity: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: opacity 0.15s, color 0.15s;
+}
+.msg-line:hover .msg-report {
+  opacity: 1;
+}
+.msg-report:hover {
+  color: #ff8a9a;
+  background: rgba(255, 255, 255, 0.06);
+}
+.msg.hidden-msg {
+  font-style: italic;
+  color: var(--muted);
+}
+.report-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+}
+.report-reason {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+.report-reason span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.report-reason:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.report-reason.on {
+  border-color: rgba(var(--accent-rgb), 0.7);
+  background: rgba(var(--accent-rgb), 0.12);
+}
+.report-note {
+  width: 100%;
+}
+.report-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}

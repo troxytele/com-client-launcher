@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ago, api, Chat, ChatSummary, msg, ServerFriend, ServerState } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
-import { Empty, Spinner } from "../components/Ui";
+import { Empty, Modal, Spinner } from "../components/Ui";
 
 export function head(uuid: string, size = 32) {
   return `https://mc-heads.net/avatar/${uuid.replace(/-/g, "")}/${size}`;
@@ -222,8 +222,66 @@ function FriendRow({ f, unread, active, running, onChat, onJoin }: {
   );
 }
 
+const REASONS: [string, string, string][] = [
+  ["spam", "Spam", "Ads, scams, the same thing over and over"],
+  ["harassment", "Harassment", "Insults, threats, bullying"],
+  ["image", "Inappropriate picture", "Sexual, violent or shocking pictures"],
+  ["impersonation", "Pretending to be someone", "A fake staff member or someone else"],
+  ["other", "Something else", "Tell us in the note"],
+];
+
+/** Report one chat message to the Com Client staff (and block the sender if you like). */
+function ReportDialog({ uuid, name, msgId, onClose, onBlocked }: { uuid: string; name: string; msgId: string; onClose: () => void; onBlocked: () => void }) {
+  const [reason, setReason] = useState("");
+  const [note, setNote] = useState("");
+  const [block, setBlock] = useState(true);
+  const [busy, setBusy] = useState(false);
+  async function send() {
+    setBusy(true);
+    try {
+      await api.serverPost("/report", { type: "chat", id: msgId, uuid, reason, note });
+      if (block) {
+        await api.serverPost("/block", { uuid });
+        onBlocked();
+      }
+      toast(block ? `Report sent. ${name} is blocked.` : "Report sent. Thanks, staff will look at it.", "ok");
+      onClose();
+    } catch (e) {
+      toast(msg(e), "error");
+      setBusy(false);
+    }
+  }
+  return (
+    <Modal title="Report message" onClose={onClose}>
+      <p className="muted small">Staff will look at this message. {name} isn't told who reported it.</p>
+      <div className="report-reasons">
+        {REASONS.map(([id, label, hint]) => (
+          <button key={id} className={"report-reason" + (reason === id ? " on" : "")} onClick={() => setReason(id)}>
+            <b>{label}</b>
+            <span>{hint}</span>
+          </button>
+        ))}
+      </div>
+      <input className="report-note" placeholder="Anything we should know? (optional)" maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} />
+      <label className="report-block">
+        <input type="checkbox" checked={block} onChange={(e) => setBlock(e.target.checked)} /> Also block {name}
+      </label>
+      <div className="modal-actions">
+        <button className="btn" onClick={onClose}>
+          Cancel
+        </button>
+        <button className="btn primary" disabled={!reason || busy} onClick={send}>
+          {busy ? <Spinner size={13} /> : <Icon name="flag" size={14} />} Send report
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
 function ChatView({ uuid, name, onChanged }: { uuid: string; name: string; onChanged: () => void }) {
   const [chat, setChat] = useState<Chat | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
+  const [blocking, setBlocking] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const end = useRef<HTMLDivElement>(null);
@@ -269,13 +327,42 @@ function ChatView({ uuid, name, onChanged }: { uuid: string; name: string; onCha
     }
   }
 
+  async function block() {
+    try {
+      await api.serverPost("/block", { uuid });
+      toast(`${name} is blocked. Unblock them in game: Profile > Settings > Blocked players.`, "ok");
+      setBlocking(false);
+      onChanged();
+    } catch (e) {
+      toast(msg(e), "error");
+    }
+  }
+
   return (
     <div className="chat">
       <div className="chat-head">
         <Head uuid={uuid} size={30} />
         <b>{name}</b>
         {chat && !chat.friend && <span className="muted small">not your friend</span>}
+        <span className="grow" />
+        <button className="icon-btn" title={"Block " + name} onClick={() => setBlocking(true)}>
+          <Icon name="block" size={16} />
+        </button>
       </div>
+      {reporting && <ReportDialog uuid={uuid} name={name} msgId={reporting} onClose={() => setReporting(null)} onBlocked={onChanged} />}
+      {blocking && (
+        <Modal title={"Block " + name + "?"} onClose={() => setBlocking(false)}>
+          <p className="muted">They can't message you, add you or see your page, here, in game and on the website. They aren't told.</p>
+          <div className="modal-actions">
+            <button className="btn" onClick={() => setBlocking(false)}>
+              Cancel
+            </button>
+            <button className="btn primary" onClick={block}>
+              <Icon name="block" size={14} /> Block
+            </button>
+          </div>
+        </Modal>
+      )}
       <div className="chat-msgs">
         {!chat ? (
           <div className="center pad">
@@ -291,7 +378,14 @@ function ChatView({ uuid, name, onChanged }: { uuid: string; name: string; onCha
             return (
               <div key={m.id} className={"msg-wrap" + (mine ? " mine" : "")}>
                 {gap && <div className="msg-time">{new Date(m.at * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}</div>}
-                <div className="msg">{m.text}</div>
+                <div className="msg-line">
+                  <div className={"msg" + (m.hidden ? " hidden-msg" : "")}>{m.text}</div>
+                  {!mine && !m.hidden && (
+                    <button className="msg-report" title="Report message" onClick={() => setReporting(m.id)}>
+                      <Icon name="flag" size={13} />
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })

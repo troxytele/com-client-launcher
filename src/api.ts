@@ -104,7 +104,7 @@ export type ChatSummary = {
   uuid: string; name: string; username: string; unread: number; at: number; request: boolean;
   last: { text: string; at: number; mine: boolean } | null;
 };
-export type ChatMessage = { id: string; from: string; text: string; at: number };
+export type ChatMessage = { id: string; from: string; text: string; at: number; hidden?: boolean };
 export type Chat = { uuid: string; name: string; username: string; friend: boolean; request: boolean; pending: boolean; declined: boolean; messages: ChatMessage[]; other_read: number };
 
 export type Skin = { id: string; name: string; variant: "classic" | "slim"; data: string; active: boolean };

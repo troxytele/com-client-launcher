@@ -5,6 +5,12 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.7",
+    items: [
+      ["flag", "Report and block", "Hover a message in Friends to report it to the Com Client staff, or block someone from the chat header. Blocks work in game and on the website too."],
+    ],
+  },
+  {
     version: "0.6.6",
     items: [
       ["download", "New update screen", "Updates now show a progress ring, download speed, time left and what's new, with Try again if something goes wrong."],
