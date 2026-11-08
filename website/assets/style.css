@@ -15,7 +15,8 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; scroll-padding-top: 90px; }
-body { background: var(--bg); color: var(--text); font: 500 16px/1.6 "Poppins", system-ui, sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--text); font: 500 16px/1.6 "Poppins", system-ui, sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 a { color: inherit; text-decoration: none; }
 img { display: block; max-width: 100%; }
 ::selection { background: #fff; color: #000; }
@@ -52,7 +53,7 @@ img { display: block; max-width: 100%; }
 .btn.big { padding: 15px 26px; font-size: 16px; }
 
 /* ---------------------------------------------------------------- hero */
-main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; flex: 1 0 auto; }
 .hero { display: grid; grid-template-columns: 1fr 1.15fr; gap: 56px; align-items: center; padding: 90px 0 70px; }
 .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 99px; background: var(--glass); border: 1px solid var(--line2); color: var(--muted); font-size: 13px; }
 .pill i { width: 7px; height: 7px; border-radius: 50%; background: #7dffb0; box-shadow: 0 0 10px #7dffb0; }
@@ -128,7 +129,7 @@ h2 { font-size: clamp(32px, 4.2vw, 50px); line-height: 1.1; letter-spacing: -.03
 .download .fine { margin: 16px 0 0; }
 
 /* ---------------------------------------------------------------- footer */
-.footer { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 50px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 20px 30px; }
+.footer { flex-shrink: 0; width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 50px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 20px 30px; }
 .footer nav { display: flex; gap: 22px; color: var(--muted); font-size: 14px; }
 .footer nav a:hover { color: var(--text); }
 .footer p { width: 100%; color: var(--dim); font-size: 12px; }
