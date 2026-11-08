@@ -25,7 +25,8 @@
         img.replaceWith(c);
       }
       const gift = $("inv-gift");
-      gift.textContent = `◆ +${p.welcome} points for you after ${p.play_hours} hour${p.play_hours === 1 ? "" : "s"} of play`;
+      gift.textContent = "";
+      gift.append(window.CC.coin(18), document.createTextNode(` +${p.welcome} points for you after ${p.play_hours} hour${p.play_hours === 1 ? "" : "s"} of play`));
       gift.hidden = false;
     })
     .catch(() => {});

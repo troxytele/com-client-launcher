@@ -5,6 +5,10 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.18",
+    items: [["sparkle", "Points coin", "Points now have their own gold coin everywhere: Locker, prices and the daily deal."]],
+  },
+  {
     version: "0.6.17",
     items: [
       ["sparkle", "Daily deal", "One cosmetic is 30% off every day. You'll find it at the top of the Locker."],

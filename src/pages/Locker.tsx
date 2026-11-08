@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api, Catalog, CosmeticItem, CurrentSkin, Deal, Look, msg, Shop, ShopKind, Wallet } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
+import Coin from "../components/Coin";
 import LockerPreview from "../components/LockerPreview";
 import { AuraArt, HaloArt, HatArt } from "../components/CosmeticArt";
 import { Empty, Modal, Spinner } from "../components/Ui";
@@ -157,7 +158,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
           )}
           {shop && (
             <button className="points-pill" onClick={() => setEarnOpen(true)} title="How to earn points">
-              <Icon name="gem" size={15} />
+              <Coin size={17} />
               {shop.wallet.everything ? "Everything unlocked" : `${shop.wallet.points.toLocaleString()} points`}
             </button>
           )}
@@ -208,7 +209,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                       </button>
                     ) : (
                       <button className="btn small primary" disabled={buying !== ""} onClick={() => buy(x.field, id)}>
-                        {buying === x.field + ":" + id ? <Spinner size={12} /> : <Icon name="gem" size={13} />} Unlock for {price.toLocaleString()}
+                        {buying === x.field + ":" + id ? <Spinner size={12} /> : <Coin size={15} />} Unlock for {price.toLocaleString()}
                       </button>
                     )}
                   </div>
@@ -261,7 +262,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                 Today's deal: <b>{shop.wallet.deal.name}</b> <span className="muted">({shop.wallet.deal.kind === "wings" ? "wings" : shop.wallet.deal.kind})</span>
               </span>
               <span className="deal-price">
-                <s>{shop.wallet.deal.full_price}</s> <Icon name="gem" size={12} /> {shop.wallet.deal.price}
+                <s>{shop.wallet.deal.full_price}</s> <Coin size={14} /> {shop.wallet.deal.price}
               </span>
             </button>
           )}
@@ -320,12 +321,12 @@ function PriceTag({ wearing, owned, free, price, deal }: { wearing: boolean; own
   if (deal)
     return (
       <span className="price cost deal">
-        <s>{deal.full_price.toLocaleString()}</s> <Icon name="gem" size={11} /> {deal.price.toLocaleString()}
+        <s>{deal.full_price.toLocaleString()}</s> <Coin size={13} /> {deal.price.toLocaleString()}
       </span>
     );
   return (
     <span className="price cost">
-      <Icon name="gem" size={11} /> {price.toLocaleString()}
+      <Coin size={13} /> {price.toLocaleString()}
     </span>
   );
 }
@@ -351,7 +352,7 @@ function EarnPoints({ wallet: w, onWallet, onClose }: { wallet: Wallet; onWallet
     <Modal title="Earn points" onClose={onClose} width={480}>
       <div className="earn">
         <div className="earn-balance">
-          <Icon name="gem" size={20} />
+          <Coin size={22} />
           <b>{w.points.toLocaleString()}</b>
           <span className="muted">points{w.everything ? " · you have everything unlocked" : ""}</span>
         </div>

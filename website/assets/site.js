@@ -77,5 +77,20 @@ window.CC = (() => {
   /** comclient.xyz/u/<name> */
   const profileUrl = (p) => "/u/" + encodeURIComponent(p.username || p.name);
 
-  return { STEVE, API, NEWS, el, get, hours, ROLES, roleBadges, face, avatarUrl, profileUrl };
+  /** The gold points coin (an <img>). */
+  const coin = (size = 16) => {
+    const i = el("img", "coin");
+    i.src = "/assets/coin.svg";
+    i.alt = "points";
+    i.width = i.height = size;
+    return i;
+  };
+  /** A coin followed by a number. */
+  const coins = (n, size = 16) => {
+    const s = el("span", "coins");
+    s.append(coin(size), document.createTextNode(" " + Number(n).toLocaleString()));
+    return s;
+  };
+
+  return { STEVE, API, NEWS, el, get, hours, ROLES, roleBadges, face, avatarUrl, profileUrl, coin, coins };
 })();
