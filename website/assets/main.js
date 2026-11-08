@@ -57,6 +57,13 @@
         }
       });
     });
+    // using the live Click GUI stops the slideshow on it
+    stage.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".cg")) {
+        clearTimeout(timer);
+        stage.classList.add("paused");
+      }
+    });
     // only play while it's on screen
     if ("IntersectionObserver" in window) {
       new IntersectionObserver((e) => {

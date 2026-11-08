@@ -15,11 +15,12 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/assets/style.css?v=e3200735">
+  <link rel="stylesheet" href="/assets/style.css?v=b76c4795">
   <link rel="stylesheet" href="/assets/pages.css?v=fd9c5351">
-  <script src="/assets/main.js?v=37bc4e77" defer></script>
+  <script src="/assets/main.js?v=73ad29da" defer></script>
   <script src="/assets/site.js?v=7a479379" defer></script>
   <script src="/assets/viewer.js?v=5b4a0e87" defer></script>
+  <script src="/assets/clickgui.js?v=4faf8777" defer></script>
   <script src="/assets/home.js?v=eb8d853a" defer></script>
 </head>
 <body>
@@ -61,14 +62,14 @@
       <div class="stage" id="stage">
         <div class="stage-screen">
           <img class="shot on" data-shot="menu" src="/assets/shots/menu.webp" srcset="/assets/shots/menu-sm.webp 960w, /assets/shots/menu.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="1057" fetchpriority="high" alt="The Com Client main menu with the player's skin, wings, halo and aura">
-          <img class="shot" data-shot="gui" src="/assets/shots/gui-render.webp" srcset="/assets/shots/gui-render-sm.webp 960w, /assets/shots/gui-render.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="1057" loading="lazy" alt="The Click GUI showing Render modules like Custom Sky, Radiance and Afterglow">
+          <div class="shot cg" data-shot="gui" data-clickgui="RENDER" role="region" aria-label="Try the Click GUI: click modules to switch them"></div>
           <img class="shot" data-shot="world" src="/assets/shots/world.webp" srcset="/assets/shots/world-sm.webp 960w, /assets/shots/world.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="850" loading="lazy" alt="In game with the Com Client HUD and a custom aurora sky">
           <img class="shot" data-shot="social" src="/assets/shots/feed.webp" srcset="/assets/shots/feed-sm.webp 960w, /assets/shots/feed.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="1057" loading="lazy" alt="The Social tab with a 24-hour feed, chats and pages">
           <img class="shot" data-shot="locker" src="/assets/shots/locker-wings.webp" srcset="/assets/shots/locker-wings-sm.webp 960w, /assets/shots/locker-wings.webp 1920w" sizes="(max-width: 1240px) 100vw, 1180px" width="1920" height="1057" loading="lazy" alt="The Locker, picking devil wings">
         </div>
         <div class="stage-tabs" role="tablist" aria-label="Screens">
           <button role="tab" class="on" data-tab="menu" aria-selected="true"><b>Main menu</b><span>Your skin and cosmetics, front and centre</span><i></i></button>
-          <button role="tab" data-tab="gui" aria-selected="false"><b>Click GUI</b><span>Every module, searchable</span><i></i></button>
+          <button role="tab" data-tab="gui" aria-selected="false"><b>Click GUI</b><span>Live: click the modules</span><i></i></button>
           <button role="tab" data-tab="world" aria-selected="false"><b>In game</b><span>Glass HUD and custom skies</span><i></i></button>
           <button role="tab" data-tab="social" aria-selected="false"><b>Social</b><span>Feed, chats and pages</span><i></i></button>
           <button role="tab" data-tab="locker" aria-selected="false"><b>Locker</b><span>Capes, wings, halos, auras</span><i></i></button>
@@ -88,7 +89,7 @@
             <h3>A HUD you arrange yourself</h3>
             <p>FPS, keystrokes, armor, potions, ping, coordinates, clock, Spotify and more, in glass. Drag each one where you want it.</p>
           </div>
-          <img src="/assets/shots/gui-hud-sm.webp" width="960" height="528" loading="lazy" alt="HUD modules in the Click GUI">
+          <div class="cg cg-tile" data-clickgui="HUD" role="region" aria-label="HUD modules in the Click GUI, try switching them"></div>
         </article>
 
         <article class="tile t-cos" id="cosmetics">
