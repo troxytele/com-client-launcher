@@ -155,6 +155,8 @@ button.chip:hover { background: rgba(255,255,255,.12); }
 .g-item:hover { transform: translateY(-3px); border-color: var(--line2); }
 .g-item.on { border-color: #fff; box-shadow: 0 0 0 1px #fff; background: rgba(255,255,255,.07); }
 .g-item small { font-size: 12px; text-align: center; line-height: 1.25; }
+.g-price { font-size: 11px; font-weight: 700; color: var(--text); opacity: .75; }
+.g-price.free { color: #4fe3a0; opacity: 1; }
 .art { width: 48px; height: 64px; image-rendering: pixelated; display: grid; place-items: center; }
 .art.cape { width: 40px; height: 64px; border-radius: 3px; }
 .art.wings { width: 72px; height: 60px; }
@@ -246,3 +248,12 @@ button.chip:hover { background: rgba(255,255,255,.12); }
 [hidden] { display: none !important; }
 button.btn.ghost { color: var(--text); font: inherit; font-weight: 700; }
 .art.thumb { width: 64px; height: 64px; image-rendering: auto; object-fit: contain; }
+
+/* comclient.xyz/r/<name>: invite page */
+.invite { max-width: 520px; margin: 40px auto 80px; padding: 34px 28px; border-radius: 22px; text-align: center; }
+.invite .inv-face { width: 84px; height: 84px; border-radius: 20px; margin: 0 auto 14px; image-rendering: pixelated; display: block; background: rgba(255,255,255,.06); object-fit: cover; }
+.invite h2 { margin: 0 0 8px; font-size: clamp(24px, 6vw, 34px); overflow-wrap: anywhere; }
+.invite p { color: var(--muted); margin: 0 auto 10px; max-width: 420px; }
+.invite .inv-gift { display: inline-flex; gap: 8px; align-items: center; margin: 12px 0 20px; padding: 9px 15px; border-radius: 999px; border: 1px solid var(--line2); font-weight: 700; }
+.invite ol { text-align: left; margin: 0 auto 22px; max-width: 360px; color: var(--muted); padding-left: 20px; line-height: 1.7; }
+.invite .btn { margin: 4px; }

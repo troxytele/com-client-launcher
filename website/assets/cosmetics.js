@@ -10,6 +10,18 @@
   // cat and dog ears come in real fur colours: white, cream, golden, ginger, brown, dark brown, grey, black
   const EAR_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 0x8c8782, 0x1e1a19];
   let catalog = null;
+  let prices = null; // "cape:<hash>" -> points (0 = free), from the server's shop
+  const SHOP_KIND = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura" };
+  get("/public/shop").then((s) => {
+    prices = new Map(s.items.map((i) => [i.kind + ":" + i.id, i.price]));
+    if (catalog) render();
+  }).catch(() => {});
+  function priceTag(id) {
+    if (!prices) return null;
+    const p = prices.get(SHOP_KIND[kind] + ":" + id) ?? (kind === "capes" ? 300 : null);
+    if (p === null) return null;
+    return el("span", "g-price" + (p ? "" : " free"), p ? `◆ ${p.toLocaleString()}` : "Free");
+  }
   let kind = "capes";
   let viewer = null;
 
@@ -128,6 +140,8 @@
       const b = el("button", "g-item" + (look[field] === item.id ? " on" : ""));
       b.title = item.name;
       b.append(kind === "capes" ? capeArt(item.id) : kind === "wings" ? wingArt(item.id) : iconArt(kind, item.id), el("small", null, item.name));
+      const tag = priceTag(item.id);
+      if (tag) b.append(tag);
       b.addEventListener("click", () => pick(item.id));
       box.append(b);
     }
