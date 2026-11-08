@@ -16,11 +16,11 @@
   <meta name="twitter:card" content="summary">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="stylesheet" href="/assets/style.css?v=567898f2">
-  <link rel="stylesheet" href="/assets/pages.css?v=94fbe647">
+  <link rel="stylesheet" href="/assets/pages.css?v=73f67a2e">
   <script src="/assets/main.js?v=ee397b28" defer></script>
   <script src="/assets/site.js?v=44e6b615" defer></script>
   <script src="/assets/viewer.js?v=8302bebf" defer></script>
-  <script src="/assets/u.js?v=af223cb4" defer></script>
+  <script src="/assets/u.js?v=8734f479" defer></script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
@@ -64,7 +64,15 @@
           <div class="p-card glass" id="p-tiers" hidden></div>
           <div class="p-card glass" id="p-badges" hidden></div>
           <div class="p-card glass" id="p-wear" hidden></div>
-          <audio id="p-music" controls preload="none" hidden></audio>
+          <div class="p-song glass" id="p-song" hidden>
+            <button class="song-play" id="song-play" type="button" aria-label="Play"><span class="i-play"></span></button>
+            <div class="song-main">
+              <div class="song-top"><b id="song-name">Their song</b><span id="song-time">0:00 / 0:00</span></div>
+              <div class="song-bar" id="song-bar" role="slider" aria-label="Position" tabindex="0"><div class="song-fill" id="song-fill"></div></div>
+            </div>
+            <input class="song-vol" id="song-vol" type="range" min="0" max="1" step="0.01" value="0.6" aria-label="Volume">
+            <audio id="p-music" preload="none"></audio>
+          </div>
         </div>
       </div>
     </section>

@@ -188,8 +188,36 @@
       if (p.music) {
         const m = $("p-music");
         m.src = `${API}/page/${p.uuid}/music?v=${p.music}`;
-        m.title = p.music_name || "Their song";
-        m.hidden = false;
+        m.volume = 0.6;
+        $("song-name").textContent = p.music_name || "Their song";
+        const play = $("song-play"), bar = $("song-bar"), fill = $("song-fill"), vol = $("song-vol");
+        const fmt = (t) => (isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "0:00");
+        const draw = () => {
+          const d = m.duration || 0;
+          fill.style.width = d ? `${(m.currentTime / d) * 100}%` : "0%";
+          $("song-time").textContent = `${fmt(m.currentTime)} / ${fmt(d)}`;
+          play.classList.toggle("on", !m.paused);
+          play.setAttribute("aria-label", m.paused ? "Play" : "Pause");
+        };
+        play.addEventListener("click", () => (m.paused ? m.play().catch(() => {}) : m.pause()));
+        for (const ev of ["timeupdate", "loadedmetadata", "play", "pause", "ended"]) m.addEventListener(ev, draw);
+        const seek = (x) => {
+          const r = bar.getBoundingClientRect();
+          if (m.duration) m.currentTime = Math.max(0, Math.min(1, (x - r.left) / r.width)) * m.duration;
+        };
+        bar.addEventListener("pointerdown", (e) => {
+          seek(e.clientX);
+          bar.setPointerCapture(e.pointerId);
+          const move = (ev) => seek(ev.clientX);
+          bar.addEventListener("pointermove", move);
+          bar.addEventListener("pointerup", () => bar.removeEventListener("pointermove", move), { once: true });
+        });
+        bar.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight") m.currentTime += 5;
+          if (e.key === "ArrowLeft") m.currentTime -= 5;
+        });
+        vol.addEventListener("input", () => (m.volume = +vol.value));
+        $("p-song").hidden = false;
       }
 
       // ---- 3D model with cosmetics
