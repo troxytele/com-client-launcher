@@ -4205,3 +4205,82 @@ svg.flip {
   opacity: 0.45;
   cursor: default;
 }
+
+/* crash popup: the likely reason in plain words */
+.crash-reasons {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.crash-reason {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.04);
+}
+.crash-reason.fix {
+  border-color: rgba(255, 120, 120, 0.35);
+  background: rgba(255, 90, 90, 0.07);
+}
+.crash-reason b {
+  display: block;
+  margin-bottom: 3px;
+}
+.crash-reason p {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.crash-details summary {
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+/* first-run tour */
+.tour {
+  text-align: left;
+}
+.tour-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  margin-bottom: 14px;
+}
+.tour-count {
+  font-size: 12px;
+  opacity: 0.5;
+}
+.tour h3 {
+  margin: 4px 0 8px;
+  font-size: 20px;
+}
+.tour p {
+  line-height: 1.5;
+  min-height: 3em;
+}
+.tour-dots {
+  display: flex;
+  gap: 6px;
+  margin: 16px 0 6px;
+}
+.tour-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: width 0.25s, background 0.25s;
+}
+.tour-dots button.on {
+  width: 22px;
+  background: #fff;
+}
