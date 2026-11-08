@@ -92,6 +92,27 @@ export type PackInfo = { kind: "mrpack" | "ccprofile"; name: string; version: st
 export type ModrinthPack = { id: string; slug: string; title: string; description: string; icon: string; downloads: number; version: string; problem: string };
 export type CosmeticItem = { id: string; name: string };
 export type Catalog = { capes: CosmeticItem[]; wings: CosmeticItem[]; halos: CosmeticItem[]; hats: CosmeticItem[]; auras: CosmeticItem[] };
+export type ShopKind = "cape" | "wings" | "halo" | "hat" | "aura";
+export type ShopItem = { kind: ShopKind; id: string; name: string; price: number; owned: boolean };
+export type Wallet = {
+  points: number;
+  everything: boolean;
+  today: number;
+  today_cap: number;
+  per_minutes: number;
+  streak: number;
+  streak_bonus_next: number;
+  streak_claimed_today: boolean;
+  invite_link: string;
+  invited: number;
+  invites_paid: number;
+  invite_reward: number;
+  invite_welcome: number;
+  referred_by: { uuid: string; name: string } | null;
+  can_claim_invite: boolean;
+  history: { at: number; n: number; why: string }[];
+};
+export type Shop = { wallet: Wallet; items: ShopItem[] };
 /** Same fields as the mod's config. auraColor -1 = rainbow. */
 export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number };
 
@@ -142,7 +163,10 @@ export const api = {
   catalog: () => invoke<Catalog>("cosmetics_catalog"),
   cosmeticTexture: (kind: "cape" | "wings", id: string) => invoke<string>("cosmetic_texture", { kind, id }),
   lookGet: () => invoke<Look>("cosmetics_get"),
-  lookSave: (look: Look) => invoke<void>("cosmetics_save", { look }),
+  lookSave: (look: Look) => invoke<Look>("cosmetics_save", { look }),
+  shop: () => invoke<Shop>("server_get", { path: "/shop" }),
+  shopBuy: (kind: ShopKind, id: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/shop/buy", body: { kind, id } }),
+  inviteClaim: (who: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/ref/claim", body: { who } }),
   modpackInstall: (project: string, title: string, icon: string) => invoke<string>("modpack_install", { project, title, icon }),
   openLogsWindow: () => invoke<void>("open_logs_window"),
   optimiseScan: () => invoke<OptimisePlan>("optimise_scan"),
