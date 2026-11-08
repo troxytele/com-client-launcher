@@ -209,6 +209,10 @@ export default function LockerPreview({ skin, slim, look, cape, wings }: { skin:
       // wings: the elytra shape held out to the sides and beating, like the client (WingsFeature.java)
       const el = v.playerObject.elytra;
       if (el.visible) {
+        // Minecraft turns model parts pitch first, then roll (ZYX); three.js defaults to XYZ, which laid the
+        // spread wings flat and away from the back
+        el.leftWing.rotation.order = "ZYX";
+        el.rightWing.rotation.order = "ZYX";
         const flap = Math.sin((now / 2000) * Math.PI * 2) * WING_FLAP;
         el.leftWing.rotation.set(ELYTRA_REST + flap, 0.01, ELYTRA_REST + WING_SPREAD);
         el.updateRightWing();
