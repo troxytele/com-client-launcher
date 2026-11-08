@@ -3,6 +3,20 @@
 (() => {
   const { API, el, get, hours, roleBadges, face, avatarUrl, ROLES } = window.CC;
   const $ = (id) => document.getElementById(id);
+  // the kit's icon, like the Tier Tags module in game (MCTiers, PvPTiers and SubTiers use different names)
+  const tierIcon = (mode) => {
+    const k = mode.toLowerCase();
+    if (k.includes("neth")) return "nethpot";
+    if (k.includes("sword")) return "sword";
+    if (k.includes("axe")) return "axe";
+    if (k.includes("pot")) return "pot";
+    if (k.includes("mace")) return "mace";
+    if (k.includes("uhc")) return "uhc";
+    if (k.includes("crystal") || k.includes("vanilla")) return "vanilla";
+    if (k.includes("creeper")) return "creeper";
+    if (k.includes("smp")) return "smp";
+    return "other";
+  };
   const path = location.pathname.startsWith("/u/") ? location.pathname.slice(3).replace(/\/$/, "") : "";
   const who = decodeURIComponent(path) || new URLSearchParams(location.search).get("name") || "";
 
@@ -150,10 +164,16 @@
           const row = el("div", "tier-row");
           row.append(el("span", "tier-list", { mctiers: "MCTiers", pvptiers: "PvPTiers", subtiers: "SubTiers" }[list] || list));
           for (const [mode, r] of Object.entries(modes)) {
-            const chip = el("span", "tier t" + r.tier + (r.retired ? " retired" : ""), `${r.retired ? "R" : ""}${r.high ? "HT" : "LT"}${r.tier}`);
-            chip.title = mode;
-            const wrap = el("span", "tier-mode");
-            wrap.append(chip, el("small", null, mode.replace(/_/g, " ")));
+            const label = mode.replace(/_/g, " ");
+            const wrap = el("span", "tier-mode t" + r.tier + (r.retired ? " retired" : ""));
+            wrap.title = `${label}: ${r.high ? "High" : "Low"} Tier ${r.tier}${r.retired ? " (retired)" : ""}`;
+            const icon = el("img", "tier-icon");
+            icon.src = `/assets/tiers/${tierIcon(mode)}.png`;
+            icon.alt = "";
+            icon.width = icon.height = 20;
+            const text = el("span", "tier-text");
+            text.append(el("b", null, `${r.retired ? "R" : ""}${r.high ? "HT" : "LT"}${r.tier}`), el("small", null, label));
+            wrap.append(icon, text);
             row.append(wrap);
           }
           t.append(row);
@@ -244,7 +264,7 @@
         const box = canvas.parentElement;
         const v = window.CCViewer.create(canvas, { width: box.clientWidth, height: box.clientHeight });
         new ResizeObserver(() => v.setSize(box.clientWidth, box.clientHeight)).observe(box);
-        v.setSkin(`${API}/public/skin/${p.uuid}`, p.model === "slim");
+        v.setSkin([`${API}/public/skin/${p.uuid}`, ...window.CC.STEVE], p.model === "slim");
         const cape = look.cape && look.cape !== "none" ? `${API}/public/cape/${look.cape}` : null;
         const wings = look.wings && look.wings !== "none" ? `/assets/cosmetics/${look.wings}.png` : null;
         v.setLook(look, cape, wings);

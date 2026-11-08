@@ -145,7 +145,7 @@
     if (!name) return;
     get("/public/player/" + encodeURIComponent(name))
       .then((p) => {
-        viewer.setSkin(`${API}/public/skin/${p.uuid}`, p.model === "slim");
+        viewer.setSkin([`${API}/public/skin/${p.uuid}`, ...window.CC.STEVE], p.model === "slim");
         $("g-skin-name").value = p.name;
       })
       .catch((err) => {
@@ -164,7 +164,7 @@
       if (window.CCViewer) {
         viewer = window.CCViewer.create(canvas, { width: box.clientWidth, height: box.clientHeight });
         new ResizeObserver(() => viewer.setSize(box.clientWidth, box.clientHeight)).observe(box);
-        viewer.setSkin("/assets/cosmetics/default-skin.png", false);
+        viewer.setSkin(window.CC.STEVE, false);
       }
       look.wings = "none";
       apply();

@@ -217,7 +217,16 @@ export default function LockerPreview({ skin, slim, look, cape, wings }: { skin:
         el.leftWing.rotation.set(ELYTRA_REST + flap, 0.01, ELYTRA_REST + WING_SPREAD);
         el.updateRightWing();
         el.scale.setScalar(WING_SCALE);
-        el.position.set(0, 8 + WING_UP, -2 - WING_BACK);
+        // like the game: the wing boxes are 2 px thick and start at their pivot, which sits WING_BACK behind the
+        // middle of the body (skinview3d's own elytra is 4 px thick, centred, and already pushed 2 px back)
+        for (const w of [el.leftWing, el.rightWing]) {
+          const mesh = w.children[0];
+          if (mesh) {
+            mesh.scale.z = 0.5;
+            mesh.position.z = -1;
+          }
+        }
+        el.position.set(0, 8 + WING_UP, -WING_BACK);
       }
       // orbiting sparks of the halo
       const halo = extras.current.halo;

@@ -11,6 +11,22 @@ const WING_SCALE = 0.65;
 const WING_UP = 0.08 * 16;
 const WING_BACK = 0.18 * 16;
 
+const loadImage = (url, ms) =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    const t = setTimeout(() => resolve(null), ms);
+    img.onload = () => {
+      clearTimeout(t);
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(t);
+      resolve(null);
+    };
+    img.src = url;
+  });
+
 function create(canvas, { width = 320, height = 420, rotate = true, fromBehind = true } = {}) {
   const v = new SkinViewer({ canvas, width, height, zoom: 0.78, fov: 40 });
   v.controls.enableZoom = false;
@@ -24,6 +40,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
 
   let look = { cape: "none", wings: "none", halo: "none", haloColor: 0, hat: "none", hatColor: 0, aura: "none", auraColor: 0 };
   const extras = {};
+  let skinCall = 0;
   const aura = new THREE.Group();
   const dots = [];
   for (let i = 0; i < 70; i++) {
@@ -60,7 +77,16 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
       el.leftWing.rotation.set(ELYTRA_REST + flap, 0.01, ELYTRA_REST + WING_SPREAD);
       el.updateRightWing();
       el.scale.setScalar(WING_SCALE);
-      el.position.set(0, 8 + WING_UP, -2 - WING_BACK);
+      // like the game: the wing boxes are 2 px thick and start at their pivot, which sits WING_BACK behind the
+      // middle of the body (skinview3d's own elytra is 4 px thick, centred, and already pushed 2 px back)
+      for (const w of [el.leftWing, el.rightWing]) {
+        const mesh = w.children[0];
+        if (mesh) {
+          mesh.scale.z = 0.5;
+          mesh.position.z = -1;
+        }
+      }
+      el.position.set(0, 8 + WING_UP, -WING_BACK);
     }
     const halo = extras.halo;
     if (halo) {
@@ -78,13 +104,19 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
   return {
     viewer: v,
     setSize: (w, h) => v.setSize(w, h),
-    async setSkin(url, slim) {
-      try {
-        if (url) await v.loadSkin(url, { model: slim ? "slim" : "default" });
-        else v.loadSkin(null);
-      } catch {
-        v.loadSkin(null);
+    /** Shows the first skin of `urls` that loads (each gets a few seconds), so a slow server never leaves the
+     *  player blank. A newer setSkin call always wins over an older one that finishes late. */
+    async setSkin(urls, slim) {
+      const mine = ++skinCall;
+      for (const url of [].concat(urls).filter(Boolean)) {
+        const img = await loadImage(url, 7000);
+        if (mine !== skinCall) return;
+        if (img) {
+          v.loadSkin(img, { model: slim ? "slim" : "default" });
+          return;
+        }
       }
+      if (mine === skinCall) v.loadSkin(null);
     },
     /** look as the backend stores it; capeUrl / wingUrl are texture URLs (or null). */
     setLook(next, capeUrl, wingUrl) {

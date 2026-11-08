@@ -92,7 +92,7 @@
       if (viewer) return;
       viewer = window.CCViewer.create(canvas, { width: live.clientWidth, height: live.clientHeight });
       new ResizeObserver(() => viewer.setSize(live.clientWidth, live.clientHeight)).observe(live);
-      viewer.setSkin("/assets/cosmetics/default-skin.png", false);
+      viewer.setSkin(window.CC.STEVE, false);
       show();
       setInterval(show, 4500);
     };

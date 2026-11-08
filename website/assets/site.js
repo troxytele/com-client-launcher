@@ -3,6 +3,9 @@
 window.CC = (() => {
   const API = "https://com-client.onrender.com";
   const NEWS = "https://raw.githubusercontent.com/troxytele/com-client-launcher/main/news.json";
+  // Steve, Minecraft's default skin, straight from Mojang (through our server, which adds CORS for the 3D viewer).
+  // The local skin is only used when the server is asleep.
+  const STEVE = [API + "/public/cape/1a4af718455d4aab528e7a61f86fa25e6a369d1768dcb13f7df319a713eb810b", "/assets/cosmetics/default-skin.png"];
 
   const el = (tag, cls, text) => {
     const n = document.createElement(tag);
@@ -67,5 +70,5 @@ window.CC = (() => {
   /** comclient.xyz/u/<name> */
   const profileUrl = (p) => "/u/" + encodeURIComponent(p.username || p.name);
 
-  return { API, NEWS, el, get, hours, ROLES, roleBadges, face, avatarUrl, profileUrl };
+  return { STEVE, API, NEWS, el, get, hours, ROLES, roleBadges, face, avatarUrl, profileUrl };
 })();
