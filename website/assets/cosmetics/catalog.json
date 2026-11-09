@@ -111,11 +111,6 @@
    "own": true
   },
   {
-   "id": "cc_matrix",
-   "name": "Matrix",
-   "own": true
-  },
-  {
    "id": "cc_storm",
    "name": "Thunderstorm",
    "own": true
@@ -136,11 +131,6 @@
    "own": true
   },
   {
-   "id": "cc_midnight",
-   "name": "Midnight",
-   "own": true
-  },
-  {
    "id": "cc_sunset",
    "name": "Sunset",
    "own": true
@@ -148,26 +138,6 @@
   {
    "id": "cc_sakura",
    "name": "Sakura",
-   "own": true
-  },
-  {
-   "id": "cc_ocean",
-   "name": "Deep Ocean",
-   "own": true
-  },
-  {
-   "id": "cc_forest",
-   "name": "Forest",
-   "own": true
-  },
-  {
-   "id": "cc_crimson",
-   "name": "Crimson",
-   "own": true
-  },
-  {
-   "id": "cc_carbon",
-   "name": "Carbon",
    "own": true
   },
   {

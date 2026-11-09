@@ -46,10 +46,9 @@ const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_heart_left", "Heart (left half)"), ("cc_heart_right", "Heart (right half)"), ("cc_yin", "Yin"), ("cc_yang", "Yang"),
     ("cc_mono_black", "Mono Black"), ("cc_mono_white", "Mono White"), ("cc_gg", "GG"),
     ("cc_aurora", "Aurora"), ("cc_galaxy", "Galaxy"), ("cc_nebula", "Nebula"), ("cc_lava", "Lava"),
-    ("cc_rainbow", "Rainbow Flow"), ("cc_matrix", "Matrix"), ("cc_storm", "Thunderstorm"), ("cc_waves", "Waves"),
+    ("cc_rainbow", "Rainbow Flow"), ("cc_storm", "Thunderstorm"), ("cc_waves", "Waves"),
     ("cc_fireflies", "Fireflies"), ("cc_hearts", "Hearts"),
-    ("cc_midnight", "Midnight"), ("cc_sunset", "Sunset"), ("cc_sakura", "Sakura"),
-    ("cc_ocean", "Deep Ocean"), ("cc_forest", "Forest"), ("cc_crimson", "Crimson"), ("cc_carbon", "Carbon"),
+    ("cc_sunset", "Sunset"), ("cc_sakura", "Sakura"),
     ("cc_honeycomb", "Honeycomb"), ("cc_mint", "Mint"),
 ];
 
