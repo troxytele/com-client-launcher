@@ -5,6 +5,14 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.22",
+    items: [
+      ["play", "You, as others see you", "The Play tab shows your skin wearing your cape, wings, hat, halo, aura and pet, with your name in its name tag style."],
+      ["check", "Picks save themselves", "Anything you own is worn as soon as you pick it in the Locker, and the game picks it up within half a minute, even while it's running."],
+      ["sparkle", "Today's deal, pictured", "The daily deal in the Locker shows the item itself instead of just its name."],
+    ],
+  },
+  {
     version: "0.6.21",
     items: [
       ["sparkle", "Christmas look", "Snow falling over the launcher, fairy lights along the top and a Santa hat on the logo. Turn it off in Settings if you like it plain."],

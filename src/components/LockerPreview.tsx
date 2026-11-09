@@ -20,7 +20,7 @@ const WING_UP = 0.08 * 16;
 const WING_BACK = 2.3;
 
 // A 3D player wearing the look: cape or wings on the back, halo and hat on the head, the aura around the body.
-export default function LockerPreview({ skin, slim, look, cape, wings }: { skin: string; slim: boolean; look: Look; cape: string | null; wings: string | null }) {
+export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.78, front = false }: { skin: string; slim: boolean; look: Look; cape: string | null; wings: string | null; zoom?: number; front?: boolean }) {
   const box_ = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const viewer = useRef<SkinViewer | null>(null);
@@ -31,12 +31,12 @@ export default function LockerPreview({ skin, slim, look, cape, wings }: { skin:
 
   useEffect(() => {
     if (!canvas.current || !box_.current) return;
-    const v = new SkinViewer({ canvas: canvas.current, width: box_.current.clientWidth || 320, height: box_.current.clientHeight || 420, zoom: 0.78, fov: 40 });
+    const v = new SkinViewer({ canvas: canvas.current, width: box_.current.clientWidth || 320, height: box_.current.clientHeight || 420, zoom, fov: 40 });
     v.controls.enableZoom = false;
     v.controls.enablePan = false;
     v.autoRotate = true;
     v.autoRotateSpeed = 0.6;
-    v.playerWrapper.rotation.y = Math.PI + 0.5; // start from behind, so the cape / wings show
+    v.playerWrapper.rotation.y = front ? -0.45 : Math.PI + 0.5; // the Locker starts from behind, so the cape / wings show
     v.globalLight.intensity = 3;
     v.cameraLight.intensity = 0.7;
     const idle = new IdleAnimation();

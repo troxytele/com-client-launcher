@@ -7,6 +7,7 @@ import LockerPreview from "../components/LockerPreview";
 import { AuraArt, HaloArt, HatArt } from "../components/CosmeticArt";
 import { Empty, Modal, Spinner } from "../components/Ui";
 import GiftDialog from "../components/GiftDialog";
+import NameTag from "../components/NameTag";
 import { CUSTOM_CAPES } from "../../website-src/helpers.js";
 
 type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "nametags";
@@ -19,16 +20,6 @@ const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "pets", label: "Pets", field: "pet" },
   { id: "nametags", label: "Name tags", field: "nametag" },
 ];
-// name tag styles (NameStyles.java): gradient stops; moving ones flow along the name
-const NAME_STYLES: Record<string, { stops: number[]; moving: boolean }> = {
-  fire: { stops: [0xffe066, 0xff7a1a, 0xe8202a], moving: true },
-  ocean: { stops: [0x8ff6ff, 0x2e9bff, 0x4a4af0], moving: true },
-  gold: { stops: [0xb8860b, 0xf2c230, 0xfff4b0, 0xf2c230, 0xb8860b], moving: true },
-  toxic: { stops: [0xd8ff3a, 0x3ae86e, 0x0e9f6e], moving: false },
-  candy: { stops: [0xff5fa2, 0xffb3d9, 0x8fd8ff], moving: false },
-  galaxy: { stops: [0xb57bff, 0x5b6bff, 0xff6bd5, 0xb57bff], moving: true },
-  rainbow: { stops: [], moving: true },
-};
 const CAPE_DEFAULT_PRICE = 300; // capes the server has no price for
 const HALO_COLORS = [0xffe07a, 0xffffff, 0x8fd8ff, 0xb98cff, 0xff7ab6, 0xff5a5a, 0x7dff9a, 0xffa048];
 // ears come in real fur colours: white, cream, golden, ginger, brown, dark brown, grey, black
@@ -37,6 +28,9 @@ const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a,
 
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
 const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none" };
+
+// what you're trying on, kept while you look at other pages (cleared once it's saved)
+let draft: Look | null = null;
 
 // Locker + shop: everything you can wear on Com Client, tried on your own skin in 3D. Most items cost points
 // (earned by playing, daily streaks and invites); staff own everything. Saving wears it in game for everyone.
@@ -63,7 +57,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       .lookGet()
       .then((l) => {
         setSaved(l);
-        setLook(l);
+        setLook(draft ?? l);
       })
       .catch((e) => toast(msg(e), "error"));
     api.shop().then(setShop).catch(() => setShop(null));
@@ -115,13 +109,23 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   const wingTex = look.wings !== "none" ? texture("wings", look.wings) : null;
 
   const dirty = saved !== null && JSON.stringify(saved) !== JSON.stringify(look);
-  async function save() {
+  useEffect(() => {
+    draft = dirty ? look : null;
+  }, [look, dirty]);
+  // everything you own is worn as soon as you pick it (in game too, within half a minute)
+  useEffect(() => {
+    if (!dirty || saving || !shop || locked.length > 0) return;
+    const t = setTimeout(() => save(true), 700);
+    return () => clearTimeout(t);
+  }, [look, dirty, shop]); // eslint-disable-line react-hooks/exhaustive-deps
+  async function save(quiet = false) {
     setSaving(true);
     try {
-      const kept = await api.lookSave(look);
+      const want = look;
+      const kept = await api.lookSave(want);
       setSaved(kept);
-      setLook(kept);
-      toast("Saved: everyone with Com Client sees it next time you play", "ok");
+      setLook((l) => (l === want ? kept : l));
+      if (!quiet) toast("Saved: everyone with Com Client sees it next time you play", "ok");
     } catch (e) {
       toast(msg(e), "error");
     } finally {
@@ -140,12 +144,35 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
     want("cape", [look.cape]);
     want("wings", [look.wings]);
     if (tab === "capes") want("cape", items.slice(0, 80).map((i) => i.id));
+    if (shop?.wallet.deal?.kind === "cape") want("cape", [shop.wallet.deal.id]);
     if (tab === "wings") want("wings", items.map((i) => i.id));
-  }, [look.cape, look.wings, tab, items]);
+  }, [look.cape, look.wings, tab, items, shop?.wallet.deal?.id]);
   const pick = (id: string) => setLook({ ...look, [t.field]: id });
   // what can be gifted from this tab: the item picked here, if it costs points
   const giftName = catalog?.[tab].find((i) => i.id === current)?.name;
   const canGift = !!shop && current !== "none" && !!giftName && priceOf(t.field, current) > 0;
+
+  // the picture of an item, for its card and today's deal
+  function art(kind: ShopKind, id: string) {
+    switch (kind) {
+      case "cape":
+        return <CapeFront url={texture("cape", id)} />;
+      case "wings":
+        return <WingArt url={texture("wings", id)} />;
+      case "halo":
+        return <HaloArt id={id} color={look.haloColor} />;
+      case "hat":
+        return <HatArt id={id} color={look.hatColor} />;
+      case "pet":
+        return <img className="pet-art" src={`/cosmetics/pets/${id}.png`} alt="" />;
+      case "nametag":
+        return <NameTag style={id} name={skin?.name || "Name"} className="nametag-art" still />;
+      case "aura":
+        return <AuraArt id={id} color={look.auraColor} />;
+      default:
+        return <Icon name="sparkle" size={22} />;
+    }
+  }
 
   if (!signedIn)
     return (
@@ -191,7 +218,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               <Icon name="refresh" size={15} /> Undo
             </button>
           )}
-          <button className="btn primary" disabled={!dirty || saving || locked.length > 0} title={locked.length ? "Unlock what you're trying on first" : undefined} onClick={save}>
+          <button className="btn primary" disabled={!dirty || saving || locked.length > 0} title={locked.length ? "Unlock what you're trying on first" : undefined} onClick={() => save()}>
             {saving ? <Spinner size={13} /> : <Icon name="check" size={15} />} {dirty ? "Save & wear" : "Saved"}
           </button>
         </div>
@@ -296,6 +323,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               }}
             >
               <span className="deal-off">-{shop.wallet.deal.off}%</span>
+              <div className="deal-art">{art(shop.wallet.deal.kind, shop.wallet.deal.id)}</div>
               <span>
                 Today's deal: <b>{shop.wallet.deal.name}</b> <span className="muted">({shop.wallet.deal.kind === "wings" ? "wings" : shop.wallet.deal.kind})</span>
               </span>
@@ -321,21 +349,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               {items.map((i) => (
                 <button key={i.id} className={"shop-card" + (current === i.id ? " on" : "") + (ownsIt(t.field, i.id) ? "" : " locked")} onClick={() => pick(i.id)}>
                   <div className="shop-art">
-                    {tab === "capes" ? (
-                      <CapeFront url={texture("cape", i.id)} />
-                    ) : tab === "wings" ? (
-                      <WingArt url={texture("wings", i.id)} />
-                    ) : tab === "halos" ? (
-                      <HaloArt id={i.id} color={look.haloColor} />
-                    ) : tab === "hats" ? (
-                      <HatArt id={i.id} color={look.hatColor} />
-                    ) : tab === "pets" ? (
-                      <img className="pet-art" src={`/cosmetics/pets/${i.id}.png`} alt="" />
-                    ) : tab === "nametags" ? (
-                      <NameTag style={i.id} name={skin?.name || "Name"} className="nametag-art" still />
-                    ) : (
-                      <AuraArt id={i.id} color={look.auraColor} />
-                    )}
+                    {art(t.field, i.id)}
                   </div>
                   <b>{i.name}</b>
                   <PriceTag
@@ -538,47 +552,3 @@ function ColourBar({ colors, value, rainbow, custom = true, onChange }: { colors
   );
 }
 
-const mixRgb = (a: number, b: number, t: number) => {
-  const ch = (sh: number) => Math.round(((a >> sh) & 255) + (((b >> sh) & 255) - ((a >> sh) & 255)) * t);
-  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
-};
-
-function nameColour(style: { stops: number[]; moving: boolean }, i: number, n: number, now: number) {
-  let t = n <= 1 ? 0 : i / (n - 1);
-  if (!style.stops.length) return `hsl(${(((t * 0.8 + now / 2500) % 1) * 360).toFixed(0)}, 100%, 70%)`;
-  if (style.moving) {
-    t = (t * 0.7 + now / 1800) % 1;
-    t = t < 0.5 ? t * 2 : 2 - t * 2;
-  }
-  const st = style.stops;
-  const f = t * (st.length - 1);
-  const k = Math.min(st.length - 2, Math.floor(f));
-  return hex(mixRgb(st[k], st[k + 1], f - k));
-}
-
-/** A name in a name tag style, letter by letter like the game (moving styles flow unless `still`). */
-function NameTag({ style, name, className, still }: { style: string; name: string; className?: string; still?: boolean }) {
-  const s = NAME_STYLES[style];
-  const [now, setNow] = useState(900);
-  useEffect(() => {
-    if (!s || still || !s.moving) return;
-    let f = 0;
-    const loop = (t: number) => {
-      setNow(t);
-      f = requestAnimationFrame(loop);
-    };
-    f = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(f);
-  }, [style, still]);
-  if (!s) return null;
-  const letters = [...name];
-  return (
-    <span className={className}>
-      {letters.map((ch, i) => (
-        <span key={i} style={{ color: nameColour(s, i, letters.length, now) }}>
-          {ch}
-        </span>
-      ))}
-    </span>
-  );
-}

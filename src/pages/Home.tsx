@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ago, api, fmtTime, CurrentSkin, Info, msg, NewsItem, Progress, Social } from "../api";
+import { ago, api, fmtTime, CurrentSkin, Info, Look, msg, NewsItem, Progress, Social } from "../api";
+import NameTag from "../components/NameTag";
+import { CUSTOM_CAPES } from "../../website-src/helpers.js";
 import Icon from "../components/Icon";
 import { updateAll, updateCount, useUpdates } from "../updates";
 import { toast } from "../stores";
@@ -8,7 +10,8 @@ import { Spinner } from "../components/Ui";
 import logo from "../assets/logo.png";
 import ProfileIcon from "../components/ProfileIcon";
 import { ServerIcon } from "./Profiles";
-const SkinModel = lazy(() => import("../components/SkinModel")); // the 3D viewer (three.js) loads after the page shows
+const SkinModel = lazy(() => import("../components/SkinModel"));
+const LockerPreview = lazy(() => import("../components/LockerPreview")); // your skin wearing your Locker look // the 3D viewer (three.js) loads after the page shows
 
 type Props = {
   info: Info;
@@ -56,6 +59,36 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
       live = false;
     };
   }, [active?.uuid, skinKey]);
+
+  // what you wear (Locker), so the Play tab shows you like other players see you in game
+  const [look, setLook] = useState<Look | null>(null);
+  const [capeTex, setCapeTex] = useState<string | null>(null);
+  useEffect(() => {
+    setLook(null);
+    if (!active) return;
+    let live = true;
+    api
+      .lookGet()
+      .then((l) => live && setLook(l))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [active?.uuid]);
+  useEffect(() => {
+    setCapeTex(null);
+    const id = look?.cape;
+    if (!id || id === "none") return;
+    if (CUSTOM_CAPES[id]) return setCapeTex(`/cosmetics/capes/${id.slice(3)}.png`);
+    let live = true;
+    api
+      .cosmeticTexture("cape", id)
+      .then((u) => live && setCapeTex(u))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [look?.cape]);
 
   useEffect(() => {
     api.news().then(setNews).catch(() => {});
@@ -116,11 +149,25 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
         </div>
         <div className="banner-model">
           <button className="banner-name" onClick={onAccounts}>
-            {active?.name ?? "Sign in"}
+            {active && look && look.nametag !== "none" ? <NameTag style={look.nametag} name={active.name} className="banner-nametag" /> : (active?.name ?? "Sign in")}
           </button>
           {skin ? (
             <Suspense fallback={null}>
-              <SkinModel skin={skin.data} slim={skin.variant === "slim"} animate className="banner-canvas" zoom={0.74} />
+              {look ? (
+                <div className="banner-canvas locker-preview">
+                  <LockerPreview
+                    skin={skin.data}
+                    slim={skin.variant === "slim"}
+                    look={look}
+                    cape={capeTex}
+                    wings={look.wings !== "none" ? `/cosmetics/wings/${look.wings}.png` : null}
+                    zoom={0.62}
+                    front
+                  />
+                </div>
+              ) : (
+                <SkinModel skin={skin.data} slim={skin.variant === "slim"} animate className="banner-canvas" zoom={0.74} />
+              )}
             </Suspense>
           ) : (
             <div className="banner-canvas center">

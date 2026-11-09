@@ -4429,7 +4429,7 @@ svg.flip {
 .deal-banner:hover {
   border-color: rgba(255, 211, 107, 0.8);
 }
-.deal-banner > span:nth-child(2) {
+.deal-banner > span:nth-of-type(2) {
   flex: 1;
   min-width: 0;
 }
@@ -4721,3 +4721,14 @@ html.festive .fairy-lights {
     animation: none !important;
   }
 }
+
+/* today's deal shows the item itself */
+.deal-banner { padding: 8px 12px 8px 8px; }
+.deal-art { width: 76px; height: 64px; flex: none; display: grid; place-items: center; overflow: hidden; border-radius: 10px;
+  background: radial-gradient(70% 70% at 50% 45%, rgba(255, 211, 107, 0.22), rgba(0, 0, 0, 0.25)); color: var(--accent); }
+.deal-art > * { max-width: 100%; max-height: 100%; }
+.deal-art .nametag-art { font-size: 14px; }
+.deal-banner .deal-off { order: -1; }
+/* Play tab: your skin wears your Locker look, with your name in its name tag style */
+.banner-name .banner-nametag { font-weight: 700; }
+.banner-canvas.locker-preview .locker-model { position: absolute; inset: 0; background: none; min-height: 0; }
