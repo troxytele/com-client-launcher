@@ -294,7 +294,7 @@ button.btn.ghost { color: var(--text); font: inherit; font-weight: 700; }
 
 /* name icons, wing types, advent calendar (cosmetics page) */
 .art.nameicon, .advent-web-door .nameicon { width: 40px; height: 40px; image-rendering: pixelated; }
-.g-nameicon { width: 16px; height: 16px; margin-left: 6px; vertical-align: -2px; image-rendering: pixelated; }
+.g-nameicon { width: 16px; height: 16px; margin-right: 6px; vertical-align: -2px; image-rendering: pixelated; }
 .g-type { font-size: 10px !important; color: var(--dim); margin-top: -6px; }
 .g-price.advent { color: #ff8a8a; opacity: 1; }
 .advent-web { margin-top: 26px; padding: 22px; border-radius: 20px; }
@@ -308,3 +308,5 @@ button.btn.ghost { color: var(--text); font: inherit; font-weight: 700; }
 .advent-web-door.open { color: var(--text); border-color: rgba(242,194,48,.7); background: linear-gradient(160deg, rgba(224,72,78,.35), rgba(63,166,90,.3)); }
 .g-nametag { white-space: nowrap; display: inline-flex; align-items: center; }
 .g-nametag[hidden] { display: none; }
+
+.art.voxel { width: 64px; height: 64px; object-fit: contain; image-rendering: auto; }

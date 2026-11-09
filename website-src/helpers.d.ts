@@ -14,3 +14,5 @@ export function colourAt(c: number, t: number, now: number): THREE.Color;
 export function glow(color: number, opacity?: number): THREE.MeshBasicMaterial;
 export function makeHalo(style: string, color: number): THREE.Group;
 export function makeHat(style: string, color: number): THREE.Group;
+export const VOXEL_HATS: Set<string>;
+export function setHatBase(base: string): void;

@@ -1,4 +1,28 @@
 import * as THREE from "three";
+import { buildPart, loadTex } from "./pets.js";
+
+// hats made of voxels (voxels.py): the same models and textures as the mod, loaded from HAT_BASE
+const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat"]);
+let HAT_BASE = "/assets/cosmetics/hats";
+let hatModels = null;
+function setHatBase(b) {
+  HAT_BASE = b;
+  hatModels = null;
+}
+function voxelHat(style, g) {
+  hatModels ||= fetch(`${HAT_BASE}/models.json`).then((r) => r.json());
+  Promise.all([hatModels, loadTex(`${HAT_BASE}/tex/${style}.png`)])
+    .then(([ms, tex]) => {
+      const m = ms[style];
+      if (!m || !tex) return;
+      const mat = new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.1, side: THREE.DoubleSide });
+      const flip = new THREE.Group(); // the game's model space (+y down, front at -z) -> three.js
+      flip.rotation.x = Math.PI;
+      flip.add(buildPart(m.root, m.w, m.h, mat, {}));
+      g.add(flip);
+    })
+    .catch(() => {});
+}
 /** 0xRRGGBB, or a rainbow when -1. */
 function colourAt(c, t, now) {
   if (c === -1) return new THREE.Color().setHSL((t * 0.6 + now / 4000) % 1, 0.75, 0.62);
@@ -184,7 +208,9 @@ const modBox = (x0, y0, z0, x1, y1, z1, color) => box(x1 - x0, y1 - y0, z1 - z0,
 /** Blocky hats, like the mod's. */
 function makeHat(style, color) {
   const g = new THREE.Group();
-  if (style === "crown") {
+  if (VOXEL_HATS.has(style)) {
+    voxelHat(style, g);
+  } else if (style === "crown") {
     const gold = 0xf2c230;
     const o = 4.6;
     g.add(box(o * 2, 2, 0.6, gold, 0, 9.6, -o + 0.3));
@@ -219,10 +245,13 @@ function makeHat(style, color) {
 const CUSTOM_CAPES = {
   cc_northpole: [12, 150], cc_snowfall: [12, 140], cc_lights: [8, 260], cc_candy_cane: [10, 90], cc_frostbite: [12, 130],
   cc_prism: [16, 110],
-  cc_aurora: [16, 110], cc_galaxy: [16, 130], cc_nebula: [16, 140], cc_lava: [16, 100], cc_glitch: [12, 90],
+  cc_rose_red: [16, 120], cc_rose_white: [16, 120], cc_sun: [16, 150], cc_moon: [16, 150],
+  cc_heart_left: [16, 90], cc_heart_right: [16, 90], cc_yin: [16, 180], cc_yang: [16, 180],
+  cc_mono_black: [20, 250], cc_mono_white: [20, 250], cc_gg: [24, 250],
+  cc_aurora: [16, 110], cc_galaxy: [16, 130], cc_nebula: [16, 140], cc_lava: [16, 100],
   cc_rainbow: [16, 90], cc_matrix: [16, 90], cc_storm: [16, 100], cc_waves: [16, 110], cc_fireflies: [16, 140],
-  cc_neon: [12, 100], cc_hearts: [12, 120],
-  cc_royal: [1, 1000], cc_midnight: [1, 1000], cc_sunset: [1, 1000], cc_sakura: [1, 1000], cc_ocean: [1, 1000],
+  cc_hearts: [12, 120],
+  cc_midnight: [1, 1000], cc_sunset: [1, 1000], cc_sakura: [1, 1000], cc_ocean: [1, 1000],
   cc_forest: [1, 1000], cc_crimson: [1, 1000], cc_carbon: [1, 1000], cc_honeycomb: [1, 1000], cc_mint: [1, 1000],
 };
 
@@ -258,4 +287,4 @@ function playCape(viewer, img, id, backEquipment = "cape") {
   return () => clearInterval(t);
 }
 
-export { CUSTOM_CAPES, EARS, earPalette, SANTA, capeFrames, playCape, auraColour, auraPoints, colourAt, glow, makeHalo, makeHat };
+export { VOXEL_HATS, setHatBase, CUSTOM_CAPES, EARS, earPalette, SANTA, capeFrames, playCape, auraColour, auraPoints, colourAt, glow, makeHalo, makeHat };

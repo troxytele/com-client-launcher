@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
 // the halo, hat and aura shapes are shared with the website's 3D viewer, so both look like the game
-import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape } from "../../website-src/helpers.js";
+import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape, setHatBase } from "../../website-src/helpers.js";
 import { loadPet } from "../../website-src/pets.js";
 import { makeWings } from "../../website-src/wings.js";
 
 export { auraPoints };
+setHatBase("/cosmetics/hats"); // the launcher keeps the voxel hats here
 import * as THREE from "three";
 import { IdleAnimation, SkinViewer } from "skinview3d";
 import { Look } from "../api";

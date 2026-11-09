@@ -4736,6 +4736,8 @@ html.festive .fairy-lights {
 /* name icons, limited drops and the advent calendar (Locker) */
 .icon-art { width: 40px; height: 40px; image-rendering: pixelated; }
 .nametag-icon { width: 16px; height: 16px; margin-left: 6px; vertical-align: -2px; image-rendering: pixelated; }
+.nametag-icon.before { margin-left: 0; margin-right: 6px; }
+.voxel-art { width: 58px; height: 58px; object-fit: contain; }
 .locker-nametag { display: inline-flex; align-items: center; }
 .shop-card .wing-type { font-size: 10.5px; margin-top: -2px; }
 .shop-card .price.advent { color: #ff8a8a; display: inline-flex; align-items: center; gap: 4px; }

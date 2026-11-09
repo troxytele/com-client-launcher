@@ -7,7 +7,10 @@ const PETS = {
   bee: [true, 0.55], ender_dragon: [true, 0.06], allay: [true, 0.55], bat: [true, 0.5],
   parrot: [false, 1.0], fox: [false, 0.42], cat: [false, 0.42], frog: [false, 0.55],
   axolotl: [false, 0.5], chicken: [false, 0.5], slime: [false, 0.45],
+  // Com Client's own chibi pets (voxels.py): head bobs, ears and tails wiggle
+  goat: [false, 0.6], lamb: [false, 0.6], pumpkin_cat: [false, 0.55], koala: [false, 0.6], duck: [false, 0.6], penguin: [false, 0.55],
 };
+const OWN = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin"]);
 
 let modelsP = null;
 const loadModels = (base) => (modelsP ||= fetch(`${base}/models.json`).then((r) => r.json()));
@@ -114,6 +117,8 @@ function pose(id, parts) {
  * Loads a pet. base: where models.json and tex/ live. Returns { group, tick(now) } or null; add group to the
  * skinview3d playerObject. left: on the player's left shoulder.
  */
+export { buildPart, loadTex };
+
 export async function loadPet(id, base, left) {
   const info = PETS[id];
   if (!info) return null;
@@ -161,6 +166,15 @@ export async function loadPet(id, base, left) {
       if (id === "slime") {
         const sq = Math.cos(t * 6.4) * 0.08;
         flip.scale.set(scale * (1 + sq), scale * (1 - sq), scale * (1 + sq));
+      }
+      if (OWN.has(id)) {
+        // Pets.java (own pets): the head bobs, ears and tails wiggle, wings flutter now and then
+        const P = (n) => parts[n];
+        if (P("head")) P("head").rotation.x = P("head").userData.rest.pitch + Math.sin(t * 2.2) * 0.06;
+        for (const n of ["left_ear", "right_ear"]) if (P(n)) P(n).rotation.z = P(n).userData.rest.roll + (n.startsWith("left") ? 1 : -1) * Math.max(0, Math.sin(t * 3.1)) * 0.25;
+        if (P("tail")) P("tail").rotation.y = Math.sin(t * 6) * 0.4;
+        for (const n of ["left_wing", "right_wing"]) if (P(n)) P(n).rotation.z = P(n).userData.rest.roll + (n.startsWith("left") ? -1 : 1) * Math.max(0, Math.sin(t * 9)) * Math.max(0, Math.sin(t * 0.9)) * 0.6;
+        return;
       }
       for (const [n, w] of wings) {
         const r = w.userData.rest;

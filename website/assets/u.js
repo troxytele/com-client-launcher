@@ -334,7 +334,7 @@
         const ic = el("img", "g-nameicon");
         ic.src = `/assets/cosmetics/icons/${look.icon}.png`;
         ic.alt = "";
-        $("p-name").after(ic);
+        $("p-name").before(ic);
       }
       wear.id = "wears";
       if (worn.length) {

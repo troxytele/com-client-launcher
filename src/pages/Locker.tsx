@@ -11,6 +11,10 @@ import NameTag from "../components/NameTag";
 import { CUSTOM_CAPES } from "../../website-src/helpers.js";
 import { WING_SHAPES, wingShape } from "../../website-src/wings.js";
 
+// Com Client's own voxel pets and hats (the card picture is a rendered PNG)
+const OWN_PETS = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin"]);
+const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat"]);
+
 type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "nametags" | "icons";
 const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "capes", label: "Capes", field: "cape" },
@@ -169,9 +173,9 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       case "halo":
         return <HaloArt id={id} color={look.haloColor} />;
       case "hat":
-        return <HatArt id={id} color={look.hatColor} />;
+        return VOXEL_HATS.has(id) ? <img className="voxel-art" src={`/cosmetics/hats/${id}.png`} alt="" /> : <HatArt id={id} color={look.hatColor} />;
       case "pet":
-        return <img className="pet-art" src={`/cosmetics/pets/${id}.png`} alt="" />;
+        return <img className={OWN_PETS.has(id) ? "voxel-art" : "pet-art"} src={`/cosmetics/pets/${id}.png`} alt="" />;
       case "nametag":
         return <NameTag style={id} name={skin?.name || "Name"} className="nametag-art" still />;
       case "icon":
@@ -242,8 +246,8 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
           <LockerPreview skin={skin?.data ?? ""} slim={skin?.variant === "slim"} look={look} cape={capeTex} wings={wingTex} />
           {(look.nametag !== "none" || look.icon !== "none") && (
             <span className="locker-nametag">
+              {look.icon !== "none" && <img className="nametag-icon before" src={`/cosmetics/icons/${look.icon}.png`} alt="" />}
               {look.nametag !== "none" ? <NameTag style={look.nametag} name={skin?.name || "You"} /> : skin?.name || "You"}
-              {look.icon !== "none" && <img className="nametag-icon" src={`/cosmetics/icons/${look.icon}.png`} alt="" />}
             </span>
           )}
           <div className="locker-wearing">
@@ -337,7 +341,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               </div>
             </div>
           )}
-          {((tab === "halos" && look.halo !== "wreath") || (tab === "hats" && !["crown", "santa", "antlers"].includes(look.hat)) || (tab === "auras" && look.aura !== "snow")) && (
+          {((tab === "halos" && look.halo !== "wreath") || (tab === "hats" && !["crown", "santa", "antlers"].includes(look.hat) && !VOXEL_HATS.has(look.hat)) || (tab === "auras" && look.aura !== "snow")) && (
             <ColourBar
               colors={tab === "halos" ? HALO_COLORS : tab === "hats" ? HAT_COLORS : AURA_COLORS}
               value={tab === "halos" ? look.haloColor : tab === "hats" ? look.hatColor : look.auraColor}

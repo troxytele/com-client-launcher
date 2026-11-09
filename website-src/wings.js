@@ -43,19 +43,29 @@ const loadImage = (url) =>
 export async function makeWings(id, url) {
   const img = await loadImage(url);
   if (!img) return null;
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-  canvas.getContext("2d").drawImage(img, 0, 0);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.magFilter = THREE.NearestFilter;
-  tex.minFilter = THREE.NearestFilter;
+  const toTex = (image) => {
+    const cv = document.createElement("canvas");
+    cv.width = image.width;
+    cv.height = image.height;
+    cv.getContext("2d").drawImage(image, 0, 0);
+    const t = new THREE.CanvasTexture(cv);
+    t.magFilter = THREE.NearestFilter;
+    t.minFilter = THREE.NearestFilter;
+    return t;
+  };
+  const tex = toTex(img);
   const shape = WING_SHAPES[wingShape(id)];
+  // butterflies: the lower pair is the rounder hind wing, with its own texture (<id>_lower.png)
+  let lowerTex = null;
+  if (shape.pairs === 2) {
+    const low = await loadImage(url.replace(/\.png$/, "_lower.png"));
+    if (low) lowerTex = toTex(low);
+  }
   const group = new THREE.Group();
   const pairs = [];
   for (let i = 0; i < (shape.pairs || 1); i++) {
     const el = new ElytraObject();
-    el.map = tex;
+    el.map = i === 1 && lowerTex ? lowerTex : tex;
     el.leftWing.rotation.order = "ZYX";
     el.rightWing.rotation.order = "ZYX";
     // like the game: the wing boxes are 2 px thick and start at their pivot (skinview3d's are 4 px and centred)
@@ -87,6 +97,7 @@ export async function makeWings(id, url) {
     tick,
     dispose() {
       tex.dispose();
+      if (lowerTex) lowerTex.dispose();
       pairs.forEach((el) => el.material.dispose());
     },
   };

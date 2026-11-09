@@ -31,6 +31,61 @@
    "own": true
   },
   {
+   "id": "cc_rose_red",
+   "name": "Red Rose",
+   "own": true
+  },
+  {
+   "id": "cc_rose_white",
+   "name": "White Rose",
+   "own": true
+  },
+  {
+   "id": "cc_sun",
+   "name": "Sun",
+   "own": true
+  },
+  {
+   "id": "cc_moon",
+   "name": "Moon",
+   "own": true
+  },
+  {
+   "id": "cc_heart_left",
+   "name": "Heart (left half)",
+   "own": true
+  },
+  {
+   "id": "cc_heart_right",
+   "name": "Heart (right half)",
+   "own": true
+  },
+  {
+   "id": "cc_yin",
+   "name": "Yin",
+   "own": true
+  },
+  {
+   "id": "cc_yang",
+   "name": "Yang",
+   "own": true
+  },
+  {
+   "id": "cc_mono_black",
+   "name": "Mono Black",
+   "own": true
+  },
+  {
+   "id": "cc_mono_white",
+   "name": "Mono White",
+   "own": true
+  },
+  {
+   "id": "cc_gg",
+   "name": "GG",
+   "own": true
+  },
+  {
    "id": "cc_aurora",
    "name": "Aurora",
    "own": true
@@ -48,11 +103,6 @@
   {
    "id": "cc_lava",
    "name": "Lava",
-   "own": true
-  },
-  {
-   "id": "cc_glitch",
-   "name": "Glitch",
    "own": true
   },
   {
@@ -81,18 +131,8 @@
    "own": true
   },
   {
-   "id": "cc_neon",
-   "name": "Neon Pulse",
-   "own": true
-  },
-  {
    "id": "cc_hearts",
    "name": "Hearts",
-   "own": true
-  },
-  {
-   "id": "cc_royal",
-   "name": "Royal",
    "own": true
   },
   {
@@ -257,6 +297,18 @@
   {
    "id": "antlers",
    "name": "Reindeer antlers"
+  },
+  {
+   "id": "bunny_hat",
+   "name": "Bunny hat"
+  },
+  {
+   "id": "axolotl_hat",
+   "name": "Axolotl hat"
+  },
+  {
+   "id": "frog_hat",
+   "name": "Frog hat"
   }
  ],
  "auras": [
@@ -280,58 +332,71 @@
  "pets": [
   {
    "id": "bee",
-   "name": "Bee",
-   "flies": true
+   "name": "Bee"
   },
   {
    "id": "ender_dragon",
-   "name": "Mini Ender Dragon",
-   "flies": true
+   "name": "Mini Ender Dragon"
   },
   {
    "id": "allay",
-   "name": "Allay",
-   "flies": true
+   "name": "Allay"
   },
   {
    "id": "bat",
-   "name": "Bat",
-   "flies": true
+   "name": "Bat"
   },
   {
    "id": "parrot",
-   "name": "Parrot",
-   "flies": false
+   "name": "Parrot"
   },
   {
    "id": "fox",
-   "name": "Fox",
-   "flies": false
+   "name": "Fox"
   },
   {
    "id": "cat",
-   "name": "Cat",
-   "flies": false
+   "name": "Cat"
   },
   {
    "id": "frog",
-   "name": "Frog",
-   "flies": false
+   "name": "Frog"
   },
   {
    "id": "axolotl",
-   "name": "Axolotl",
-   "flies": false
+   "name": "Axolotl"
   },
   {
    "id": "chicken",
-   "name": "Chicken",
-   "flies": false
+   "name": "Chicken"
   },
   {
    "id": "slime",
-   "name": "Slime",
-   "flies": false
+   "name": "Slime"
+  },
+  {
+   "id": "goat",
+   "name": "Goat"
+  },
+  {
+   "id": "lamb",
+   "name": "Lamb"
+  },
+  {
+   "id": "pumpkin_cat",
+   "name": "Pumpkin Cat"
+  },
+  {
+   "id": "koala",
+   "name": "Koala"
+  },
+  {
+   "id": "duck",
+   "name": "Duck"
+  },
+  {
+   "id": "penguin",
+   "name": "Penguin"
   }
  ],
  "nametags": [

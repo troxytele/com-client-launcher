@@ -146,20 +146,22 @@
     if (on) stopName = window.CC.styleName(box, look.nametag);
     if (look.icon && look.icon !== "none") {
       box.hidden = false;
-      box.append(iconImg(look.icon, "g-nameicon"));
+      box.prepend(iconImg(look.icon, "g-nameicon"));   // in place of the Com Client C, in front of the name
     }
   }
   function showPet() {
     // the pet itself is in the 3D preview now
   }
-  function iconImg(id, cls) {
+  const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat"]);
+  const OWN_PETS = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin"]);
+  function iconImg(id, cls, dir = "icons") {
     const img = el("img", cls);
-    img.src = `/assets/cosmetics/icons/${id}.png`;
+    img.src = `/assets/cosmetics/${dir}/${id}.png`;
     img.alt = "";
     return img;
   }
   function petArt(id) {
-    const img = el("img", "art pet");
+    const img = el("img", OWN_PETS.has(id) ? "art voxel" : "art pet");
     img.src = `/assets/cosmetics/pets/${id}.png`;
     img.alt = "";
     return img;
@@ -223,6 +225,7 @@
       const b = el("button", "g-item" + (look[field] === item.id ? " on" : ""));
       b.title = item.name;
       const art = kind === "capes" ? capeArt(item.id) : kind === "wings" ? wingArt(item.id) : kind === "pets" ? petArt(item.id)
+        : kind === "hats" && VOXEL_HATS.has(item.id) ? iconImg(item.id, "art voxel", "hats")
         : kind === "nametags" ? nametagArt(item) : kind === "icons" ? iconImg(item.id, "art nameicon") : iconArt(kind, item.id);
       b.append(art, el("small", null, item.name));
       if (kind === "wings") b.append(el("small", "g-type", wingType(item.id)));
@@ -235,7 +238,7 @@
     const cbox = $("g-colors");
     cbox.textContent = "";
     const cf = COLOR[kind];
-    cbox.hidden = !cf || (kind === "hats" && ["crown", "santa", "antlers"].includes(look.hat)) || (kind === "auras" && look.aura === "snow") || (kind === "halos" && look.halo === "wreath");
+    cbox.hidden = !cf || (kind === "hats" && (["crown", "santa", "antlers"].includes(look.hat) || VOXEL_HATS.has(look.hat))) || (kind === "auras" && look.aura === "snow") || (kind === "halos" && look.halo === "wreath");
     if (cf) {
       for (const c of kind === "hats" ? EAR_COLORS : SWATCHES) {
         const s = el("button", "swatch" + (look[cf] === c ? " on" : ""));

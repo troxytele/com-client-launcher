@@ -20,11 +20,13 @@ const WINGS: &[(&str, &str)] = &[
     ("pixie", "Pixie"), ("bat", "Bat"), ("emerald", "Emerald Drake"),
 ];
 const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
-const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers")];
+const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers"),
+    ("bunny_hat", "Bunny hat"), ("axolotl_hat", "Axolotl hat"), ("frog_hat", "Frog hat")];
 const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix"), ("snow", "Snowfall")];
 const PETS: &[(&str, &str)] = &[
     ("bee", "Bee"), ("ender_dragon", "Mini Ender Dragon"), ("allay", "Allay"), ("bat", "Bat"), ("parrot", "Parrot"), ("fox", "Fox"),
     ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"),
+    ("goat", "Goat"), ("lamb", "Lamb"), ("pumpkin_cat", "Pumpkin Cat"), ("koala", "Koala"), ("duck", "Duck"), ("penguin", "Penguin"),
 ];
 const NAMETAGS: &[(&str, &str)] = &[
     ("fire", "Fire"), ("ocean", "Ocean"), ("gold", "Gold"), ("toxic", "Toxic"), ("candy", "Candy"), ("galaxy", "Galaxy"), ("rainbow", "Rainbow"),
@@ -40,10 +42,13 @@ const ICONS: &[(&str, &str)] = &[
 const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_northpole", "North Pole"), ("cc_snowfall", "Snowfall"), ("cc_lights", "Christmas Lights"), ("cc_candy_cane", "Candy Cane"),
     ("cc_frostbite", "Frostbite"), ("cc_prism", "Prism"),
-    ("cc_aurora", "Aurora"), ("cc_galaxy", "Galaxy"), ("cc_nebula", "Nebula"), ("cc_lava", "Lava"), ("cc_glitch", "Glitch"),
+    ("cc_rose_red", "Red Rose"), ("cc_rose_white", "White Rose"), ("cc_sun", "Sun"), ("cc_moon", "Moon"),
+    ("cc_heart_left", "Heart (left half)"), ("cc_heart_right", "Heart (right half)"), ("cc_yin", "Yin"), ("cc_yang", "Yang"),
+    ("cc_mono_black", "Mono Black"), ("cc_mono_white", "Mono White"), ("cc_gg", "GG"),
+    ("cc_aurora", "Aurora"), ("cc_galaxy", "Galaxy"), ("cc_nebula", "Nebula"), ("cc_lava", "Lava"),
     ("cc_rainbow", "Rainbow Flow"), ("cc_matrix", "Matrix"), ("cc_storm", "Thunderstorm"), ("cc_waves", "Waves"),
-    ("cc_fireflies", "Fireflies"), ("cc_neon", "Neon Pulse"), ("cc_hearts", "Hearts"),
-    ("cc_royal", "Royal"), ("cc_midnight", "Midnight"), ("cc_sunset", "Sunset"), ("cc_sakura", "Sakura"),
+    ("cc_fireflies", "Fireflies"), ("cc_hearts", "Hearts"),
+    ("cc_midnight", "Midnight"), ("cc_sunset", "Sunset"), ("cc_sakura", "Sakura"),
     ("cc_ocean", "Deep Ocean"), ("cc_forest", "Forest"), ("cc_crimson", "Crimson"), ("cc_carbon", "Carbon"),
     ("cc_honeycomb", "Honeycomb"), ("cc_mint", "Mint"),
 ];
