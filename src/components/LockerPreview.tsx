@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 // the halo, hat and aura shapes are shared with the website's 3D viewer, so both look like the game
 import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape } from "../../website-src/helpers.js";
+import { loadPet } from "../../website-src/pets.js";
 
 export { auraPoints };
 import * as THREE from "three";
@@ -24,6 +25,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings }: { skin:
   const canvas = useRef<HTMLCanvasElement>(null);
   const viewer = useRef<SkinViewer | null>(null);
   const extras = useRef<{ halo?: THREE.Group; hat?: THREE.Group; aura?: THREE.Group }>({});
+  const pet = useRef<{ group: THREE.Group; tick(now: number): void; dispose(): void } | null>(null);
   const lookRef = useRef(look);
   lookRef.current = look;
 
@@ -58,6 +60,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings }: { skin:
       frame = requestAnimationFrame(tick);
       const now = performance.now();
       const l = lookRef.current;
+      pet.current?.tick(now);
       // feet of the model: skinview3d's player is 32 units tall, centred on 0
       const unit = 16;
       const feet = -16;
@@ -169,6 +172,29 @@ export default function LockerPreview({ skin, slim, look, cape, wings }: { skin:
       head.add(extras.current.hat);
     }
   }, [look.halo, look.haloColor, look.hat, look.hatColor]);
+
+  // the pet: the game's own mob model on (or beside) the shoulder
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v || look.pet === "none") return;
+    let gone = false;
+    let mine: typeof pet.current = null;
+    loadPet(look.pet, "/cosmetics/pets", look.petLeft).then((p) => {
+      if (!p) return;
+      if (gone) return p.dispose();
+      mine = p;
+      pet.current = p;
+      v.playerObject.add(p.group);
+    });
+    return () => {
+      gone = true;
+      if (mine) {
+        v.playerObject.remove(mine.group);
+        mine.dispose();
+        if (pet.current === mine) pet.current = null;
+      }
+    };
+  }, [look.pet, look.petLeft]);
 
   return (
     <div ref={box_} className="skin-model locker-model">

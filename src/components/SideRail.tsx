@@ -25,6 +25,13 @@ export default function SideRail({
     <aside className="rail" data-tauri-drag-region>
       <div className="rail-logo" data-tauri-drag-region>
         <img src={logo} alt="" />
+        {/* Christmas look: a little Santa hat on the logo */}
+        <svg className="xmas-hat" viewBox="0 0 32 26" aria-hidden="true">
+          <path d="M4 20 C7 9 13 4 21 5 C25 5.5 27 9 27.5 13 L24 13 C23.5 11 22 9.5 20 9.5 C15 10 11 14 9.5 20 Z" fill="#d42a2a" />
+          <path d="M9 13 C12 9 16 7 20 7.5" stroke="#ff6b6b" stroke-width="1.4" fill="none" opacity=".5" />
+          <rect x="2" y="18.5" width="17" height="5.5" rx="2.75" fill="#f4f4f2" />
+          <circle cx="27" cy="14" r="3.4" fill="#f4f4f2" />
+        </svg>
       </div>
       <nav className="rail-nav">
         {tabs.map((t) => (

@@ -5,6 +5,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.21",
+    items: [
+      ["sparkle", "Christmas look", "Snow falling over the launcher, fairy lights along the top and a Santa hat on the logo. Turn it off in Settings if you like it plain."],
+      ["shirt", "Pets in 3D", "Your pet now sits on (or flies beside) your shoulder in the Locker preview, with the game's own model and texture."],
+    ],
+  },
+  {
     version: "0.6.20",
     items: [
       ["gift", "Gifts", "Buy a cosmetic for a friend with your points: pick it in the Locker and press Gift. They own it right away and see who it's from."],

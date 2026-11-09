@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import { IdleAnimation, SkinViewer } from "skinview3d";
 import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape } from "./helpers.js";
+import { loadPet } from "./pets.js";
 
 const ELYTRA_REST = 0.2617994;
 const WING_SPREAD = (76 * Math.PI) / 180;
@@ -43,6 +44,9 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
   const extras = {};
   let skinCall = 0;
   let capeCall = 0;
+  let pet = null;
+  let petKey = "";
+  let petCall = 0;
   let stopCape = null;
   const aura = new THREE.Group();
   const dots = [];
@@ -92,6 +96,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
       el.position.set(0, 8 + WING_UP, -WING_BACK);
     }
     const halo = extras.halo;
+    if (pet) pet.tick(now);
     if (halo) {
       halo.position.y = 11 + Math.sin(now / 700) * 0.25;
       if (halo.userData.spin) halo.rotation.y = -(now / 1000) * 0.21; // the wreath turns slowly, like in game
@@ -151,6 +156,24 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
       }
       if (look.halo && look.halo !== "none") head.add((extras.halo = makeHalo(look.halo, look.haloColor & 0xffffff)));
       if (look.hat && look.hat !== "none") head.add((extras.hat = makeHat(look.hat, look.hatColor & 0xffffff)));
+      // the pet: the game's own mob model on (or beside) the shoulder
+      const key = look.pet && look.pet !== "none" ? look.pet + (look.petLeft ? ":left" : "") : "";
+      if (key !== petKey) {
+        petKey = key;
+        const mine2 = ++petCall;
+        if (pet) {
+          v.playerObject.remove(pet.group);
+          pet.dispose();
+          pet = null;
+        }
+        if (key)
+          loadPet(look.pet, PET_BASE, !!look.petLeft).then((p) => {
+            if (!p) return;
+            if (mine2 !== petCall) return p.dispose();
+            pet = p;
+            v.playerObject.add(p.group);
+          });
+      }
     },
     dispose() {
       cancelAnimationFrame(frame);
@@ -160,4 +183,6 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
   };
 }
 
-window.CCViewer = { create };
+// where pets' models and textures are (the launcher sets its own before creating a viewer)
+let PET_BASE = "/assets/cosmetics/pets";
+window.CCViewer = { create, setPetBase: (b) => (PET_BASE = b) };

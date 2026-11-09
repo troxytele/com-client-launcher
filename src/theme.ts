@@ -57,7 +57,13 @@ export function customTheme(color: string): Theme {
   };
 }
 
-export type Look = { theme: string; stars: boolean; custom: string };
+export type Look = { theme: string; stars: boolean; custom: string; festive: boolean };
+
+/** The Christmas look is on by default from November 1 to Twelfth Night (Jan 6). */
+export function festiveSeason(d = new Date()) {
+  const m = d.getMonth(), day = d.getDate();
+  return m === 10 || m === 11 || (m === 0 && day <= 6);
+}
 
 const KEY = "look";
 
@@ -65,9 +71,9 @@ export function getLook(): Look {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? "{}");
     const theme = v.theme === "crimson" ? "custom" : typeof v.theme === "string" ? v.theme : "black";
-    return { theme, stars: v.stars !== false, custom: isHex(v.custom) ? v.custom : "#ff5a6a" };
+    return { theme, stars: v.stars !== false, custom: isHex(v.custom) ? v.custom : "#ff5a6a", festive: typeof v.festive === "boolean" ? v.festive : festiveSeason() };
   } catch {
-    return { theme: "black", stars: true, custom: "#ff5a6a" };
+    return { theme: "black", stars: true, custom: "#ff5a6a", festive: festiveSeason() };
   }
 }
 
@@ -108,4 +114,5 @@ export function applyLook(l: Look = getLook()) {
   r.setProperty("--accent2-rgb", rgb(t.accent2));
   r.setProperty("--on-accent", t.onAccent);
   document.documentElement.dataset.theme = t.id;
+  document.documentElement.classList.toggle("festive", l.festive);
 }

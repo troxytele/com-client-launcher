@@ -140,15 +140,7 @@
     if (on) stopName = window.CC.styleName(box, look.nametag);
   }
   function showPet() {
-    const box = $("g-pet");
-    const pet = catalog?.pets.find((p) => p.id === look.pet);
-    box.hidden = !pet;
-    box.textContent = "";
-    if (!pet) return;
-    const img = el("img");
-    img.src = `/assets/cosmetics/pets/${pet.id}.png`;
-    img.alt = "";
-    box.append(img, el("span", null, `${pet.name} ${pet.flies ? "flies beside" : "sits on"} your shoulder in game`));
+    // the pet itself is in the 3D preview now
   }
   function petArt(id) {
     const img = el("img", "art pet");

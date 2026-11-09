@@ -194,6 +194,11 @@ export default function App() {
       />
       <div className="main">
         <div className="topstrip" data-tauri-drag-region>
+          <div className="fairy-lights" aria-hidden="true">
+            {Array.from({ length: 28 }, (_, i) => (
+              <i key={i} style={{ animationDelay: `${(i * 0.37) % 2.4}s` }} />
+            ))}
+          </div>
           <span className="strip-title" data-tauri-drag-region>
             COM CLIENT <i>/</i> {titles[page].toUpperCase()}
           </span>

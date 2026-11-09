@@ -29,7 +29,6 @@ const NAME_STYLES: Record<string, { stops: number[]; moving: boolean }> = {
   galaxy: { stops: [0xb57bff, 0x5b6bff, 0xff6bd5, 0xb57bff], moving: true },
   rainbow: { stops: [], moving: true },
 };
-const FLYING_PETS = new Set(["bee", "ender_dragon", "allay", "bat"]);
 const CAPE_DEFAULT_PRICE = 300; // capes the server has no price for
 const HALO_COLORS = [0xffe07a, 0xffffff, 0x8fd8ff, 0xb98cff, 0xff7ab6, 0xff5a5a, 0x7dff9a, 0xffa048];
 // ears come in real fur colours: white, cream, golden, ginger, brown, dark brown, grey, black
@@ -201,15 +200,6 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
         <div className="locker-stage glass">
           <LockerPreview skin={skin?.data ?? ""} slim={skin?.variant === "slim"} look={look} cape={capeTex} wings={wingTex} />
           {look.nametag !== "none" && <NameTag style={look.nametag} name={skin?.name || "You"} className="locker-nametag" />}
-          {look.pet !== "none" && (
-            <div className="locker-pet">
-              <img src={`/cosmetics/pets/${look.pet}.png`} alt="" />
-              <span>
-                {catalog?.pets.find((p) => p.id === look.pet)?.name ?? "Pet"} {FLYING_PETS.has(look.pet) ? "flies beside" : "sits on"} your{" "}
-                {look.petLeft ? "left" : "right"} shoulder in game
-              </span>
-            </div>
-          )}
           <div className="locker-wearing">
             {TABS.map((x) => {
               const v = look[x.field] as string;

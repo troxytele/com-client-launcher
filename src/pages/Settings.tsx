@@ -89,6 +89,13 @@ export default function Settings({ info, reload, running }: { info: Info; reload
         </div>
         <div className="setting">
           <div>
+            <b>Christmas look</b>
+            <span>Falling snow, fairy lights along the top and a Santa hat on the logo. On by default until January 6.</span>
+          </div>
+          <Switch on={look.festive} onChange={(v) => setLook({ ...look, festive: v })} />
+        </div>
+        <div className="setting">
+          <div>
             <b>Sounds</b>
             <span>A soft click and hover sound on buttons, the same ones as in the game.</span>
           </div>

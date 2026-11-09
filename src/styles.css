@@ -4602,3 +4602,122 @@ svg.flip {
 .locker-model { flex: 1 1 320px; min-height: 300px; }
 .locker-unlock { max-height: 170px; overflow-y: auto; flex: none; }
 .points-pill { white-space: nowrap; }
+
+/* ---- Christmas look (Settings → Christmas look; on by default Nov 1 to Jan 6) ---- */
+/* the snow falls in front of the pages (it never catches a click) */
+html.festive .backdrop {
+  overflow: visible;
+}
+.snow {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+}
+.snow i {
+  position: absolute;
+  top: -12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+  animation-name: snowfall, snowsway;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-direction: normal, alternate;
+}
+@keyframes snowfall {
+  to {
+    top: 102%;
+  }
+}
+@keyframes snowsway {
+  from {
+    margin-left: calc(var(--sway) * -1);
+  }
+  to {
+    margin-left: var(--sway);
+  }
+}
+/* a soft cold glow at the bottom, like snow on the ground catching the light */
+.frost {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 140px;
+  background: radial-gradient(70% 100% at 50% 100%, rgba(200, 225, 255, 0.07), transparent 70%);
+}
+.rail-logo {
+  position: relative;
+}
+.xmas-hat {
+  display: none;
+  position: absolute;
+  width: 32px;
+  height: 26px;
+  top: -10px;
+  left: 17px;
+  transform: rotate(16deg);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+}
+html.festive .xmas-hat {
+  display: block;
+}
+.topstrip {
+  position: relative;
+}
+.fairy-lights {
+  display: none;
+  position: absolute;
+  left: 16px;
+  right: 150px;
+  top: 0;
+  height: 16px;
+  pointer-events: none;
+  justify-content: space-between;
+  /* the wire, sagging between the bulbs */
+  background: radial-gradient(60% 9px at 50% 0, transparent 70%, rgba(255, 255, 255, 0.14) 72%, transparent 80%) 0 0 / 7.142% 16px repeat-x;
+}
+html.festive .fairy-lights {
+  display: flex;
+}
+.fairy-lights i {
+  width: 5px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50% 50% 45% 45%;
+  --c: #ff4d4d;
+  background: var(--c);
+  box-shadow: 0 0 8px 1px var(--c);
+  animation: twinkle 2.4s ease-in-out infinite;
+}
+.fairy-lights i:nth-child(4n + 2) {
+  --c: #3ee07a;
+}
+.fairy-lights i:nth-child(4n + 3) {
+  --c: #ffd23f;
+}
+.fairy-lights i:nth-child(4n + 4) {
+  --c: #4db8ff;
+}
+.fairy-lights i:nth-child(odd) {
+  margin-top: 8px;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: 0 0 2px 0 var(--c);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snow,
+  .fairy-lights i {
+    animation: none !important;
+  }
+}
