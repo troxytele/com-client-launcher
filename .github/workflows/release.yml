@@ -4,11 +4,16 @@
 # How to publish a new launcher version:
 #   1. Raise "version" in src-tauri/tauri.conf.json AND package.json (e.g. 0.1.0 -> 0.1.1)
 #   2. Commit + push
-#   3. GitHub -> Actions -> "Release launcher" -> Run workflow
+#   It releases by itself once the "Check" build of that push succeeded (only when that version has no release yet).
+#   You can still start it by hand: GitHub -> Actions -> "Release launcher" -> Run workflow
 name: Release launcher
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: [Check]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: write
@@ -16,23 +21,47 @@ permissions:
 jobs:
   windows:
     runs-on: windows-latest
+    # automatic runs: only after a successful Check of a push to main
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - uses: actions/setup-node@v4
+      # skip when this version is already released (pushes that don't raise the version)
+      - name: New version?
+        id: ver
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          if gh release view "v$v" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "v$v is already released, nothing to do"
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.ver.outputs.new == 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - uses: dtolnay/rust-toolchain@stable
+      - if: steps.ver.outputs.new == 'true'
+        uses: dtolnay/rust-toolchain@stable
 
-      - uses: swatinem/rust-cache@v2
+      - if: steps.ver.outputs.new == 'true'
+        uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
 
-      - run: npm ci
+      - if: steps.ver.outputs.new == 'true'
+        run: npm ci
 
-      - uses: tauri-apps/tauri-action@v0
+      - if: steps.ver.outputs.new == 'true'
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # the private key from updater-key/comclient-updater.key, saved as a repository secret
