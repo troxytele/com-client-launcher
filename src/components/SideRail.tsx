@@ -49,6 +49,7 @@ export default function SideRail({
         </button>
         <button className="rail-account" onClick={onAccounts} title={account ? account.name + " (switch account)" : "Sign in"}>
           <Face skin={account?.skin_url} name={account?.name} size={30} />
+          <span className="rail-name">{account ? account.name : "Sign in"}</span>
         </button>
       </div>
     </aside>

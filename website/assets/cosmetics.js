@@ -153,7 +153,6 @@
     // the pet itself is in the 3D preview now
   }
   const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat"]);
-  const OWN_PETS = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin"]);
   function iconImg(id, cls, dir = "icons") {
     const img = el("img", cls);
     img.src = `/assets/cosmetics/${dir}/${id}.png`;
@@ -161,7 +160,7 @@
     return img;
   }
   function petArt(id) {
-    const img = el("img", OWN_PETS.has(id) ? "art voxel" : "art pet");
+    const img = el("img", "art voxel");
     img.src = `/assets/cosmetics/pets/${id}.png`;
     img.alt = "";
     return img;
@@ -316,13 +315,12 @@
     $("advent-text").textContent = (a.active
       ? `Door ${a.today} is open! Open the doors in the launcher's Locker or in game (main menu). Missed doors stay open until December 26.`
       : `Opens on ${start}: one door a day until Christmas, in the launcher's Locker or in game.`) +
-      " Only in here: " + a.items.map((i) => i.name).join(", ") + ".";
+      " Behind the doors: points and Christmas cosmetics you can't get anywhere else. What's inside is a surprise!";
     const grid = $("advent-grid");
     for (const d of a.doors) {
       const door = el("div", "advent-web-door" + (d.open ? " open" : ""));
-      if (d.open && d.reward && d.reward.kind === "icon") door.append(iconImg(d.reward.id, "nameicon"));
       door.append(el("b", null, String(d.day)));
-      if (d.open && d.reward) door.append(el("small", null, d.reward.name));
+      door.append(el("small", null, d.open ? "Open" : "🔒"));
       grid.append(door);
     }
     box.hidden = false;

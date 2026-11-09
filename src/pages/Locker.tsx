@@ -12,7 +12,8 @@ import { CUSTOM_CAPES } from "../../website-src/helpers.js";
 import { WING_SHAPES, wingShape } from "../../website-src/wings.js";
 
 // Com Client's own voxel pets and hats (the card picture is a rendered PNG)
-const OWN_PETS = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin"]);
+// the advent calendar's items: hidden until you have them (they're a surprise)
+const ADVENT_ITEMS = new Set(["cape:cc_northpole", "wings:snowflake", ...["tree", "snowman", "present", "candy_cane", "gingerbread", "bell", "xmas_star", "santa_hat", "snowflake", "reindeer"].map((i) => "icon:" + i)]);
 const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat"]);
 
 type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "nametags" | "icons";
@@ -144,10 +145,12 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
 
   const t = TABS.find((x) => x.id === tab)!;
   const items: CosmeticItem[] = useMemo(() => {
-    const list = catalog?.[tab] ?? [];
+    // advent calendar items only show once they're yours
+    const owned = (id: string) => !!shop?.items.find((x) => x.kind === t.field && x.id === id && x.owned);
+    const list = (catalog?.[tab] ?? []).filter((i) => !ADVENT_ITEMS.has(t.field + ":" + i.id) || owned(i.id));
     const q = query.trim().toLowerCase();
     return q ? list.filter((i) => i.name.toLowerCase().includes(q)) : list;
-  }, [catalog, tab, query]);
+  }, [catalog, tab, query, shop]);
   const current = look[t.field] as string;
   useEffect(() => {
     want("cape", [look.cape]);
@@ -175,7 +178,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       case "hat":
         return VOXEL_HATS.has(id) ? <img className="voxel-art" src={`/cosmetics/hats/${id}.png`} alt="" /> : <HatArt id={id} color={look.hatColor} />;
       case "pet":
-        return <img className={OWN_PETS.has(id) ? "voxel-art" : "pet-art"} src={`/cosmetics/pets/${id}.png`} alt="" />;
+        return <img className="voxel-art" src={`/cosmetics/pets/${id}.png`} alt="" />;
       case "nametag":
         return <NameTag style={id} name={skin?.name || "Name"} className="nametag-art" still />;
       case "icon":
@@ -696,7 +699,7 @@ function AdventDialog({ onClose, onGot }: { onClose: () => void; onGot: (w: Wall
             {cal.active
               ? "One door a day until Christmas. Missed a door? You can still open it until December 26."
               : `The calendar opens on ${startText}.`}{" "}
-            Christmas name icons, the Snowflake wings and the North Pole cape are only in here.
+            Behind the doors: points and Christmas cosmetics you can't get anywhere else. Every door is a surprise!
           </p>
           <div className="advent-grid">
             {cal.doors.map((d) => (

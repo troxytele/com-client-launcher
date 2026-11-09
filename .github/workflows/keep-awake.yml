@@ -1,0 +1,26 @@
+# Render's free plan puts the API to sleep after 15 minutes without requests; the first request after that takes
+# up to a minute (that's when the client shows the red Com Client icon for a while). This pings it every 10 minutes
+# so it stays awake. GitHub may run scheduled jobs a few minutes late, which is still inside the 15 minutes.
+name: Keep API awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping the API
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 https://com-client.onrender.com/health) || true
+            echo "health: $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "The API didn't answer with 200" && exit 0

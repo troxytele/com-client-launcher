@@ -1,11 +1,6 @@
 {
  "capes": [
   {
-   "id": "cc_northpole",
-   "name": "North Pole",
-   "own": true
-  },
-  {
    "id": "cc_snowfall",
    "name": "Snowfall",
    "own": true
@@ -179,10 +174,6 @@
   {
    "id": "candy_cane",
    "name": "Candy Cane"
-  },
-  {
-   "id": "snowflake",
-   "name": "Snowflake"
   },
   {
    "id": "golden",
@@ -441,46 +432,6 @@
   }
  ],
  "icons": [
-  {
-   "id": "tree",
-   "name": "Christmas tree"
-  },
-  {
-   "id": "snowman",
-   "name": "Snowman"
-  },
-  {
-   "id": "present",
-   "name": "Present"
-  },
-  {
-   "id": "candy_cane",
-   "name": "Candy cane"
-  },
-  {
-   "id": "gingerbread",
-   "name": "Gingerbread"
-  },
-  {
-   "id": "bell",
-   "name": "Bell"
-  },
-  {
-   "id": "xmas_star",
-   "name": "Christmas star"
-  },
-  {
-   "id": "santa_hat",
-   "name": "Santa hat"
-  },
-  {
-   "id": "snowflake",
-   "name": "Snowflake"
-  },
-  {
-   "id": "reindeer",
-   "name": "Reindeer"
-  },
   {
    "id": "heart",
    "name": "Heart"

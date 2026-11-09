@@ -8,7 +8,7 @@ const PETS = {
   parrot: [false, 1.0], fox: [false, 0.42], cat: [false, 0.42], frog: [false, 0.55],
   axolotl: [false, 0.5], chicken: [false, 0.5], slime: [false, 0.45],
   // Com Client's own chibi pets (voxels.py): head bobs, ears and tails wiggle
-  goat: [false, 0.6], lamb: [false, 0.6], pumpkin_cat: [false, 0.55], koala: [false, 0.6], duck: [false, 0.6], penguin: [false, 0.55],
+  goat: [false, 0.48], lamb: [false, 0.6], pumpkin_cat: [false, 0.55], koala: [false, 0.6], duck: [false, 0.6], penguin: [false, 0.55],
 };
 const OWN = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin"]);
 

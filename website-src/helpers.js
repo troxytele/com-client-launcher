@@ -243,7 +243,7 @@ function makeHat(style, color) {
 
 // Com Client's own capes (CustomCapes.java): an animated strip of 128x64 frames, top to bottom. [frames, ms per frame]
 const CUSTOM_CAPES = {
-  cc_northpole: [12, 150], cc_snowfall: [12, 140], cc_lights: [8, 260], cc_candy_cane: [10, 90], cc_frostbite: [12, 130],
+  cc_northpole: [12, 150], cc_snowfall: [12, 140], cc_lights: [8, 260], cc_candy_cane: [16, 90], cc_frostbite: [12, 130],
   cc_prism: [16, 110],
   cc_rose_red: [16, 120], cc_rose_white: [16, 120], cc_sun: [16, 150], cc_moon: [16, 150],
   cc_heart_left: [16, 90], cc_heart_right: [16, 90], cc_yin: [16, 180], cc_yang: [16, 180],
@@ -251,7 +251,7 @@ const CUSTOM_CAPES = {
   cc_aurora: [16, 110], cc_galaxy: [16, 130], cc_nebula: [16, 140], cc_lava: [16, 100],
   cc_rainbow: [16, 90], cc_storm: [16, 100], cc_waves: [16, 110], cc_fireflies: [16, 140],
   cc_hearts: [12, 120],
-  cc_sunset: [1, 1000], cc_sakura: [1, 1000],
+  cc_sunset: [16, 140], cc_sakura: [1, 1000],
   cc_honeycomb: [1, 1000], cc_mint: [1, 1000],
 };
 

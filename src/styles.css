@@ -1639,9 +1639,19 @@ html[data-theme="black"] .rail button.on svg {
   padding: 6px 0 !important;
 }
 .rail-account img,
-.rail-account > * {
+.rail-account > .face {
   border-radius: 10px;
   outline: 2px solid var(--line-hi);
+}
+/* whose head it is: the account name under it */
+.rail-account .rail-name {
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9.5px;
+  letter-spacing: 0.01em;
+  text-transform: none;
 }
 .main {
   flex: 1;
@@ -4734,7 +4744,7 @@ html.festive .fairy-lights {
 .banner-canvas.locker-preview .locker-model { position: absolute; inset: 0; background: none; min-height: 0; }
 
 /* name icons, limited drops and the advent calendar (Locker) */
-.icon-art { width: 40px; height: 40px; image-rendering: pixelated; }
+.icon-art { width: 48px; height: 48px; image-rendering: pixelated; }
 .nametag-icon { width: 16px; height: 16px; margin-left: 6px; vertical-align: -2px; image-rendering: pixelated; }
 .nametag-icon.before { margin-left: 0; margin-right: 6px; }
 .voxel-art { width: 58px; height: 58px; object-fit: contain; }
