@@ -150,6 +150,7 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
         <div className="banner-model">
           <button className="banner-name" onClick={onAccounts}>
             {active && look && look.nametag !== "none" ? <NameTag style={look.nametag} name={active.name} className="banner-nametag" /> : (active?.name ?? "Sign in")}
+            {active && look && look.icon && look.icon !== "none" && <img className="nametag-icon" src={`/cosmetics/icons/${look.icon}.png`} alt="" />}
           </button>
           {skin ? (
             <Suspense fallback={null}>

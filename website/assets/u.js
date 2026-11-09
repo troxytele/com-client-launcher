@@ -319,16 +319,23 @@
       const look = p.cosmetics || {};
       const wear = $("p-wear");
       const worn = [];
-      const CC_CAPES = { cc_aurora: "Aurora", cc_galaxy: "Galaxy", cc_lava: "Lava", cc_glitch: "Glitch", cc_snowfall: "Snowfall", cc_lights: "Christmas Lights", cc_candy_cane: "Candy Cane" };
-      if (look.cape && look.cape !== "none") worn.push(CC_CAPES[look.cape] ? "Cape: " + CC_CAPES[look.cape] : "Cape");
+      const nice = (id) => id.replace(/^cc_/, "").replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+      if (look.cape && look.cape !== "none") worn.push("Cape: " + nice(look.cape));
       if (look.wings && look.wings !== "none") worn.push("Wings: " + look.wings.replace(/_/g, " "));
       if (look.halo && look.halo !== "none") worn.push("Halo: " + look.halo);
       if (look.hat && look.hat !== "none") worn.push("Hat: " + look.hat.replace(/_/g, " "));
       if (look.aura && look.aura !== "none") worn.push("Aura: " + look.aura);
       if (look.pet && look.pet !== "none") worn.push("Pet: " + look.pet.replace(/_/g, " "));
       if (look.nametag && look.nametag !== "none") worn.push("Name tag: " + (window.CC.NAME_STYLES[look.nametag]?.name || look.nametag));
+      if (look.icon && look.icon !== "none") worn.push("Name icon: " + nice(look.icon));
       // their name in their name tag style
       if (look.nametag && look.nametag !== "none") window.CC.styleName($("p-name"), look.nametag);
+      if (look.icon && look.icon !== "none") {
+        const ic = el("img", "g-nameicon");
+        ic.src = `/assets/cosmetics/icons/${look.icon}.png`;
+        ic.alt = "";
+        $("p-name").after(ic);
+      }
       wear.id = "wears";
       if (worn.length) {
         const head = el("div", "wear-head");
@@ -366,7 +373,7 @@
         };
         pts.append(stat(p.shop.points, "points"), stat(p.shop.earned, "earned in total"));
         box.append(pts);
-        const NAMES = { cape: "Cape", wings: "Wings", halo: "Halo", hat: "Hat", aura: "Aura", emote: "Emote", pet: "Pet", nametag: "Name tag" };
+        const NAMES = { cape: "Cape", wings: "Wings", halo: "Halo", hat: "Hat", aura: "Aura", emote: "Emote", pet: "Pet", nametag: "Name tag", icon: "Name icon" };
         if (p.shop.everything) box.append(el("p", "muted", "Has every cosmetic unlocked (Com Client team)."));
         else if (p.shop.owned.length) {
           box.append(el("h3", null, `Unlocked (${p.shop.owned.length})`));
@@ -393,7 +400,7 @@
         const v = window.CCViewer.create(canvas, { width: box.clientWidth, height: box.clientHeight });
         new ResizeObserver(() => v.setSize(box.clientWidth, box.clientHeight)).observe(box);
         v.setSkin([`${API}/public/skin/${p.uuid}`, ...window.CC.STEVE], p.model === "slim");
-        const cape = look.cape && look.cape !== "none" ? `${API}/public/cape/${look.cape}` : null;
+        const cape = look.cape && look.cape !== "none" ? `/assets/cosmetics/capes/${look.cape.slice(3)}.png` : null;
         const wings = look.wings && look.wings !== "none" ? `/assets/cosmetics/${look.wings}.png` : null;
         v.setLook(look, cape, wings);
       }

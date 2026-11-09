@@ -8,49 +8,16 @@ use serde_json::{json, Value};
 use std::io::Read;
 
 use crate::client;
-use crate::net;
 use crate::paths::Paths;
 use crate::social;
 use crate::store::{self, Account, Profiles};
 
-/// Official capes that are always listed as (name, texture hash); the rest comes from MineSkin's catalogue, like in the mod.
-const BUILT_IN_CAPES: &[(&str, &str)] = &[
-    ("Migrator", "2340c0e03dd24a11b15a8b33c2a7e9e32abb2051b2481d0ba7defd635ca7a933"),
-    ("Vanilla", "f9a76537647989f9a0b6d001e320dac591c359e9e61a31f4ce11c88f207f0ad4"),
-    ("15th Anniversary", "cd9d82ab17fd92022dbd4a86cde4c382a7540e117fae7b9a2853658505a80625"),
-    ("Follower's", "569b7f2a1d00d26f30efe3f9ab9ac817b1e6d35f4f3cfb0324ef2d328223d350"),
-    ("MineCon 2011", "953cac8b779fe41383e675ee2b86071a71658f2180f56fbce8aa315ea70e2ed6"),
-    ("MineCon 2012", "a2e8d97ec79100e90a75d369d1b3ba81273c4f82bc1b737e934eed4a854be1b6"),
-    ("MineCon 2013", "153b1a0dfcbae953cdeb6f2c2bf6bf79943239b1372780da44bcbb29273131da"),
-    ("MineCon 2015", "b0cc08840700447322d953a02b965f1d65a13a603bf64b17c803c21446fe1635"),
-    ("MineCon 2016", "e7dfea16dc83c97df01a12fabbd1216359c0cd0ea42f9999b6e97c584963e980"),
-    ("Mojang (Classic)", "8f120319222a9f4a104e2f5cb97b2cda93199a2ee9e1585cb8d09d6f687cb761"),
-    ("Mojang", "9e507afc56359978a3eb3e32367042b853cddd0995d17d0da995662913fb00f7"),
-    ("Mojang Studios", "5786fe99be377dfb6858859f926c4dbc995751e91cee373468c5fbf4865e7151"),
-    ("Realms MapMaker", "17912790ff164b93196f08ba71d0e62129304776d0f347334f8a6eae509f8a56"),
-    ("Translator", "1bf91499701404e21bd46b0191d63239a4ef76ebde88d27e4d430ac211df681e"),
-    ("Translator (Chinese)", "2262fb1d24912209490586ecae98aca8500df3eff91f2a07da37ee524e7e3cb6"),
-    ("Translator (Japanese)", "ca29f5dd9e94fb1748203b92e36b66fda80750c87ebc18d6eafdb0e28cc1d05f"),
-    ("Mojira Moderator", "ae677f7d98ac70a533713518416df4452fe5700365c09cf45d0d156ea9396551"),
-    ("Cobalt", "ca35c56efe71ed290385f4ab5346a1826b546a54d519e6a3ff01efa01acce81"),
-    ("Scrolls", "3efadf6510961830f9fcc077f19b4daf286d502b5f5aafbd807c7bbffcaca245"),
-    ("Turtle", "5048ea61566353397247d2b7d946034de926b997d5e66c86483dfb1e031aee95"),
-    ("Prismarine", "d8f8d13a1adf9636a16c31d47f3ecc9bb8d8533108aa5ad2a01b13b1a0c55eac"),
-    ("Birthday", "2056f2eebd759cce93460907186ef44e9192954ae12b227d817eb4b55627a7fc"),
-    ("Valentine", "6a7cf0eb5cfe7e7c508b364e32916dfd28d164e7bf6d92c6ea7811b82451e760"),
-    ("Bacon", "fd14214cd8073059e93d9c626260f5df85e5a959181537119df56cadaf5002cc"),
-    ("dB", "bcfbe84c6542a4a5c213c1cacf8979b5e913dcb4ad783a8b80e3c4a7d5c8bdac"),
-    ("Document", "23917a9b79ac95602bba0027c2d3b4a67f22ca537e8c984400c48f8056c904eb"),
-    ("Oxeye", "7706b5f5fc90329691e59277dcc66ba20572219fa8e5da472afd5235fad12cc8"),
-    ("Millionth Customer", "70efffaf86fe5bc089608d3cb297d3e276b9eb7a8f9f2fe6659c23a2d8b18edf"),
-    ("JulianClark", "23ec737f18bfe4b547c95935fc297dd767bb84ee55bfd855144d279ac9bfd9fe"),
-    ("MrMessiah", "2e002d5e1758e79ba51d08d92a0f3a95119f2f435ae7704916507b6c565a7da8"),
-];
-
 /// Ids and names, in the order the mod's Locker shows them.
 const WINGS: &[(&str, &str)] = &[
     ("heaven", "Heaven"), ("purple", "Purple"), ("dragon", "Dragon"), ("devil", "Devil"), ("blue_dragon", "Blue Dragon"),
-    ("frost", "Frost"), ("candy_cane", "Candy Cane"),
+    ("frost", "Frost"), ("candy_cane", "Candy Cane"), ("snowflake", "Snowflake"), ("golden", "Golden"), ("celestial", "Celestial"),
+    ("seraph", "Seraph"), ("void", "Void"), ("phoenix", "Phoenix"), ("monarch", "Monarch"), ("morpho", "Morpho"),
+    ("pixie", "Pixie"), ("bat", "Bat"), ("emerald", "Emerald Drake"),
 ];
 const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
 const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers")];
@@ -62,10 +29,23 @@ const PETS: &[(&str, &str)] = &[
 const NAMETAGS: &[(&str, &str)] = &[
     ("fire", "Fire"), ("ocean", "Ocean"), ("gold", "Gold"), ("toxic", "Toxic"), ("candy", "Candy"), ("galaxy", "Galaxy"), ("rainbow", "Rainbow"),
 ];
-/// Com Client's own capes (bundled in the mod, animated). Shown first.
+/// Name icons: a little picture after your name (the Christmas ones come from the advent calendar).
+const ICONS: &[(&str, &str)] = &[
+    ("tree", "Christmas tree"), ("snowman", "Snowman"), ("present", "Present"), ("candy_cane", "Candy cane"),
+    ("gingerbread", "Gingerbread"), ("bell", "Bell"), ("xmas_star", "Christmas star"), ("santa_hat", "Santa hat"),
+    ("snowflake", "Snowflake"), ("reindeer", "Reindeer"), ("heart", "Heart"), ("crown", "Crown"), ("fire", "Fire"),
+    ("diamond", "Diamond"), ("lightning", "Lightning"), ("music", "Music note"), ("skull", "Skull"), ("sparkle", "Sparkle"),
+];
+/// Com Client's capes (bundled in the mod, many animated), in the mod's Locker order. No official Minecraft capes.
 const CUSTOM_CAPES: &[(&str, &str)] = &[
-    ("cc_aurora", "Aurora"), ("cc_galaxy", "Galaxy"), ("cc_lava", "Lava"), ("cc_glitch", "Glitch"),
-    ("cc_snowfall", "Snowfall"), ("cc_lights", "Christmas Lights"), ("cc_candy_cane", "Candy Cane"),
+    ("cc_northpole", "North Pole"), ("cc_snowfall", "Snowfall"), ("cc_lights", "Christmas Lights"), ("cc_candy_cane", "Candy Cane"),
+    ("cc_frostbite", "Frostbite"), ("cc_prism", "Prism"),
+    ("cc_aurora", "Aurora"), ("cc_galaxy", "Galaxy"), ("cc_nebula", "Nebula"), ("cc_lava", "Lava"), ("cc_glitch", "Glitch"),
+    ("cc_rainbow", "Rainbow Flow"), ("cc_matrix", "Matrix"), ("cc_storm", "Thunderstorm"), ("cc_waves", "Waves"),
+    ("cc_fireflies", "Fireflies"), ("cc_neon", "Neon Pulse"), ("cc_hearts", "Hearts"),
+    ("cc_royal", "Royal"), ("cc_midnight", "Midnight"), ("cc_sunset", "Sunset"), ("cc_sakura", "Sakura"),
+    ("cc_ocean", "Deep Ocean"), ("cc_forest", "Forest"), ("cc_crimson", "Crimson"), ("cc_carbon", "Carbon"),
+    ("cc_honeycomb", "Honeycomb"), ("cc_mint", "Mint"),
 ];
 
 #[derive(Serialize, Clone, Debug)]
@@ -83,89 +63,63 @@ pub struct Catalog {
     pub auras: Vec<Item>,
     pub pets: Vec<Item>,
     pub nametags: Vec<Item>,
+    pub icons: Vec<Item>,
 }
 
 fn items(list: &[(&str, &str)]) -> Vec<Item> {
     list.iter().map(|(id, name)| Item { id: id.to_string(), name: name.to_string() }).collect()
 }
 
-fn is_hash(h: &str) -> bool {
-    (60..=64).contains(&h.len()) && h.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
-}
-
-/// Everything you can wear. The cape list is cached for a day (MineSkin knows every cape that exists).
-pub async fn catalog(paths: &Paths) -> Catalog {
-    let mut capes: Vec<Item> = BUILT_IN_CAPES.iter().map(|(name, hash)| Item { id: hash.to_string(), name: name.to_string() }).collect();
-    let cache = paths.root.join("cache").join("capes.json");
-    let fresh = std::fs::metadata(&cache)
-        .ok()
-        .and_then(|m| m.modified().ok())
-        .and_then(|m| m.elapsed().ok())
-        .map(|age| age.as_secs() < 86_400)
-        .unwrap_or(false);
-    let mut list: Option<Value> = if fresh { std::fs::read_to_string(&cache).ok().and_then(|t| serde_json::from_str(&t).ok()) } else { None };
-    if list.is_none() {
-        if let Ok(v) = net::get_json::<Value>("https://api.mineskin.org/v2/capes").await {
-            let _ = std::fs::create_dir_all(cache.parent().unwrap());
-            let _ = std::fs::write(&cache, v.to_string());
-            list = Some(v);
-        } else {
-            list = std::fs::read_to_string(&cache).ok().and_then(|t| serde_json::from_str(&t).ok());
-        }
+/// Everything you can wear.
+pub async fn catalog(_paths: &Paths) -> Catalog {
+    Catalog {
+        capes: items(CUSTOM_CAPES),
+        wings: items(WINGS),
+        halos: items(HALOS),
+        hats: items(HATS),
+        auras: items(AURAS),
+        pets: items(PETS),
+        nametags: items(NAMETAGS),
+        icons: items(ICONS),
     }
-    for c in list.as_ref().and_then(|v| v["capes"].as_array()).cloned().unwrap_or_default() {
-        let url = c["url"].as_str().unwrap_or_default();
-        let hash = url.rsplit('/').next().unwrap_or_default().to_ascii_lowercase();
-        if !is_hash(&hash) || capes.iter().any(|x| x.id == hash) {
-            continue;
-        }
-        let name = c["alias"].as_str().unwrap_or("Cape").replace(" Cape", "").trim().to_string();
-        capes.push(Item { id: hash, name });
-    }
-    capes.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
-    let mut all = items(CUSTOM_CAPES);
-    all.extend(capes);
-    Catalog { capes: all, wings: items(WINGS), halos: items(HALOS), hats: items(HATS), auras: items(AURAS), pets: items(PETS), nametags: items(NAMETAGS) }
 }
 
 fn data_url(bytes: &[u8]) -> String {
     format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))
 }
 
-/// A texture for the 3D preview as a data: URL. kind = "cape" (id = Mojang texture hash) or "wings" (design id,
-/// read from the installed Com Client jar).
+/// A texture for the 3D preview as a data: URL. kind = "cape" or "wings" (design id), read from the installed
+/// Com Client jar. (The window has its own copies of all of them; this is for designs newer than the launcher.)
 pub async fn texture(paths: &Paths, kind: &str, id: &str) -> Result<String> {
     match kind {
         "cape" => {
-            if !is_hash(id) {
+            if !CUSTOM_CAPES.iter().any(|(c, _)| *c == id) {
                 bail!("Unknown cape");
             }
-            let file = paths.root.join("cache").join("capes").join(format!("{id}.png"));
-            if !file.is_file() {
-                let d = net::Download::new(format!("https://textures.minecraft.net/texture/{id}"), file.clone(), None, 0);
-                net::fetch(&d, None).await?;
-            }
-            Ok(data_url(&std::fs::read(file)?))
+            jar_file(paths, &format!("assets/comclient/textures/capes/{}.png", &id[3..]))
         }
         "wings" => {
             if !WINGS.iter().any(|(w, _)| *w == id) {
                 bail!("Unknown wings");
             }
-            let inst = client::installed(paths);
-            let jar = paths.client().join(&inst.client_file);
-            if inst.client_file.is_empty() || !jar.is_file() {
-                bail!("Press Play once so Com Client is downloaded, then the wings show here");
-            }
-            let mut zip = zip::ZipArchive::new(std::fs::File::open(jar)?)?;
-            let mut f = zip
-                .by_name(&format!("assets/comclient/textures/cosmetics/wings/{id}.png"))
-                .map_err(|_| anyhow!("This Com Client version doesn't have those wings"))?;
-            let mut bytes = Vec::new();
-            f.read_to_end(&mut bytes)?;
-            Ok(data_url(&bytes))
+            jar_file(paths, &format!("assets/comclient/textures/cosmetics/wings/{id}.png"))
         }
         _ => bail!("Unknown kind"),
     }
+}
+
+/// A file from the installed Com Client jar, as a data: URL.
+fn jar_file(paths: &Paths, name: &str) -> Result<String> {
+    let inst = client::installed(paths);
+    let jar = paths.client().join(&inst.client_file);
+    if inst.client_file.is_empty() || !jar.is_file() {
+        bail!("Press Play once so Com Client is downloaded, then it shows here");
+    }
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(jar)?)?;
+    let mut f = zip.by_name(name).map_err(|_| anyhow!("This Com Client version doesn't have it yet"))?;
+    let mut bytes = Vec::new();
+    f.read_to_end(&mut bytes)?;
+    Ok(data_url(&bytes))
 }
 
 /// What you wear (same fields as the mod's config). auraColor -1 = rainbow.
@@ -183,6 +137,7 @@ pub struct Look {
     pub pet: String,
     pub pet_left: bool,
     pub nametag: String,
+    pub icon: String,
 }
 
 impl Default for Look {
@@ -199,6 +154,7 @@ impl Default for Look {
             pet: "none".into(),
             pet_left: false,
             nametag: "none".into(),
+            icon: "none".into(),
         }
     }
 }
@@ -226,12 +182,16 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
     let mut l = Look::default();
     let st = |k: &str, d: &str| cfg[k].as_str().unwrap_or(d).to_string();
     l.cape = st("cape", "none");
+    if !valid(&l.cape, CUSTOM_CAPES) {
+        l.cape = "none".into(); // an official Minecraft cape from before: those are gone
+    }
     l.wings = st("wings", "none");
     l.halo = st("halo", "none");
     l.hat = st("hat", "none");
     l.aura = st("aura", "none");
     l.pet = st("pet", "none");
     l.nametag = st("nametag", "none");
+    l.icon = st("icon", "none");
     l.pet_left = cfg["petLeft"].as_bool().unwrap_or(false);
     l.halo_color = cfg["haloColor"].as_i64().unwrap_or(l.halo_color);
     l.hat_color = cfg["hatColor"].as_i64().unwrap_or(l.hat_color);
@@ -242,8 +202,9 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
 /// Wears it: tells the server (everyone with Com Client sees it) and writes it into every profile's Com Client
 /// config, so the game wears the same thing next time it starts.
 pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
-    if !(look.cape == "none" || is_hash(&look.cape) || valid(&look.cape, CUSTOM_CAPES)) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
+    if !valid(&look.cape, CUSTOM_CAPES) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
         || !valid(&look.hat, HATS) || !valid(&look.aura, AURAS) || !valid(&look.pet, PETS) || !valid(&look.nametag, NAMETAGS)
+        || !valid(&look.icon, ICONS)
     {
         bail!("Unknown cosmetic");
     }
@@ -268,6 +229,7 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
         o.insert("pet".into(), json!(look.pet));
         o.insert("petLeft".into(), json!(look.pet_left));
         o.insert("nametag".into(), json!(look.nametag));
+        o.insert("icon".into(), json!(look.icon));
         o.insert("auraRainbow".into(), json!(look.aura_color == -1));
         if look.aura_color != -1 {
             o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));

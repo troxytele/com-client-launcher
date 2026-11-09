@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, Catalog, CosmeticItem, CurrentSkin, Deal, Look, msg, Shop, ShopKind, Wallet } from "../api";
+import { Advent, api, Catalog, CosmeticItem, CurrentSkin, Deal, Look, msg, Shop, ShopItem, ShopKind, Wallet } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import Coin from "../components/Coin";
@@ -9,8 +9,9 @@ import { Empty, Modal, Spinner } from "../components/Ui";
 import GiftDialog from "../components/GiftDialog";
 import NameTag from "../components/NameTag";
 import { CUSTOM_CAPES } from "../../website-src/helpers.js";
+import { WING_SHAPES, wingShape } from "../../website-src/wings.js";
 
-type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "nametags";
+type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "nametags" | "icons";
 const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "capes", label: "Capes", field: "cape" },
   { id: "wings", label: "Wings", field: "wings" },
@@ -19,6 +20,7 @@ const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "auras", label: "Auras", field: "aura" },
   { id: "pets", label: "Pets", field: "pet" },
   { id: "nametags", label: "Name tags", field: "nametag" },
+  { id: "icons", label: "Icons", field: "icon" },
 ];
 const CAPE_DEFAULT_PRICE = 300; // capes the server has no price for
 const HALO_COLORS = [0xffe07a, 0xffffff, 0x8fd8ff, 0xb98cff, 0xff7ab6, 0xff5a5a, 0x7dff9a, 0xffa048];
@@ -27,7 +29,7 @@ const HAT_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 
 const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a, 0xffffff, 0x4f7bff];
 
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
-const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none" };
+const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none" };
 
 // what you're trying on, kept while you look at other pages (cleared once it's saved)
 let draft: Look | null = null;
@@ -47,6 +49,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   const [buying, setBuying] = useState("");
   const [earnOpen, setEarnOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  const [adventOpen, setAdventOpen] = useState(false);
 
   useEffect(() => {
     api.catalog().then(setCatalog).catch((e) => toast(msg(e), "error"));
@@ -64,6 +67,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   }, [signedIn]);
 
   // price and ownership of one item ("none" is always yours)
+  const itemOf = (kind: ShopKind, id: string): ShopItem | undefined => shop?.items.find((i) => i.kind === kind && i.id === id);
   const priceOf = (kind: ShopKind, id: string) => shop?.items.find((i) => i.kind === kind && i.id === id)?.price ?? (kind === "cape" ? CAPE_DEFAULT_PRICE : 0);
   const ownsIt = (kind: ShopKind, id: string) => {
     if (id === "none" || !shop || shop.wallet.everything) return true;
@@ -91,13 +95,14 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   }, [skinKey]);
 
   // textures for the cards and the 3D model, loaded once each
+  // every cape and wing comes with the launcher; a design newer than the launcher is read from the Com Client jar
   const texture = (kind: "cape" | "wings", id: string) =>
-    id === "none" ? null : kind === "wings" ? `/cosmetics/wings/${id}.png` : CUSTOM_CAPES[id] ? `/cosmetics/capes/${id.slice(3)}.png` : textures[kind + ":" + id] || null;
+    id === "none" ? null : textures[kind + ":" + id] || (kind === "wings" ? `/cosmetics/wings/${id}.png` : `/cosmetics/capes/${id.slice(3)}.png`);
   const [asked] = useState(() => new Set<string>());
   function want(kind: "cape" | "wings", ids: string[]) {
     for (const id of ids) {
       const key = kind + ":" + id;
-      if (id === "none" || asked.has(key) || kind === "wings" || CUSTOM_CAPES[id]) continue;
+      if (id === "none" || asked.has(key) || (kind === "wings" ? KNOWN_WINGS.has(id) : CUSTOM_CAPES[id])) continue;
       asked.add(key);
       api
         .cosmeticTexture(kind, id)
@@ -150,7 +155,9 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   const pick = (id: string) => setLook({ ...look, [t.field]: id });
   // what can be gifted from this tab: the item picked here, if it costs points
   const giftName = catalog?.[tab].find((i) => i.id === current)?.name;
-  const canGift = !!shop && current !== "none" && !!giftName && priceOf(t.field, current) > 0;
+  const canGift = !!shop && current !== "none" && !!giftName && priceOf(t.field, current) > 0 && !itemOf(t.field, current)?.only;
+  const advent = shop?.wallet.advent;
+  const adventSeason = !!advent && (advent.active || advent.start - Date.now() / 1000 < 16 * 86400);
 
   // the picture of an item, for its card and today's deal
   function art(kind: ShopKind, id: string) {
@@ -167,6 +174,8 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
         return <img className="pet-art" src={`/cosmetics/pets/${id}.png`} alt="" />;
       case "nametag":
         return <NameTag style={id} name={skin?.name || "Name"} className="nametag-art" still />;
+      case "icon":
+        return <img className="icon-art" src={`/cosmetics/icons/${id}.png`} alt="" />;
       case "aura":
         return <AuraArt id={id} color={look.auraColor} />;
       default:
@@ -190,9 +199,14 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       <div className="page-head">
         <div>
           <h1>Locker</h1>
-          <p className="muted">Capes, wings, halos, hats, auras, pets and name tags. Try anything on, unlock it with points (or gift it to a friend), then save.</p>
+          <p className="muted">Capes, wings, halos, hats, auras, pets, name tags and name icons. Try anything on, unlock it with points (or gift it to a friend), then save.</p>
         </div>
         <div className="row-gap">
+          {adventSeason && (
+            <button className={"btn" + (advent!.claimable > 0 ? " primary" : "")} onClick={() => setAdventOpen(true)} title="One door a day, December 1 to 24">
+              <Icon name="gift" size={15} /> Advent calendar{advent!.claimable > 0 ? ` (${advent!.claimable})` : ""}
+            </button>
+          )}
           {shop && (
             <button
               className="btn"
@@ -226,7 +240,12 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       <div className="locker-layout">
         <div className="locker-stage glass">
           <LockerPreview skin={skin?.data ?? ""} slim={skin?.variant === "slim"} look={look} cape={capeTex} wings={wingTex} />
-          {look.nametag !== "none" && <NameTag style={look.nametag} name={skin?.name || "You"} className="locker-nametag" />}
+          {(look.nametag !== "none" || look.icon !== "none") && (
+            <span className="locker-nametag">
+              {look.nametag !== "none" ? <NameTag style={look.nametag} name={skin?.name || "You"} /> : skin?.name || "You"}
+              {look.icon !== "none" && <img className="nametag-icon" src={`/cosmetics/icons/${look.icon}.png`} alt="" />}
+            </span>
+          )}
           <div className="locker-wearing">
             {TABS.map((x) => {
               const v = look[x.field] as string;
@@ -249,6 +268,24 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                 const price = priceOf(x.field, id);
                 const name = catalog?.[x.id].find((i) => i.id === id)?.name ?? x.label;
                 const short = Math.max(0, price - shop.wallet.points);
+                const it = itemOf(x.field, id);
+                const notYet = it?.season && (Date.now() / 1000 < it.season.start || Date.now() / 1000 >= it.season.end);
+                if (it?.only === "advent" || notYet)
+                  return (
+                    <div key={x.id} className="unlock-row">
+                      <Icon name="lock" size={14} />
+                      <span>
+                        <b>{name}</b> <span className="muted">{x.label.replace(/s$/, "").toLowerCase()}</span>
+                      </span>
+                      {it?.only === "advent" ? (
+                        <button className="btn small" disabled={!adventSeason} onClick={() => setAdventOpen(true)}>
+                          <Icon name="gift" size={13} /> Only in the advent calendar
+                        </button>
+                      ) : (
+                        <span className="muted small">Back {new Date(it!.season!.start * 1000).toLocaleDateString("en", { month: "short", day: "numeric" })}</span>
+                      )}
+                    </div>
+                  );
                 return (
                   <div key={x.id} className="unlock-row">
                     <Icon name="lock" size={14} />
@@ -280,10 +317,10 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                 </button>
               ))}
             </div>
-            {tab === "capes" && (
+            {(tab === "capes" || tab === "wings" || tab === "icons") && (
               <div className="search small">
                 <Icon name="search" size={15} />
-                <input placeholder="Search capes" value={query} onChange={(e) => setQuery(e.target.value)} />
+                <input placeholder={`Search ${tab}`} value={query} onChange={(e) => setQuery(e.target.value)} />
               </div>
             )}
           </div>
@@ -332,6 +369,33 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               </span>
             </button>
           )}
+          {shop?.wallet.limited && shop.wallet.limited.length > 0 && (
+            <div className="limited-bar">
+              {shop.wallet.limited.map((d) => (
+                <button
+                  key={d.kind + d.id}
+                  className="limited-drop"
+                  onClick={() => {
+                    const tb = TABS.find((x) => x.field === d.kind);
+                    if (tb) {
+                      setTab(tb.id);
+                      setQuery("");
+                      setLook((l) => ({ ...l, [tb.field]: d.id }));
+                    }
+                  }}
+                >
+                  <span className="limited-tag">Limited</span>
+                  <div className="deal-art">{art(d.kind, d.id)}</div>
+                  <span>
+                    <b>{d.name}</b> <span className="muted">({d.kind}) · {timeLeft(d.end)} left</span>
+                  </span>
+                  <span className="deal-price">
+                    <Coin size={14} /> {d.price.toLocaleString()}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
           {!catalog ? (
             <div className="center pad">
               <Spinner />
@@ -352,7 +416,9 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                     {art(t.field, i.id)}
                   </div>
                   <b>{i.name}</b>
+                  {tab === "wings" && <small className="muted wing-type">{WING_SHAPES[wingShape(i.id)].label}</small>}
                   <PriceTag
+                    item={shop?.items.find((x) => x.kind === t.field && x.id === i.id)}
                     giftFrom={shop?.items.find((x) => x.kind === t.field && x.id === i.id)?.gift_from}
                     wearing={saved?.[t.field] === i.id}
                     owned={ownsIt(t.field, i.id)}
@@ -370,12 +436,50 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
         <GiftDialog kind={t.field} id={current} name={giftName!} onClose={() => setGiftOpen(false)} onSent={setWallet} />
       )}
       {earnOpen && shop && <EarnPoints wallet={shop.wallet} onWallet={setWallet} onClose={() => setEarnOpen(false)} />}
+      {adventOpen && (
+        <AdventDialog
+          onClose={() => setAdventOpen(false)}
+          onGot={(w, kind, id) => {
+            setShop((s) => (s ? { wallet: w, items: s.items.map((i) => (i.kind === kind && i.id === id ? { ...i, owned: true } : i)) } : s));
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function PriceTag({ wearing, owned, free, price, deal, giftFrom }: { wearing: boolean; owned: boolean; free: boolean; price: number; deal?: Deal; giftFrom?: string }) {
+const KNOWN_WINGS = new Set(Object.keys({ heaven: 1, purple: 1, dragon: 1, devil: 1, blue_dragon: 1, frost: 1, candy_cane: 1, snowflake: 1, golden: 1, celestial: 1, seraph: 1, void: 1, phoenix: 1, monarch: 1, morpho: 1, pixie: 1, bat: 1, emerald: 1 }));
+
+function timeLeft(end: number) {
+  const s = Math.max(0, end - Date.now() / 1000);
+  return s >= 86400 ? `${Math.floor(s / 86400)}d ${Math.floor((s % 86400) / 3600)}h` : `${Math.max(1, Math.floor(s / 3600))}h`;
+}
+
+function PriceTag({ item, wearing, owned, free, price, deal, giftFrom }: { item?: ShopItem; wearing: boolean; owned: boolean; free: boolean; price: number; deal?: Deal; giftFrom?: string }) {
   if (wearing) return <span className="price">Wearing</span>;
+  if (!owned && item?.only === "advent")
+    return (
+      <span className="price advent" title="Only behind a door of the advent calendar (December 1 to 24)">
+        <Icon name="gift" size={12} /> Advent calendar
+      </span>
+    );
+  if (!owned && item?.season) {
+    const now = Date.now() / 1000;
+    const open = now >= item.season.start && now < item.season.end;
+    const when = new Date((open ? item.season.end : item.season.start) * 1000).toLocaleDateString("en", { month: "short", day: "numeric" });
+    if (!open)
+      return (
+        <span className="price" title={`${item.season.name ?? "Seasonal"}: back in the shop on ${when}`}>
+          <Icon name="clock" size={12} /> Back {when}
+        </span>
+      );
+    if (item.only === "limited")
+      return (
+        <span className="price cost limited" title={`A limited drop: in the shop until ${when}`}>
+          <Coin size={13} /> {price.toLocaleString()} · {timeLeft(item.season.end)}
+        </span>
+      );
+  }
   if (free) return <span className="price">Free</span>;
   if (owned && giftFrom)
     return (
@@ -552,3 +656,76 @@ function ColourBar({ colors, value, rainbow, custom = true, onChange }: { colors
   );
 }
 
+
+/** The advent calendar: 24 doors, one a day in December. Behind them: points and Christmas items you can't buy. */
+function AdventDialog({ onClose, onGot }: { onClose: () => void; onGot: (w: Wallet, kind: string, id: string) => void }) {
+  const [cal, setCal] = useState<Advent | null>(null);
+  const [busy, setBusy] = useState(0);
+  const [got, setGot] = useState("");
+  useEffect(() => {
+    api.advent().then(setCal).catch((e) => toast(msg(e), "error"));
+  }, []);
+  async function open(day: number) {
+    setBusy(day);
+    try {
+      const r = await api.adventOpen(day);
+      setCal(r.advent);
+      setGot(r.got.name);
+      onGot(r.wallet, r.got.kind, r.got.id ?? "");
+      toast(`Door ${day}: ${r.got.name}!`, "ok");
+    } catch (e) {
+      toast(msg(e), "error");
+    } finally {
+      setBusy(0);
+    }
+  }
+  const startText = cal ? new Date(cal.start * 1000).toLocaleDateString("en", { month: "long", day: "numeric" }) : "";
+  return (
+    <Modal title="Advent calendar" onClose={onClose} width={620}>
+      {!cal ? (
+        <div className="center pad">
+          <Spinner />
+        </div>
+      ) : (
+        <div className="advent">
+          <p className="muted small">
+            {cal.active
+              ? "One door a day until Christmas. Missed a door? You can still open it until December 26."
+              : `The calendar opens on ${startText}.`}{" "}
+            Christmas name icons, the Snowflake wings and the North Pole cape are only in here.
+          </p>
+          <div className="advent-grid">
+            {cal.doors.map((d) => (
+              <button
+                key={d.day}
+                className={"advent-door" + (d.claimed ? " done" : d.open ? " ready" : "") + (d.today ? " today" : "")}
+                disabled={!d.open || d.claimed || busy !== 0}
+                onClick={() => open(d.day)}
+                title={d.claimed && d.reward ? d.reward.name : d.open ? "Open it" : `Opens on December ${d.day}`}
+              >
+                {d.claimed && d.reward ? (
+                  <>
+                    {d.reward.kind === "icon" ? (
+                      <img className="icon-art" src={`/cosmetics/icons/${d.reward.id}.png`} alt="" />
+                    ) : d.reward.kind === "points" ? (
+                      <Coin size={22} />
+                    ) : (
+                      <Icon name="sparkle" size={22} />
+                    )}
+                    <small>{d.reward.name}</small>
+                  </>
+                ) : (
+                  <>
+                    <b>{d.day}</b>
+                    {busy === d.day ? <Spinner size={12} /> : !d.open ? <Icon name="lock" size={12} /> : <small>Open</small>}
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+          {got && <p className="advent-got">You got: <b>{got}</b></p>}
+        </div>
+      )}
+    </Modal>
+  );
+}

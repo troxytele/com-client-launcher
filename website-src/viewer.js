@@ -4,14 +4,7 @@ import * as THREE from "three";
 import { IdleAnimation, SkinViewer } from "skinview3d";
 import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape } from "./helpers.js";
 import { loadPet } from "./pets.js";
-
-const ELYTRA_REST = 0.2617994;
-const WING_SPREAD = (76 * Math.PI) / 180;
-const WING_FLAP = (20 * Math.PI) / 180;
-const WING_SCALE = 0.65;
-const WING_UP = 0.08 * 16;
-// right against the back (just behind the jacket layer), so no gap shows from any side
-const WING_BACK = 2.3;
+import { makeWings } from "./wings.js";
 
 const loadImage = (url, ms) =>
   new Promise((resolve) => {
@@ -48,6 +41,9 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
   let petKey = "";
   let petCall = 0;
   let stopCape = null;
+  let wings = null;
+  let wingKey = "";
+  let wingCall = 0;
   const aura = new THREE.Group();
   const dots = [];
   for (let i = 0; i < 70; i++) {
@@ -74,27 +70,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
       });
     }
     for (; i < dots.length; i++) dots[i].visible = false;
-    const el = v.playerObject.elytra;
-    if (el.visible) {
-      // Minecraft turns model parts pitch first, then roll (ZYX); three.js defaults to XYZ, which laid the
-      // spread wings flat and away from the back
-      el.leftWing.rotation.order = "ZYX";
-      el.rightWing.rotation.order = "ZYX";
-      const flap = Math.sin((now / 2000) * Math.PI * 2) * WING_FLAP;
-      el.leftWing.rotation.set(ELYTRA_REST + flap, 0.01, ELYTRA_REST + WING_SPREAD);
-      el.updateRightWing();
-      el.scale.setScalar(WING_SCALE);
-      // like the game: the wing boxes are 2 px thick and start at their pivot, which sits WING_BACK behind the
-      // middle of the body (skinview3d's own elytra is 4 px thick, centred, and already pushed 2 px back)
-      for (const w of [el.leftWing, el.rightWing]) {
-        const mesh = w.children[0];
-        if (mesh) {
-          mesh.scale.z = 0.5;
-          mesh.position.z = -1;
-        }
-      }
-      el.position.set(0, 8 + WING_UP, -WING_BACK);
-    }
+    if (wings) wings.tick(now);
     const halo = extras.halo;
     if (pet) pet.tick(now);
     if (halo) {
@@ -135,9 +111,26 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
         stopCape();
         stopCape = null;
       }
+      // wings are their own model, so the cape (animated or not) shows under them, like in game
+      const wk = wingUrl && look.wings && look.wings !== "none" ? look.wings + "|" + wingUrl : "";
+      if (wk !== wingKey) {
+        wingKey = wk;
+        const mineW = ++wingCall;
+        if (wings) {
+          v.playerObject.remove(wings.group);
+          wings.dispose();
+          wings = null;
+        }
+        if (wk)
+          makeWings(look.wings, wingUrl).then((w) => {
+            if (!w) return;
+            if (mineW !== wingCall) return w.dispose();
+            wings = w;
+            v.playerObject.add(w.group);
+          });
+      }
       try {
-        if (wingUrl) v.loadCape(wingUrl, { backEquipment: "elytra" });
-        else if (CUSTOM_CAPES[look.cape]) {
+        if (CUSTOM_CAPES[look.cape]) {
           // Com Client's own capes are animated strips that come with the website
           loadImage(`/assets/cosmetics/capes/${look.cape.slice(3)}.png`, 7000).then((img) => {
             if (img && mine === capeCall) stopCape = playCape(v, img, look.cape);
@@ -178,6 +171,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
     dispose() {
       cancelAnimationFrame(frame);
       if (stopCape) stopCape();
+      if (wings) wings.dispose();
       v.dispose();
     },
   };

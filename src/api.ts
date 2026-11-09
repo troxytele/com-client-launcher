@@ -92,9 +92,17 @@ export type Replay = Shot & { duration_ms: number; server: string; mc_version: s
 export type PackInfo = { kind: "mrpack" | "ccprofile"; name: string; version: string; minecraft: string; loader: string; mods: number; files: number; size: number; icon: string; problem: string };
 export type ModrinthPack = { id: string; slug: string; title: string; description: string; icon: string; downloads: number; version: string; problem: string };
 export type CosmeticItem = { id: string; name: string };
-export type Catalog = { capes: CosmeticItem[]; wings: CosmeticItem[]; halos: CosmeticItem[]; hats: CosmeticItem[]; auras: CosmeticItem[]; pets: CosmeticItem[]; nametags: CosmeticItem[] };
-export type ShopKind = "cape" | "wings" | "halo" | "hat" | "aura" | "pet" | "nametag";
-export type ShopItem = { kind: ShopKind; id: string; name: string; price: number; owned: boolean; full_price?: number; deal?: boolean; gift_from?: string; season?: { start: number; end: number } | null };
+export type Catalog = { capes: CosmeticItem[]; wings: CosmeticItem[]; halos: CosmeticItem[]; hats: CosmeticItem[]; auras: CosmeticItem[]; pets: CosmeticItem[]; nametags: CosmeticItem[]; icons: CosmeticItem[] };
+export type ShopKind = "cape" | "wings" | "halo" | "hat" | "aura" | "pet" | "nametag" | "icon";
+/** only: "advent" = only from the advent calendar (can't be bought), "limited" = a limited drop. */
+export type ShopItem = {
+  kind: ShopKind; id: string; name: string; price: number; owned: boolean; full_price?: number; deal?: boolean; gift_from?: string;
+  season?: { name?: string; start: number; end: number; only?: string } | null; only?: "advent" | "limited";
+};
+export type AdventReward = { kind: "points" | ShopKind; id?: string; amount?: number; name: string };
+export type AdventDoor = { day: number; open: boolean; claimed: boolean; today: boolean; reward?: AdventReward };
+export type Advent = { year: number; start: number; end: number; active: boolean; today: number; doors: AdventDoor[]; claimable: number };
+export type LimitedDrop = { kind: ShopKind; id: string; name: string; price: number; start: number; end: number };
 export type GiftFriend = { uuid: string; name: string; username: string; avatar: number; has: boolean };
 export type Deal = { kind: ShopKind; id: string; name: string; price: number; full_price: number; off: number; ends: number };
 export type CalendarDay = { day: number; points: number; claimed: boolean; today: boolean };
@@ -119,10 +127,12 @@ export type Wallet = {
   calendar?: Calendar;
   deal?: Deal;
   show_shop?: boolean;
+  advent?: { active: boolean; today: number; claimable: number; start: number; end: number };
+  limited?: LimitedDrop[];
 };
 export type Shop = { wallet: Wallet; items: ShopItem[] };
 /** Same fields as the mod's config. auraColor -1 = rainbow. */
-export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number; pet: string; petLeft: boolean; nametag: string };
+export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number; pet: string; petLeft: boolean; nametag: string; icon: string };
 
 export type OptimisePlan = {
   ram_total_mb: number; cpu: string; cores: number; gpu: string; gpu_kind: "dedicated" | "integrated" | "unknown";
@@ -178,6 +188,8 @@ export const api = {
   giftable: (kind: ShopKind, id: string) =>
     invoke<{ friends: GiftFriend[]; price: number; points: number }>("server_get", { path: `/shop/giftable?kind=${kind}&id=${encodeURIComponent(id)}` }),
   gift: (to: string, kind: ShopKind, id: string, note: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/shop/gift", body: { to, kind, id, note } }),
+  advent: () => invoke<Advent>("server_get", { path: "/advent" }),
+  adventOpen: (day: number) => invoke<{ ok: boolean; got: AdventReward; advent: Advent; wallet: Wallet }>("server_post", { path: "/advent/open", body: { day } }),
   inviteClaim: (who: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/ref/claim", body: { who } }),
   modpackInstall: (project: string, title: string, icon: string) => invoke<string>("modpack_install", { project, title, icon }),
   openLogsWindow: () => invoke<void>("open_logs_window"),

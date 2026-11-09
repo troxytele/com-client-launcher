@@ -3,8 +3,11 @@
 (() => {
   const { API, el, get } = window.CC;
   const $ = (id) => document.getElementById(id);
-  const look = { cape: "none", wings: "heaven", halo: "ring", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "sparkles", auraColor: 0xa77bff, pet: "none", nametag: "none" };
-  const FIELD = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", pets: "pet", nametags: "nametag" };
+  const look = { cape: "none", wings: "heaven", halo: "ring", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "sparkles", auraColor: 0xa77bff, pet: "none", nametag: "none", icon: "none" };
+  const FIELD = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", pets: "pet", nametags: "nametag", icons: "icon" };
+  // wing types (WingsFeature.Shape): which design is which
+  const wingType = (id) => (["monarch", "morpho", "celestial"].includes(id) ? "Butterfly" : ["seraph", "void", "golden", "phoenix"].includes(id) ? "Seraph"
+    : ["pixie", "snowflake"].includes(id) ? "Fairy" : ["bat", "emerald"].includes(id) ? "Drake" : "Classic");
   let skinName = "Steve"; // the name shown with a name tag style
   const COLOR = { halos: "haloColor", hats: "hatColor", auras: "auraColor" };
   const SWATCHES = [0xffe07a, 0xffffff, 0xff6fae, 0xb9a6ff, 0x5aa9ff, 0x4fe3a0, 0xff5a5a, 0xff9f43, 0x1a1a1a];
@@ -12,20 +15,23 @@
   const EAR_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 0x8c8782, 0x1e1a19];
   let catalog = null;
   let prices = null; // "cape:<hash>" -> points (0 = free), from the server's shop
-  const SHOP_KIND = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", pets: "pet", nametags: "nametag" };
-  let seasons = new Map(); // seasonal items (Christmas): "kind:id" -> {start, end}
+  const SHOP_KIND = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", pets: "pet", nametags: "nametag", icons: "icon" };
+  let seasons = new Map(); // seasonal items (Christmas, limited drops, advent): "kind:id" -> {name, start, end, only}
+  let only = new Map(); // "kind:id" -> "advent" (can't be bought) or "limited"
   let deal = null; // today's deal: one item 30% off for a day
   get("/public/shop").then((s) => {
     prices = new Map(s.items.map((i) => [i.kind + ":" + i.id, i.price]));
     seasons = new Map(s.items.filter((i) => i.season).map((i) => [i.kind + ":" + i.id, i.season]));
+    only = new Map(s.items.filter((i) => i.only).map((i) => [i.kind + ":" + i.id, i.only]));
     deal = s.deal || null;
     showDeal();
     if (catalog) render();
   }).catch(() => {});
   function priceTag(id) {
     if (!prices) return null;
-    const p = prices.get(SHOP_KIND[kind] + ":" + id) ?? (kind === "capes" ? 300 : null);
+    const p = prices.get(SHOP_KIND[kind] + ":" + id) ?? null;
     if (p === null) return null;
+    if (only.get(SHOP_KIND[kind] + ":" + id) === "advent") return el("span", "g-price advent", "🎄 Advent calendar only");
     if (deal && deal.kind === SHOP_KIND[kind] && deal.id === id) {
       const t = el("span", "g-price deal");
       t.append(el("s", null, deal.full_price.toLocaleString()), document.createTextNode(" "), window.CC.coins(deal.price, 13));
@@ -40,7 +46,8 @@
       const open = now >= season.start && now < season.end;
       const when = new Date((open ? season.end : season.start) * 1000).toLocaleDateString("en", { month: "short", day: "numeric" });
       const wrap = el("span", "g-season" + (open ? " open" : ""));
-      wrap.append(t, el("small", null, open ? `Christmas · until ${when}` : `Christmas · from ${when}`));
+      const sname = season.name || "Christmas";
+      wrap.append(t, el("small", null, open ? `${sname} · until ${when}` : `${sname} · back ${when}`));
       return wrap;
     }
     return t;
@@ -81,7 +88,7 @@
     for (const [k, f] of Object.entries(FIELD)) {
       if (look[f] === "none") continue;
       const item = catalog[k].find((i) => i.id === look[f]);
-      const chip = el("button", "chip", (item ? item.name : look[f]) + (k === "pets" ? " (pet)" : k === "nametags" ? " (name tag)" : "") + " ✕");
+      const chip = el("button", "chip", (item ? item.name : look[f]) + (k === "pets" ? " (pet)" : k === "nametags" ? " (name tag)" : k === "icons" ? " (icon)" : "") + " ✕");
       chip.title = "Take it off";
       chip.addEventListener("click", () => {
         look[f] = "none";
@@ -90,7 +97,6 @@
       });
       w.append(chip);
     }
-    if (look.wings !== "none" && look.cape !== "none") w.append(el("small", "muted", "Wings and a cape: the preview shows the wings"));
   }
 
   /** The front of a cape (10x16 pixels at 1,1 of its 64x32 texture). */
@@ -138,9 +144,19 @@
     box.hidden = !on;
     box.textContent = skinName;
     if (on) stopName = window.CC.styleName(box, look.nametag);
+    if (look.icon && look.icon !== "none") {
+      box.hidden = false;
+      box.append(iconImg(look.icon, "g-nameicon"));
+    }
   }
   function showPet() {
     // the pet itself is in the 3D preview now
+  }
+  function iconImg(id, cls) {
+    const img = el("img", cls);
+    img.src = `/assets/cosmetics/icons/${id}.png`;
+    img.alt = "";
+    return img;
   }
   function petArt(id) {
     const img = el("img", "art pet");
@@ -177,7 +193,7 @@
           thumbViewer.viewer.animation = null;
         }
         const v = thumbViewer.viewer;
-        const lk = { cape: "none", wings: "none", halo: "none", haloColor: look.haloColor, hat: "none", hatColor: look.hatColor, aura: "none", auraColor: look.auraColor, pet: "none", nametag: "none" };
+        const lk = { cape: "none", wings: "none", halo: "none", haloColor: look.haloColor, hat: "none", hatColor: look.hatColor, aura: "none", auraColor: look.auraColor, pet: "none", nametag: "none", icon: "none" };
         lk[FIELD[k]] = id;
         thumbViewer.setLook(lk, null, null);
         const head = k !== "auras";
@@ -207,8 +223,9 @@
       const b = el("button", "g-item" + (look[field] === item.id ? " on" : ""));
       b.title = item.name;
       const art = kind === "capes" ? capeArt(item.id) : kind === "wings" ? wingArt(item.id) : kind === "pets" ? petArt(item.id)
-        : kind === "nametags" ? nametagArt(item) : iconArt(kind, item.id);
+        : kind === "nametags" ? nametagArt(item) : kind === "icons" ? iconImg(item.id, "art nameicon") : iconArt(kind, item.id);
       b.append(art, el("small", null, item.name));
+      if (kind === "wings") b.append(el("small", "g-type", wingType(item.id)));
       const tag = priceTag(item.id);
       if (tag) b.append(tag);
       b.addEventListener("click", () => pick(item.id));
@@ -288,6 +305,25 @@
         btn.textContent = "Try on";
       });
   });
+
+  // the advent calendar: which doors are open, and what is only in there
+  get("/public/advent").then((a) => {
+    const box = $("advent");
+    const start = new Date(a.start * 1000).toLocaleDateString("en", { month: "long", day: "numeric" });
+    $("advent-text").textContent = (a.active
+      ? `Door ${a.today} is open! Open the doors in the launcher's Locker or in game (main menu). Missed doors stay open until December 26.`
+      : `Opens on ${start}: one door a day until Christmas, in the launcher's Locker or in game.`) +
+      " Only in here: " + a.items.map((i) => i.name).join(", ") + ".";
+    const grid = $("advent-grid");
+    for (const d of a.doors) {
+      const door = el("div", "advent-web-door" + (d.open ? " open" : ""));
+      if (d.open && d.reward && d.reward.kind === "icon") door.append(iconImg(d.reward.id, "nameicon"));
+      door.append(el("b", null, String(d.day)));
+      if (d.open && d.reward) door.append(el("small", null, d.reward.name));
+      grid.append(door);
+    }
+    box.hidden = false;
+  }).catch(() => {});
 
   fetch("/assets/cosmetics/catalog.json")
     .then((r) => r.json())

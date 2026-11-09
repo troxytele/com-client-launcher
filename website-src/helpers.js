@@ -214,20 +214,16 @@ function makeHat(style, color) {
   return g;
 }
 
-// the client's wing pose: vanilla elytra rest angle, spread 76 degrees, 20 degree flap every 2 s, 0.65 size,
-// a little up and back (skin pixels: 1 block = 16)
-const ELYTRA_REST = 0.2617994;
-const WING_SPREAD = (76 * Math.PI) / 180;
-const WING_FLAP = (20 * Math.PI) / 180;
-const WING_SCALE = 0.65;
-const WING_UP = 0.08 * 16;
-const WING_BACK = 0.18 * 16;
-
 
 // Com Client's own capes (CustomCapes.java): an animated strip of 128x64 frames, top to bottom. [frames, ms per frame]
 const CUSTOM_CAPES = {
-  cc_snowfall: [12, 140], cc_lights: [8, 260], cc_candy_cane: [10, 90],
-  cc_aurora: [16, 110], cc_galaxy: [16, 130], cc_lava: [16, 100], cc_glitch: [12, 90],
+  cc_northpole: [12, 150], cc_snowfall: [12, 140], cc_lights: [8, 260], cc_candy_cane: [10, 90], cc_frostbite: [12, 130],
+  cc_prism: [16, 110],
+  cc_aurora: [16, 110], cc_galaxy: [16, 130], cc_nebula: [16, 140], cc_lava: [16, 100], cc_glitch: [12, 90],
+  cc_rainbow: [16, 90], cc_matrix: [16, 90], cc_storm: [16, 100], cc_waves: [16, 110], cc_fireflies: [16, 140],
+  cc_neon: [12, 100], cc_hearts: [12, 120],
+  cc_royal: [1, 1000], cc_midnight: [1, 1000], cc_sunset: [1, 1000], cc_sakura: [1, 1000], cc_ocean: [1, 1000],
+  cc_forest: [1, 1000], cc_crimson: [1, 1000], cc_carbon: [1, 1000], cc_honeycomb: [1, 1000], cc_mint: [1, 1000],
 };
 
 /** Cuts a cape strip into one canvas per frame. */
@@ -257,6 +253,7 @@ function playCape(viewer, img, id, backEquipment = "cape") {
     }
   };
   step();
+  if (frames.length < 2) return () => {};
   const t = setInterval(step, Math.min(ms, 100));
   return () => clearInterval(t);
 }

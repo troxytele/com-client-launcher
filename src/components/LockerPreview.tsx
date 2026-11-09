@@ -2,22 +2,13 @@ import { useEffect, useRef } from "react";
 // the halo, hat and aura shapes are shared with the website's 3D viewer, so both look like the game
 import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape } from "../../website-src/helpers.js";
 import { loadPet } from "../../website-src/pets.js";
+import { makeWings } from "../../website-src/wings.js";
 
 export { auraPoints };
 import * as THREE from "three";
 import { IdleAnimation, SkinViewer } from "skinview3d";
 import { Look } from "../api";
 
-/** 0xRRGGBB, or a rainbow when -1. */
-// the client's wing pose: vanilla elytra rest angle, spread 76 degrees, 20 degree flap every 2 s, 0.65 size,
-// a little up and back (skin pixels: 1 block = 16)
-const ELYTRA_REST = 0.2617994;
-const WING_SPREAD = (76 * Math.PI) / 180;
-const WING_FLAP = (20 * Math.PI) / 180;
-const WING_SCALE = 0.65;
-const WING_UP = 0.08 * 16;
-// right against the back (just behind the jacket layer), so no gap shows from any side
-const WING_BACK = 2.3;
 
 // A 3D player wearing the look: cape or wings on the back, halo and hat on the head, the aura around the body.
 export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.78, front = false }: { skin: string; slim: boolean; look: Look; cape: string | null; wings: string | null; zoom?: number; front?: boolean }) {
@@ -26,6 +17,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
   const viewer = useRef<SkinViewer | null>(null);
   const extras = useRef<{ halo?: THREE.Group; hat?: THREE.Group; aura?: THREE.Group }>({});
   const pet = useRef<{ group: THREE.Group; tick(now: number): void; dispose(): void } | null>(null);
+  const wingObj = useRef<{ group: THREE.Group; tick(now: number): void; dispose(): void } | null>(null);
   const lookRef = useRef(look);
   lookRef.current = look;
 
@@ -79,27 +71,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
       }
       for (; i < dots.length; i++) dots[i].visible = false;
       // wings: the elytra shape held out to the sides and beating, like the client (WingsFeature.java)
-      const el = v.playerObject.elytra;
-      if (el.visible) {
-        // Minecraft turns model parts pitch first, then roll (ZYX); three.js defaults to XYZ, which laid the
-        // spread wings flat and away from the back
-        el.leftWing.rotation.order = "ZYX";
-        el.rightWing.rotation.order = "ZYX";
-        const flap = Math.sin((now / 2000) * Math.PI * 2) * WING_FLAP;
-        el.leftWing.rotation.set(ELYTRA_REST + flap, 0.01, ELYTRA_REST + WING_SPREAD);
-        el.updateRightWing();
-        el.scale.setScalar(WING_SCALE);
-        // like the game: the wing boxes are 2 px thick and start at their pivot, which sits WING_BACK behind the
-        // middle of the body (skinview3d's own elytra is 4 px thick, centred, and already pushed 2 px back)
-        for (const w of [el.leftWing, el.rightWing]) {
-          const mesh = w.children[0];
-          if (mesh) {
-            mesh.scale.z = 0.5;
-            mesh.position.z = -1;
-          }
-        }
-        el.position.set(0, 8 + WING_UP, -WING_BACK);
-      }
+      wingObj.current?.tick(now);
       // orbiting sparks of the halo
       const halo = extras.current.halo;
       if (halo) {
@@ -130,14 +102,14 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
     else v.loadSkin(null);
   }, [skin, slim]);
 
-  // cape or wings (wings win, like in game). Com Client's own capes are animated strips that come with the launcher.
+  // the cape: Com Client's capes are (mostly animated) strips that come with the launcher. Wings are their own
+  // model (below), so the cape keeps showing under them, like in game.
   useEffect(() => {
     const v = viewer.current;
     if (!v) return;
     let stop: (() => void) | null = null;
     let gone = false;
-    if (wings) v.loadCape(wings, { backEquipment: "elytra" });
-    else if (CUSTOM_CAPES[look.cape]) {
+    if (CUSTOM_CAPES[look.cape]) {
       const img = new Image();
       img.onload = () => {
         if (!gone) stop = playCape(v, img, look.cape);
@@ -149,7 +121,30 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
       gone = true;
       if (stop) stop();
     };
-  }, [cape, wings, look.cape]);
+  }, [cape, look.cape]);
+
+  // wings, in their type (classic, butterfly, seraph, fairy, drake)
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v || !wings || look.wings === "none") return;
+    let gone = false;
+    let mine: typeof wingObj.current = null;
+    makeWings(look.wings, wings).then((w) => {
+      if (!w) return;
+      if (gone) return w.dispose();
+      mine = w;
+      wingObj.current = w;
+      v.playerObject.add(w.group);
+    });
+    return () => {
+      gone = true;
+      if (mine) {
+        v.playerObject.remove(mine.group);
+        mine.dispose();
+        if (wingObj.current === mine) wingObj.current = null;
+      }
+    };
+  }, [wings, look.wings]);
 
   // halo + hat on the head
   useEffect(() => {
