@@ -396,12 +396,8 @@
    "name": "Ethereum"
   },
   {
-   "id": "coin_com",
-   "name": "Com Coin"
-  },
-  {
-   "id": "coin_gem",
-   "name": "Amethyst Coin"
+   "id": "coin_ltc",
+   "name": "Litecoin"
   }
  ],
  "nametags": [

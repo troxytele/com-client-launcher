@@ -28,7 +28,7 @@ const PETS: &[(&str, &str)] = &[
     ("bee", "Bee"), ("ender_dragon", "Mini Ender Dragon"), ("allay", "Allay"), ("bat", "Bat"), ("parrot", "Parrot"), ("fox", "Fox"),
     ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"),
     ("goat", "Goat"), ("lamb", "Lamb"), ("pumpkin_cat", "Pumpkin Cat"), ("koala", "Koala"), ("duck", "Duck"), ("penguin", "Penguin"),
-    ("coin_btc", "Bitcoin"), ("coin_eth", "Ethereum"), ("coin_com", "Com Coin"), ("coin_gem", "Amethyst Coin"),
+    ("coin_btc", "Bitcoin"), ("coin_eth", "Ethereum"), ("coin_ltc", "Litecoin"),
 ];
 const NAMETAGS: &[(&str, &str)] = &[
     ("fire", "Fire"), ("ocean", "Ocean"), ("gold", "Gold"), ("toxic", "Toxic"), ("candy", "Candy"), ("galaxy", "Galaxy"), ("rainbow", "Rainbow"),
