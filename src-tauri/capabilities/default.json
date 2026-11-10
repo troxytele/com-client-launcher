@@ -16,6 +16,7 @@
     "process:allow-exit",
     "dialog:allow-open",
     "dialog:allow-save",
+    "opener:default",
     "opener:allow-open-url"
   ]
 }
