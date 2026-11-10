@@ -31,12 +31,39 @@ function colourAt(c, t, now) {
 
 /** The colour of an aura point: snow is always snow-white, the rest use the chosen colour. */
 function auraColour(style, c, t, now) {
-  return style === "snow" ? new THREE.Color(0xeef6ff) : colourAt(c, t, now);
+  if (style === "snow" || style === "trail_snow") return new THREE.Color(0xeef6ff);
+  if (style === "trail_hearts") return new THREE.Color(t < 0.5 ? 0xff4f86 : 0xff8fb0);
+  if (style === "trail_petals" && c !== -1) return new THREE.Color(t < 0.5 ? c & 0xffffff : 0xffc2d6);
+  return colourAt(c, t, now);
+}
+
+const hash01 = (i) => {
+  const x = Math.sin(i * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+/** Trails (Auras.java trailPoint): in previews the trail sweeps behind you as if you walked in a slow circle. */
+function trailPoints(style, time, out) {
+  for (let i = 0; i < 24; i++) {
+    const age = i / 24;
+    const a = -age * 2.2 + time * 0.6;
+    const x = Math.cos(a) * 0.7 - 0.7 * Math.cos(time * 0.6);
+    const z = Math.sin(a) * 0.7 - 0.7 * Math.sin(time * 0.6);
+    const y = 0.15 + age * 0.1;
+    const fade = Math.pow(1 - age, 1.4);
+    const h = hash01(i);
+    if (style === "trail_stars") out(x + (h - 0.5) * 0.25, y + 0.2 + h * 0.6, z + (hash01(i + 7) - 0.5) * 0.25, 0.05 + h * 0.04, fade * (0.6 + 0.4 * Math.sin(time * 9 + i * 1.7)), h);
+    else if (style === "trail_petals") out(x + (h - 0.5) * 0.3, y + 0.6 + h * 0.8 - age * 0.9, z + (hash01(i + 3) - 0.5) * 0.3, 0.05, fade, h);
+    else if (style === "trail_snow") out(x + (h - 0.5) * 0.35, y + 0.3 + h * 1.2 - age * 0.6, z + (hash01(i + 5) - 0.5) * 0.35, i % 4 === 0 ? 0.055 : 0.04, fade, h);
+    else if (style === "trail_hearts") out(x + (h - 0.5) * 0.3, y + 0.5 + h * 0.6 + age * 0.8, z + (hash01(i + 9) - 0.5) * 0.3, 0.07 * (1 - age * 0.4), fade, h);
+    else out(x + (h - 0.5) * 0.3, y + 0.3 + h * 1.1, z + (hash01(i + 11) - 0.5) * 0.3, 0.05, fade, h);
+  }
 }
 
 /** The same aura shapes as the mod (Auras.java), in blocks around the feet. */
 function auraPoints(style, now, out) {
   const time = now / 1000;
+  if (style && style.startsWith("trail_")) return trailPoints(style, time, out);
   if (style === "sparkles") {
     for (let ring = 0; ring < 3; ring++) {
       const h = 0.45 + ring * 0.5;

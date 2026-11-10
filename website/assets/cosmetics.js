@@ -6,8 +6,8 @@
   const look = { cape: "none", wings: "heaven", halo: "ring", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "sparkles", auraColor: 0xa77bff, pet: "none", nametag: "none", icon: "none" };
   const FIELD = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", pets: "pet", nametags: "nametag", icons: "icon" };
   // wing types (WingsFeature.Shape): which design is which
-  const wingType = (id) => (["monarch", "morpho", "celestial"].includes(id) ? "Butterfly" : ["seraph", "void", "golden", "phoenix"].includes(id) ? "Seraph"
-    : ["pixie", "snowflake"].includes(id) ? "Fairy" : ["bat", "emerald"].includes(id) ? "Drake" : "Classic");
+  const wingType = (id) => (["monarch", "morpho", "celestial"].includes(id) ? "Butterfly" : id === "pixie" ? "Fairy"
+    : ["dragon", "devil", "blue_dragon", "bat", "emerald"].includes(id) ? "Dragon" : "Feathered");
   let skinName = "Steve"; // the name shown with a name tag style
   const COLOR = { halos: "haloColor", hats: "hatColor", auras: "auraColor" };
   const SWATCHES = [0xffe07a, 0xffffff, 0xff6fae, 0xb9a6ff, 0x5aa9ff, 0x4fe3a0, 0xff5a5a, 0xff9f43, 0x1a1a1a];
@@ -116,24 +116,12 @@
     return c;
   }
 
-  /** The two wings like the game's card: the elytra's back face, mirrored. */
+  /** The wings' card picture: a 3D render of the pair. */
   function wingArt(id) {
-    const c = el("canvas", "art wings");
-    c.width = 24;
-    c.height = 20;
-    const img = new Image();
-    img.onload = () => {
-      const s = img.width / 64;
-      const g = c.getContext("2d");
-      g.imageSmoothingEnabled = false;
-      g.drawImage(img, 36 * s, 2 * s, 10 * s, 20 * s, 12, 0, 10, 20);
-      g.save();
-      g.scale(-1, 1);
-      g.drawImage(img, 36 * s, 2 * s, 10 * s, 20 * s, -12, 0, 10, 20);
-      g.restore();
-    };
-    img.src = `/assets/cosmetics/${id}.png`;
-    return c;
+    const img = el("img", "art voxel");
+    img.src = `/assets/cosmetics/wings_card/${id}.png`;
+    img.alt = "";
+    return img;
   }
 
   let stopName = () => {};
@@ -307,6 +295,29 @@
         btn.textContent = "Try on";
       });
   });
+
+  // sets: a few items that go together, cheaper together; clicking one puts it on the 3D model
+  get("/public/sets").then((r) => {
+    const grid = $("sets-grid");
+    for (const st of r.sets) {
+      const card = el("button", "sets-web-card");
+      card.append(el("b", null, st.name));
+      card.append(el("small", null, st.items.map((i) => i.name).join(" · ")));
+      const price = el("span", "g-price");
+      price.append(el("s", null, st.full_price.toLocaleString()), document.createTextNode(" " + st.price.toLocaleString() + " points"));
+      card.append(price);
+      if (st.why) card.append(el("small", "muted", st.why));
+      card.addEventListener("click", () => {
+        if (!catalog) return;
+        for (const it of st.items) look[it.kind] = it.id;
+        apply();
+        render();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      grid.append(card);
+    }
+    $("sets").hidden = r.sets.length === 0;
+  }).catch(() => {});
 
   // the advent calendar: which doors are open, and what is only in there
   get("/public/advent").then((a) => {

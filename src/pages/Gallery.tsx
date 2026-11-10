@@ -12,13 +12,13 @@ export function shotUrl(path: string) {
 
 // Gallery: every screenshot from every profile in one grid, and the ReplayMod recordings.
 export default function Gallery({ profiles, running, onWatch }: { profiles: Profile[]; running: boolean; onWatch: (r: Replay) => void }) {
-  const [tab, setTab] = useState<"shots" | "replays">("shots");
+  const [tab, setTab] = useState<"shots" | "replays" | "clips">("shots");
   return (
     <div className="page">
       <div className="page-head">
         <div>
           <h1>Gallery</h1>
-          <p className="muted">Screenshots (F2 in game) and ReplayMod recordings from all your profiles.</p>
+          <p className="muted">Screenshots (F2 in game), clips (F8 with the Clips module) and ReplayMod recordings from all your profiles.</p>
         </div>
         <button className="btn" onClick={() => api.openFolder(tab === "shots" ? "screenshots" : "replay_recordings")}>
           <Icon name="folder" size={15} /> Open folder
@@ -29,12 +29,15 @@ export default function Gallery({ profiles, running, onWatch }: { profiles: Prof
           <button className={tab === "shots" ? "on" : ""} onClick={() => setTab("shots")}>
             <Icon name="image" size={15} /> Screenshots
           </button>
+          <button className={tab === "clips" ? "on" : ""} onClick={() => setTab("clips")}>
+            <Icon name="play" size={15} /> Clips
+          </button>
           <button className={tab === "replays" ? "on" : ""} onClick={() => setTab("replays")}>
             <Icon name="film" size={15} /> Replays
           </button>
         </div>
       </div>
-      {tab === "shots" ? <Shots profiles={profiles} /> : <Replays profiles={profiles} running={running} onWatch={onWatch} />}
+      {tab === "shots" ? <Shots profiles={profiles} /> : tab === "clips" ? <Clips profiles={profiles} /> : <Replays profiles={profiles} running={running} onWatch={onWatch} />}
     </div>
   );
 }
@@ -207,6 +210,84 @@ function Shots({ profiles }: { profiles: Profile[] }) {
             </button>
           </div>
         </Modal>
+      )}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------- clips
+
+/** The Clips module's videos (F8 in game saves the last seconds). They open in your video player. */
+function Clips({ profiles }: { profiles: Profile[] }) {
+  const [list, setList] = useState<Shot[] | null>(null);
+  const [profile, setProfile] = useState("");
+  const load = useCallback(() => {
+    api.clips().then(setList).catch((e) => {
+      setList([]);
+      toast(msg(e), "error");
+    });
+  }, []);
+  useEffect(load, [load]);
+  if (!list)
+    return (
+      <div className="center pad">
+        <Spinner />
+      </div>
+    );
+  const shown = list.filter((r) => !profile || r.profile === profile);
+  return (
+    <>
+      <div className="toolbar">
+        <span className="muted">
+          {shown.length} clip{shown.length === 1 ? "" : "s"}
+        </span>
+        <div className="row-gap">
+          <ProfileFilter profiles={profiles} value={profile} onChange={setProfile} />
+          <button className="btn" onClick={load}>
+            <Icon name="refresh" size={15} /> Refresh
+          </button>
+        </div>
+      </div>
+      {shown.length === 0 ? (
+        <Empty icon="play" title="No clips yet" text="Turn on the Clips module in game (Render): it keeps the last 30 to 120 seconds, and F8 saves them as a video." />
+      ) : (
+        <div className="list">
+          {shown.map((r) => (
+            <div key={r.path} className="item glass replay-row">
+              <div className="item-icon none">
+                <Icon name="play" size={20} />
+              </div>
+              <div className="item-text">
+                <div className="item-title">
+                  <b>{r.name.replace(/\.avi$/i, "").replace(/^clip_/, "Clip ").replace(/_/g, " ")}</b>
+                </div>
+                <p>
+                  {r.profile_name} · {ago(r.modified)} · {fmtBytes(r.size)}
+                </p>
+              </div>
+              <div className="item-actions">
+                <button className="btn primary small" onClick={() => api.openFile(r.path).catch((e) => toast(msg(e), "error"))}>
+                  <Icon name="play" size={13} fill /> Play
+                </button>
+                <button className="icon-btn" title="Share (copies the file)" onClick={() => api.shotShare(r.path).then(() => toast("Clip copied: Ctrl+V to send it", "ok")).catch((e) => toast(msg(e), "error"))}>
+                  <Icon name="share" size={15} />
+                </button>
+                <button
+                  className="icon-btn danger"
+                  title="Delete"
+                  onClick={() =>
+                    api
+                      .galleryDelete(r.path)
+                      .then(() => setList((cur) => (cur ?? []).filter((x) => x.path !== r.path)))
+                      .catch((e) => toast(msg(e), "error"))
+                  }
+                >
+                  <Icon name="trash" size={15} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </>
   );

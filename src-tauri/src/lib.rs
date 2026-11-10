@@ -740,6 +740,12 @@ async fn replays_list(state: State<'_, AppState>) -> Res<Vec<gallery::Replay>> {
 }
 
 #[tauri::command]
+async fn clips_list(state: State<'_, AppState>) -> Res<Vec<gallery::Shot>> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || gallery::clips(&paths)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn gallery_delete(state: State<'_, AppState>, path: String) -> Res<()> {
     gallery::delete(&state.paths, &path).map_err(err)
 }
@@ -1054,6 +1060,7 @@ pub fn run() {
             profile_import,
             shots_list,
             replays_list,
+            clips_list,
             gallery_delete,
             shot_copy,
             shot_share,

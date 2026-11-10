@@ -288,6 +288,26 @@
   {
    "id": "snow",
    "name": "Snowfall"
+  },
+  {
+   "id": "trail_stars",
+   "name": "Star trail"
+  },
+  {
+   "id": "trail_petals",
+   "name": "Petal trail"
+  },
+  {
+   "id": "trail_snow",
+   "name": "Snow trail"
+  },
+  {
+   "id": "trail_hearts",
+   "name": "Heart trail"
+  },
+  {
+   "id": "trail_cape",
+   "name": "Cape trail"
   }
  ],
  "pets": [
@@ -463,6 +483,30 @@
   {
    "id": "sparkle",
    "name": "Sparkle"
+  },
+  {
+   "id": "heartbeat",
+   "name": "Beating heart"
+  },
+  {
+   "id": "flame",
+   "name": "Living flame"
+  },
+  {
+   "id": "twinkle",
+   "name": "Twinkling star"
+  },
+  {
+   "id": "bolt",
+   "name": "Flashing bolt"
+  },
+  {
+   "id": "orb",
+   "name": "Rainbow orb"
+  },
+  {
+   "id": "ghost",
+   "name": "Ghost"
   }
  ]
 }

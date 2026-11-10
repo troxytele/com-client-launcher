@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Advent, api, Catalog, CosmeticItem, CurrentSkin, Deal, Look, msg, Shop, ShopItem, ShopKind, Wallet } from "../api";
+import { Advent, api, Catalog, CosmeticItem, CurrentSkin, Deal, Look, msg, Outfit, Shop, ShopItem, ShopKind, ShopSet, Wallet } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import Coin from "../components/Coin";
@@ -31,10 +31,11 @@ const CAPE_DEFAULT_PRICE = 300; // capes the server has no price for
 const HALO_COLORS = [0xffe07a, 0xffffff, 0x8fd8ff, 0xb98cff, 0xff7ab6, 0xff5a5a, 0x7dff9a, 0xffa048];
 // ears come in real fur colours: white, cream, golden, ginger, brown, dark brown, grey, black
 const HAT_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 0x8c8782, 0x1e1a19];
+const PET_COLORS = [-1, 0xffd24a, 0x6fd3ff, 0xff7ab8, 0x8cff9e, 0xb48cff, 0x3a3a48, -2];
 const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a, 0xffffff, 0x4f7bff];
 
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
-const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none" };
+const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none", petName: "", petColor: -1, plainTag: false };
 
 // what you're trying on, kept while you look at other pages (cleared once it's saved)
 let draft: Look | null = null;
@@ -55,6 +56,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   const [earnOpen, setEarnOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   const [adventOpen, setAdventOpen] = useState(false);
+  const [view, setView] = useState<"shop" | "outfits">("shop");
 
   useEffect(() => {
     api.catalog().then(setCatalog).catch((e) => toast(msg(e), "error"));
@@ -172,7 +174,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       case "cape":
         return <CapeFront url={texture("cape", id)} />;
       case "wings":
-        return <WingArt url={texture("wings", id)} />;
+        return <img className="voxel-art" src={`/cosmetics/wings_card/${id}.png`} alt="" />;
       case "halo":
         return <HaloArt id={id} color={look.haloColor} />;
       case "hat":
@@ -318,19 +320,33 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
         <div className="locker-shop">
           <div className="toolbar">
             <div className="seg">
+              <button className={view === "outfits" ? "on" : ""} onClick={() => setView("outfits")}>
+                <Icon name="sparkle" size={13} /> Outfits & sets
+              </button>
               {TABS.map((x) => (
-                <button key={x.id} className={x.id === tab ? "on" : ""} onClick={() => setTab(x.id)}>
+                <button key={x.id} className={view === "shop" && x.id === tab ? "on" : ""} onClick={() => (setView("shop"), setTab(x.id))}>
                   {x.label}
                 </button>
               ))}
             </div>
-            {(tab === "capes" || tab === "wings" || tab === "icons") && (
+            {view === "shop" && (tab === "capes" || tab === "wings" || tab === "icons") && (
               <div className="search small">
                 <Icon name="search" size={15} />
                 <input placeholder={`Search ${tab}`} value={query} onChange={(e) => setQuery(e.target.value)} />
               </div>
             )}
           </div>
+          {view === "outfits" ? (
+            <OutfitsPanel
+              look={look}
+              catalog={catalog}
+              onWear={(l) => setLook({ ...l })}
+              onWallet={setWallet}
+              onOwned={(ks) => setShop((sh) => (sh ? { ...sh, items: sh.items.map((i) => (ks.includes(i.kind + ":" + i.id) ? { ...i, owned: true } : i)) } : sh))}
+              art={art}
+            />
+          ) : (
+            <>
           {tab === "pets" && (
             <div className="colour-bar">
               <span className="muted small">Side</span>
@@ -342,9 +358,42 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                   Right shoulder
                 </button>
               </div>
+              <span className="muted small">Name</span>
+              <input
+                className="pet-name"
+                placeholder="Name over your pet"
+                maxLength={16}
+                value={look.petName ?? ""}
+                onChange={(e) => setLook({ ...look, petName: e.target.value.replace(/[^A-Za-z0-9 _'-]/g, "") })}
+              />
             </div>
           )}
-          {((tab === "halos" && look.halo !== "wreath") || (tab === "hats" && !["crown", "santa", "antlers"].includes(look.hat) && !VOXEL_HATS.has(look.hat)) || (tab === "auras" && look.aura !== "snow")) && (
+          {view === "shop" && tab === "pets" && (
+            <div className="colour-bar">
+              <span className="muted small">Colour</span>
+              {PET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  className={"swatch" + (c === -2 ? " rainbow" : "") + ((look.petColor ?? -1) === c ? " on" : "")}
+                  style={c >= 0 ? { background: hex(c) } : c === -1 ? { background: "rgba(255,255,255,.12)" } : undefined}
+                  title={c === -1 ? "Its own colours" : c === -2 ? "Rainbow" : hex(c)}
+                  onClick={() => setLook({ ...look, petColor: c })}
+                >
+                  {c === -1 && <Icon name="x" size={10} />}
+                </button>
+              ))}
+            </div>
+          )}
+          {view === "shop" && tab === "nametags" && (
+            <label className="plain-tag">
+              <input type="checkbox" checked={!!look.plainTag} onChange={(e) => setLook({ ...look, plainTag: e.target.checked })} />
+              <span>
+                <b>Plain name tag for others</b>
+                <small className="muted">Other Com Client players see your normal Minecraft name tag (no style, icon or glass tag).</small>
+              </span>
+            </label>
+          )}
+          {((tab === "halos" && look.halo !== "wreath") || (tab === "hats" && !["crown", "santa", "antlers"].includes(look.hat) && !VOXEL_HATS.has(look.hat)) || (tab === "auras" && !["snow", "trail_snow", "trail_hearts", "trail_cape"].includes(look.aura))) && (
             <ColourBar
               colors={tab === "halos" ? HALO_COLORS : tab === "hats" ? HAT_COLORS : AURA_COLORS}
               value={tab === "halos" ? look.haloColor : tab === "hats" ? look.hatColor : look.auraColor}
@@ -436,6 +485,8 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                 </button>
               ))}
             </div>
+          )}
+            </>
           )}
         </div>
       </div>
@@ -630,19 +681,6 @@ function CapeFront({ url }: { url: string | null }) {
   );
 }
 
-/** The two wings as the card picture, like the client: the elytra's back face (u 36..46, v 2..22), leaning out. */
-function WingArt({ url }: { url: string | null }) {
-  const s = 2.5;
-  if (!url) return <span className="cape-front loading" style={{ width: 20 * s, height: 20 * s }} />;
-  const wing = { width: 10 * s, height: 20 * s, backgroundImage: `url("${url}")`, backgroundSize: `${64 * s}px auto`, backgroundPosition: `-${36 * s}px -${2 * s}px` };
-  return (
-    <span className="wing-art">
-      <span className="cape-front" style={{ ...wing, transform: "rotate(12.6deg) scaleX(-1)", transformOrigin: "100% 0" }} />
-      <span className="cape-front" style={{ ...wing, transform: "rotate(-12.6deg)", transformOrigin: "0 0" }} />
-    </span>
-  );
-}
-
 function ColourBar({ colors, value, rainbow, custom = true, onChange }: { colors: number[]; value: number; rainbow: boolean; custom?: boolean; onChange: (c: number) => void }) {
   return (
     <div className="colour-bar">
@@ -734,5 +772,179 @@ function AdventDialog({ onClose, onGot }: { onClose: () => void; onGot: (w: Wall
         </div>
       )}
     </Modal>
+  );
+}
+
+
+/** Outfits (saved looks, the same as in game) and sets (items that go together, cheaper together). */
+function OutfitsPanel({ look, catalog, onWear, onWallet, onOwned, art }: {
+  look: Look; catalog: Catalog | null; onWear: (l: Look) => void; onWallet: (w: Wallet) => void; onOwned: (keys: string[]) => void;
+  art: (kind: ShopKind, id: string) => JSX.Element;
+}) {
+  const [outfits, setOutfits] = useState<Outfit[] | null>(null);
+  const [sets, setSets] = useState<ShopSet[] | null>(null);
+  const [name, setName] = useState("");
+  const [renaming, setRenaming] = useState(-1);
+  const [busy, setBusy] = useState("");
+  useEffect(() => {
+    api.outfits().then((r) => setOutfits(r.outfits)).catch(() => setOutfits([]));
+    api.sets().then((r) => setSets(r.sets)).catch(() => setSets([]));
+  }, []);
+  async function store(list: Outfit[]) {
+    setOutfits(list);
+    try {
+      const r = await api.outfitsSave(list);
+      setOutfits(r.outfits);
+    } catch (e) {
+      toast(msg(e), "error");
+    }
+  }
+  const same = (a: Look, b: Look) => (["cape", "wings", "halo", "hat", "aura", "pet", "nametag", "icon"] as const).every((k) => a[k] === b[k]);
+  const nameOf = (kind: ShopKind, id: string) => {
+    const tab = TABS.find((x) => x.field === kind);
+    return (tab && catalog?.[tab.id].find((i) => i.id === id)?.name) || id.replace(/^cc_/, "").replace(/_/g, " ");
+  };
+  async function buySet(st: ShopSet) {
+    setBusy(st.id);
+    try {
+      const r = await api.setBuy(st.id);
+      onWallet(r.wallet);
+      onOwned(st.items.map((i) => i.kind + ":" + i.id));
+      setSets((ss) => ss && ss.map((x) => (x.id === st.id ? { ...x, owned: true, items: x.items.map((i) => ({ ...i, owned: true })) } : x)));
+      wearSet(st);
+      toast(`The ${st.name} set is yours!`, "ok");
+    } catch (e) {
+      toast(msg(e), "error");
+    } finally {
+      setBusy("");
+    }
+  }
+  function wearSet(st: ShopSet) {
+    const l: Look = { ...look };
+    for (const it of st.items) (l as Record<string, unknown>)[it.kind] = it.id;
+    onWear(l);
+  }
+  return (
+    <div className="outfits">
+      <div className="outfits-head">
+        <b>Your outfits</b>
+        <span className="muted small">{outfits?.length ?? 0} / 12 · the same in game (Locker → Outfits)</span>
+        <div className="outfits-save">
+          <input placeholder="Name for what you wear now" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} />
+          <button
+            className="btn small primary"
+            disabled={!outfits || outfits.length >= 12}
+            onClick={() => {
+              store([...(outfits ?? []), { name: name.trim() || `Outfit ${(outfits?.length ?? 0) + 1}`, look }]);
+              setName("");
+              toast("Outfit saved", "ok");
+            }}
+          >
+            <Icon name="plus" size={13} /> Save outfit
+          </button>
+        </div>
+      </div>
+      {!outfits ? (
+        <div className="center pad">
+          <Spinner />
+        </div>
+      ) : outfits.length === 0 ? (
+        <p className="muted small">No outfits yet: put something on and save it here, then switch looks with one click.</p>
+      ) : (
+        <div className="outfit-grid">
+          {outfits.map((o, i) => {
+            const parts = (["wings", "cape", "halo", "hat", "aura", "pet", "nametag", "icon"] as const).filter((k) => o.look[k] !== "none");
+            return (
+              <div key={i} className={"outfit-card glass" + (same(o.look, look) ? " on" : "")} onClick={() => onWear(o.look)}>
+                <div className="outfit-art">
+                  {parts.slice(0, 3).map((k) => (
+                    <div key={k} className="outfit-thumb">
+                      {art(k, o.look[k] as string)}
+                    </div>
+                  ))}
+                  {parts.length === 0 && <Icon name="x" size={18} />}
+                </div>
+                {renaming === i ? (
+                  <input
+                    autoFocus
+                    defaultValue={o.name}
+                    maxLength={24}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+                    }}
+                    onBlur={(e) => {
+                      setRenaming(-1);
+                      const v = e.currentTarget.value.trim();
+                      if (v && v !== o.name) store(outfits.map((x, j) => (j === i ? { ...x, name: v } : x)));
+                    }}
+                  />
+                ) : (
+                  <b>{o.name}</b>
+                )}
+                <small className="muted">{parts.map((k) => nameOf(k, o.look[k] as string)).join(" · ") || "Nothing on"}</small>
+                <div className="outfit-actions" onClick={(e) => e.stopPropagation()}>
+                  <button title="Rename" onClick={() => setRenaming(i)}>
+                    <Icon name="edit" size={13} />
+                  </button>
+                  <button title="Save what you wear now into this outfit" onClick={() => (store(outfits.map((x, j) => (j === i ? { ...x, look } : x))), toast("Outfit updated", "ok"))}>
+                    <Icon name="refresh" size={13} />
+                  </button>
+                  <button title="Delete" onClick={() => store(outfits.filter((_, j) => j !== i))}>
+                    <Icon name="trash" size={13} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="outfits-head">
+        <b>Sets</b>
+        <span className="muted small">Cheaper together: you only pay for the parts you don't have</span>
+      </div>
+      {!sets ? (
+        <div className="center pad">
+          <Spinner />
+        </div>
+      ) : (
+        <div className="set-list">
+          {sets.map((st) => (
+            <div key={st.id} className={"set-card glass" + (st.owned ? " owned" : "")}>
+              <div className="set-art" onClick={() => wearSet(st)} title="Try it on">
+                {st.items.slice(0, 5).map((it) => (
+                  <div key={it.kind + it.id} className={"outfit-thumb" + (it.owned ? " have" : "")} title={it.name}>
+                    {art(it.kind, it.id)}
+                  </div>
+                ))}
+              </div>
+              <div className="set-info">
+                <b>{st.name}</b>
+                <small className="muted">{st.items.map((it) => (it.owned ? "✓ " : "") + it.name).join(" · ")}</small>
+              </div>
+              <div className="set-buy">
+                {st.owned ? (
+                  <button className="btn small" onClick={() => wearSet(st)}>
+                    <Icon name="check" size={13} /> Wear set
+                  </button>
+                ) : st.why ? (
+                  <span className="muted small">{st.why}</span>
+                ) : (
+                  <>
+                    <span className="price cost deal">
+                      <s>{st.full_price.toLocaleString()}</s> <Coin size={13} /> {st.price.toLocaleString()}
+                    </span>
+                    <button className="btn small primary" disabled={busy !== ""} onClick={() => buySet(st)}>
+                      {busy === st.id ? <Spinner size={12} /> : <Coin size={14} />} Buy set (-{st.off}%)
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

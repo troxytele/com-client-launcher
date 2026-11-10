@@ -123,6 +123,34 @@ pub fn replays(paths: &Paths) -> Vec<Replay> {
     out
 }
 
+/// Every Com Client clip (the Clips module's videos, .avi) of every profile, newest first. Same fields as a screenshot.
+pub fn clips(paths: &Paths) -> Vec<Shot> {
+    let mut out = Vec::new();
+    for (id, name, dir) in folders(paths, "comclient/clips") {
+        let Ok(rd) = std::fs::read_dir(&dir) else { continue };
+        for e in rd.flatten() {
+            let path = e.path();
+            if ext(&path) != "avi" {
+                continue;
+            }
+            let Ok(meta) = e.metadata() else { continue };
+            if !meta.is_file() {
+                continue;
+            }
+            out.push(Shot {
+                path: native(&path),
+                name: e.file_name().to_string_lossy().to_string(),
+                profile: id.clone(),
+                profile_name: name.clone(),
+                modified: modified(&meta),
+                size: meta.len(),
+            });
+        }
+    }
+    out.sort_by(|a, b| b.modified.cmp(&a.modified));
+    out
+}
+
 /// metaData.json inside a replay file (it is a zip).
 fn replay_meta(path: &Path) -> Option<serde_json::Value> {
     let mut zip = zip::ZipArchive::new(std::fs::File::open(path).ok()?).ok()?;
@@ -139,6 +167,7 @@ pub fn allowed(paths: &Paths, path: &Path) -> bool {
     folders(paths, "screenshots")
         .into_iter()
         .chain(folders(paths, "replay_recordings"))
+        .chain(folders(paths, "comclient/clips"))
         .any(|(_, _, dir)| dir.canonicalize().map(|d| file.starts_with(d)).unwrap_or(false))
 }
 

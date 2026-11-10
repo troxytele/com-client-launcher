@@ -1,30 +1,19 @@
-// Wings in 3D, the same as the game (WingsFeature.java): the elytra shape held out to the sides and beating, in five
-// types. They are their own model with their own texture, so a cape (animated ones too) still shows under them;
-// skinview3d's built-in elytra shares the cape's texture, which is why wings used to hide the cape.
+// Wings in 3D, the same as the game (WingsFeature.java): each wing is two flat textured panels (an arm and a hand, or a
+// butterfly's fore and hind wing), posed and beating from wing_rigs.json, which the game reads too. They are their own
+// model with their own texture, so a cape (animated ones too) still shows under them.
 import * as THREE from "three";
-import { ElytraObject } from "skinview3d";
+import RIGS from "./wing_rigs.json";
 
-const ELYTRA_REST = 0.2617994;
 const RAD = Math.PI / 180;
-// right against the back (just behind the jacket layer), so no gap shows from any side
-const BACK_BASE = 2.3;
+// the wings hang from the top of the body: the neck is y 8 here (the game's body pivot)
+const NECK = 8;
 
-/** scale, spread (deg), flap (deg), ms per beat, tilt back (rad), up and back (blocks): WingsFeature.Shape */
-export const WING_SHAPES = {
-  classic: { label: "Classic", scale: 0.65, spread: 76, flap: 20, period: 2000, tilt: 0, up: 0.08, back: 0.18 },
-  butterfly: { label: "Butterfly", scale: 0.6, spread: 108, flap: 26, period: 700, tilt: 0.1, up: 0.02, back: 0.17, pairs: 2 },
-  seraph: { label: "Seraph", scale: 0.8, spread: 112, flap: 12, period: 3000, tilt: 0.15, up: 0.12, back: 0.2 },
-  fairy: { label: "Fairy", scale: 0.45, spread: 98, flap: 24, period: 400, tilt: 0.05, up: 0.04, back: 0.17 },
-  drake: { label: "Drake", scale: 0.85, spread: 84, flap: 28, period: 2500, tilt: 0.3, up: 0.06, back: 0.2 },
-};
+/** The wing types, for labels ("Feathered", "Dragon", ...). */
+export const WING_SHAPES = Object.fromEntries(Object.entries(RIGS.shapes).map(([k, v]) => [k, { label: v.label }]));
 
 /** Which type a wing design is (WingsFeature.shapeOf). */
 export function wingShape(id) {
-  if (["monarch", "morpho", "celestial"].includes(id)) return "butterfly";
-  if (["seraph", "void", "golden", "phoenix"].includes(id)) return "seraph";
-  if (["pixie", "snowflake"].includes(id)) return "fairy";
-  if (["bat", "emerald"].includes(id)) return "drake";
-  return "classic";
+  return RIGS.designs[id] || "feather";
 }
 
 const loadImage = (url) =>
@@ -37,59 +26,66 @@ const loadImage = (url) =>
   });
 
 /**
+ * One panel as a flat quad, in three's space (the game's x, -y, -z): it starts at its top-inner corner and runs
+ * along +x (side 1) or -x (side -1) and down. The texture is the same on both faces.
+ */
+function panelMesh(p, side, material) {
+  const [tw, th] = RIGS.texture;
+  const [u, v, uw, vh] = p.uv;
+  const [w, h] = p.size;
+  const g = new THREE.BufferGeometry();
+  const x = side * w;
+  g.setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0, x, 0, 0, x, -h, 0, 0, -h, 0], 3));
+  const u0 = u / tw, u1 = (u + uw) / tw, v0 = 1 - v / th, v1 = 1 - (v + vh) / th;
+  g.setAttribute("uv", new THREE.Float32BufferAttribute([u0, v0, u1, v0, u1, v1, u0, v1], 2));
+  g.setIndex(side > 0 ? [0, 2, 1, 0, 3, 2] : [0, 1, 2, 0, 2, 3]);
+  g.computeVertexNormals();
+  return new THREE.Mesh(g, material);
+}
+
+/**
  * Wings for a skinview3d player: makeWings(id, url) -> Promise<{ group, tick(now), dispose() } | null>.
  * Add `group` to viewer.playerObject and call tick(performance.now()) every frame.
  */
 export async function makeWings(id, url) {
   const img = await loadImage(url);
   if (!img) return null;
-  const toTex = (image) => {
-    const cv = document.createElement("canvas");
-    cv.width = image.width;
-    cv.height = image.height;
-    cv.getContext("2d").drawImage(image, 0, 0);
-    const t = new THREE.CanvasTexture(cv);
-    t.magFilter = THREE.NearestFilter;
-    t.minFilter = THREE.NearestFilter;
-    return t;
-  };
-  const tex = toTex(img);
-  const shape = WING_SHAPES[wingShape(id)];
-  // butterflies: the lower pair is the rounder hind wing, with its own texture (<id>_lower.png)
-  let lowerTex = null;
-  if (shape.pairs === 2) {
-    const low = await loadImage(url.replace(/\.png$/, "_lower.png"));
-    if (low) lowerTex = toTex(low);
-  }
+  const cv = document.createElement("canvas");
+  cv.width = img.width;
+  cv.height = img.height;
+  cv.getContext("2d").drawImage(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.magFilter = THREE.NearestFilter;
+  tex.minFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide, alphaTest: 0.5 });
+  const shape = RIGS.shapes[wingShape(id)];
+
   const group = new THREE.Group();
-  const pairs = [];
-  for (let i = 0; i < (shape.pairs || 1); i++) {
-    const el = new ElytraObject();
-    el.map = i === 1 && lowerTex ? lowerTex : tex;
-    el.leftWing.rotation.order = "ZYX";
-    el.rightWing.rotation.order = "ZYX";
-    // like the game: the wing boxes are 2 px thick and start at their pivot (skinview3d's are 4 px and centred)
-    for (const w of [el.leftWing, el.rightWing]) {
-      const mesh = w.children[0];
-      if (mesh) {
-        mesh.scale.z = 0.5;
-        mesh.position.z = -1;
-      }
+  group.position.y = NECK;
+  const joints = []; // [object, panel, side]
+  for (const side of [1, -1]) {
+    const byId = {};
+    for (const p of shape.panels) {
+      const joint = new THREE.Group();
+      joint.rotation.order = "YZX";
+      const [ax, ay, az] = p.at;
+      joint.position.set(side * ax, -ay, -az);
+      if (!p.parent) joint.scale.setScalar(shape.scale);
+      joint.add(panelMesh(p, side, material));
+      (p.parent ? byId[p.parent] : group).add(joint);
+      byId[p.id] = joint;
+      joints.push([joint, p, side]);
     }
-    group.add(el);
-    pairs.push(el);
   }
   const tick = (now) => {
-    pairs.forEach((el, i) => {
-      const lower = i === 1; // the butterfly's small lower pair
-      const flap = Math.sin((now / shape.period) * Math.PI * 2 + (lower ? 0.6 : 0)) * shape.flap * RAD;
-      const spread = (lower ? 58 : shape.spread) * RAD;
-      el.leftWing.rotation.set(ELYTRA_REST + flap + shape.tilt, 0.01, ELYTRA_REST + spread);
-      el.updateRightWing();
-      el.scale.setScalar(lower ? shape.scale * 0.68 : shape.scale);
-      // game: up is -y, back is +z; here up is +y and the back is -z (1 block = 16)
-      el.position.set(0, 8 + shape.up * 16 - (lower ? 0.2 * 16 : 0), -(BACK_BASE + (shape.back - 0.18) * 16 + (lower ? 0.16 : 0)));
-    });
+    const a = ((now / 50) / shape.period) * Math.PI * 2;
+    for (const [joint, p, side] of joints) {
+      const [yaw, pitch, roll] = p.rot;
+      const s = Math.sin(a + p.flap[2]);
+      joint.rotation.set(pitch * RAD, side * (yaw + p.flap[1] * s) * RAD, side * (roll + p.flap[0] * s) * RAD);
+    }
   };
   tick(performance.now());
   return {
@@ -97,8 +93,8 @@ export async function makeWings(id, url) {
     tick,
     dispose() {
       tex.dispose();
-      if (lowerTex) lowerTex.dispose();
-      pairs.forEach((el) => el.material.dispose());
+      material.dispose();
+      group.traverse((o) => o.geometry && o.geometry.dispose());
     },
   };
 }

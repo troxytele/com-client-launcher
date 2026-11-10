@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Account, api, msg, Skin } from "../api";
+import { Account, api, Look, msg, Skin } from "../api";
 import { toast } from "../stores";
 import { shot } from "../skinShots";
 import Icon from "../components/Icon";
 import SkinModel from "../components/SkinModel";
+import LockerPreview from "../components/LockerPreview";
 import { Empty, Modal, Spinner } from "../components/Ui";
 
 // Your skin library: click a skin to wear it right away; edit name and arm type; add from a file or another player.
@@ -177,6 +178,12 @@ function EditSkin({ skin, onClose, onSaved }: { skin: Skin; onClose: () => void;
   const [name, setName] = useState(skin.name);
   const [variant, setVariant] = useState<"classic" | "slim">(skin.variant);
   const [saving, setSaving] = useState(false);
+  // try the skin on with what you wear (cape, wings, hat, halo, pet...)
+  const [look, setLook] = useState<Look | null>(null);
+  const [withLook, setWithLook] = useState(true);
+  useEffect(() => {
+    api.lookGet().then(setLook).catch(() => setLook(null));
+  }, []);
   async function save(apply: boolean) {
     setSaving(true);
     try {
@@ -190,7 +197,25 @@ function EditSkin({ skin, onClose, onSaved }: { skin: Skin; onClose: () => void;
   return (
     <Modal title="Edit skin" onClose={onClose} width={420}>
       <input value={name} maxLength={32} onChange={(e) => setName(e.target.value)} placeholder="Name" />
-      <SkinModel skin={skin.data} slim={variant === "slim"} className="edit-model" zoom={0.85} />
+      {look && withLook ? (
+        <div className="edit-model">
+          <LockerPreview
+            skin={skin.data}
+            slim={variant === "slim"}
+            look={look}
+            cape={look.cape !== "none" ? `/cosmetics/capes/${look.cape.slice(3)}.png` : null}
+            wings={look.wings !== "none" ? `/cosmetics/wings/${look.wings}.png` : null}
+            zoom={0.8}
+          />
+        </div>
+      ) : (
+        <SkinModel skin={skin.data} slim={variant === "slim"} className="edit-model" zoom={0.85} />
+      )}
+      {look && (
+        <label className="row-gap small muted" style={{ cursor: "pointer" }}>
+          <input type="checkbox" checked={withLook} onChange={(e) => setWithLook(e.target.checked)} /> With my cosmetics
+        </label>
+      )}
       <VariantPick value={variant} onChange={setVariant} />
       <div className="block-foot">
         <span className="grow" />

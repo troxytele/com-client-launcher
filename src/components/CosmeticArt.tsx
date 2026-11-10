@@ -177,7 +177,7 @@ export function AuraArt({ id, color }: { id: string; color: number }) {
           const rz = x * sin + z * cos;
           const front = rz > 0 ? 1 : 0.4;
           const r = Math.max(2, sz * size * 3.2);
-          const rgb = id === "snow" ? 0xeef6ff : color === -1 ? hue(t * 0.6 + now / 4000) : color & 0xffffff;
+          const rgb = id === "snow" || id === "trail_snow" ? 0xeef6ff : id === "trail_hearts" ? (t < 0.5 ? 0xff4f86 : 0xff8fb0) : color === -1 ? hue(t * 0.6 + now / 4000) : color & 0xffffff;
           const k = Math.max(0, Math.min(1, bright)) * front;
           dot(ctx, W / 2 + rx * size, feet - y * size, r, rgb, 0.75 * k);
           dot(ctx, W / 2 + rx * size, feet - y * size, Math.max(1, r * 0.28), 0xffffff, 0.6 * k);

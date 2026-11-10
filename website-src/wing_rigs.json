@@ -1,0 +1,283 @@
+{
+  "_doc": "Com Client wings v3: each wing is a few flat textured panels (2 per side), posed and animated the same in the game (WingsFeature.java), the launcher and the website (wings.js). Units: skin pixels, game model space (x out to the side, +y down, +z back); angles in degrees (yaw + = swept back, roll + = raised, pitch + = lower edge back). uv: x, y, w, h in the 256x256 texture. flap: [roll amplitude, yaw amplitude, phase (radians)]. at: where the panel's top-inner corner sits (on the body, or on its parent panel). period: ticks per beat.",
+  "texture": [
+    256,
+    256
+  ],
+  "shapes": {
+    "feather": {
+      "label": "Feathered",
+      "scale": 0.82,
+      "period": 72,
+      "panels": [
+        {
+          "id": "inner",
+          "uv": [
+            0,
+            0,
+            80,
+            128
+          ],
+          "size": [
+            10,
+            16
+          ],
+          "at": [
+            1.0,
+            1.2,
+            2.7
+          ],
+          "rot": [
+            20,
+            10,
+            32
+          ],
+          "flap": [
+            10,
+            4,
+            0
+          ]
+        },
+        {
+          "id": "outer",
+          "uv": [
+            96,
+            0,
+            112,
+            176
+          ],
+          "size": [
+            14,
+            22
+          ],
+          "parent": "inner",
+          "at": [
+            9.6,
+            0.2,
+            0
+          ],
+          "rot": [
+            16,
+            -4,
+            14
+          ],
+          "flap": [
+            9,
+            5,
+            -0.8
+          ]
+        }
+      ]
+    },
+    "membrane": {
+      "label": "Dragon",
+      "scale": 0.85,
+      "period": 56,
+      "panels": [
+        {
+          "id": "inner",
+          "uv": [
+            0,
+            0,
+            80,
+            112
+          ],
+          "size": [
+            10,
+            14
+          ],
+          "at": [
+            1.0,
+            1.2,
+            2.7
+          ],
+          "rot": [
+            20,
+            14,
+            28
+          ],
+          "flap": [
+            14,
+            5,
+            0
+          ]
+        },
+        {
+          "id": "outer",
+          "uv": [
+            96,
+            0,
+            112,
+            144
+          ],
+          "size": [
+            14,
+            18
+          ],
+          "parent": "inner",
+          "at": [
+            9.6,
+            0.1,
+            0
+          ],
+          "rot": [
+            18,
+            -4,
+            10
+          ],
+          "flap": [
+            11,
+            7,
+            -0.9
+          ]
+        }
+      ]
+    },
+    "butterfly": {
+      "label": "Butterfly",
+      "scale": 0.8,
+      "period": 16,
+      "panels": [
+        {
+          "id": "fore",
+          "uv": [
+            0,
+            0,
+            112,
+            128
+          ],
+          "size": [
+            14,
+            16
+          ],
+          "at": [
+            0.5,
+            0.8,
+            2.6
+          ],
+          "rot": [
+            6,
+            12,
+            26
+          ],
+          "flap": [
+            0,
+            28,
+            0
+          ]
+        },
+        {
+          "id": "hind",
+          "uv": [
+            128,
+            0,
+            88,
+            96
+          ],
+          "size": [
+            11,
+            12
+          ],
+          "at": [
+            0.5,
+            4.6,
+            2.62
+          ],
+          "rot": [
+            8,
+            6,
+            -22
+          ],
+          "flap": [
+            0,
+            24,
+            -0.35
+          ]
+        }
+      ]
+    },
+    "fairy": {
+      "label": "Fairy",
+      "scale": 0.62,
+      "period": 9,
+      "panels": [
+        {
+          "id": "fore",
+          "uv": [
+            0,
+            0,
+            112,
+            128
+          ],
+          "size": [
+            14,
+            16
+          ],
+          "at": [
+            0.5,
+            1.0,
+            2.6
+          ],
+          "rot": [
+            4,
+            10,
+            30
+          ],
+          "flap": [
+            0,
+            22,
+            0
+          ]
+        },
+        {
+          "id": "hind",
+          "uv": [
+            128,
+            0,
+            88,
+            96
+          ],
+          "size": [
+            11,
+            12
+          ],
+          "at": [
+            0.5,
+            4.8,
+            2.62
+          ],
+          "rot": [
+            6,
+            6,
+            -20
+          ],
+          "flap": [
+            0,
+            20,
+            -0.4
+          ]
+        }
+      ]
+    }
+  },
+  "designs": {
+    "heaven": "feather",
+    "seraph": "feather",
+    "golden": "feather",
+    "phoenix": "feather",
+    "void": "feather",
+    "purple": "feather",
+    "frost": "feather",
+    "snowflake": "feather",
+    "candy_cane": "feather",
+    "dragon": "membrane",
+    "devil": "membrane",
+    "blue_dragon": "membrane",
+    "bat": "membrane",
+    "emerald": "membrane",
+    "monarch": "butterfly",
+    "morpho": "butterfly",
+    "celestial": "butterfly",
+    "pixie": "fairy"
+  }
+}

@@ -1,4 +1,6 @@
-import { Account } from "../api";
+import { useEffect, useRef, useState } from "react";
+import { Account, api, msg } from "../api";
+import { toast } from "../stores";
 import Face from "./Face";
 import Icon from "./Icon";
 import logo from "../assets/logo.png";
@@ -11,16 +13,44 @@ export default function SideRail({
   page,
   onPage,
   account,
+  accounts = [],
   onAccounts,
+  onSwitched,
   badge,
 }: {
   tabs: Tab[];
   page: string;
   onPage: (id: string) => void;
   account?: Account;
+  accounts?: Account[];
   onAccounts: () => void;
+  onSwitched?: (a: Account[]) => void;
   badge?: Record<string, number>;
 }) {
+  // quick switch: click the head for a list of your accounts (Manage opens the full dialog)
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState("");
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => box.current && !box.current.contains(e.target as Node) && setOpen(false);
+    window.addEventListener("mousedown", close);
+    return () => window.removeEventListener("mousedown", close);
+  }, [open]);
+  async function pick(a: Account) {
+    if (a.active) return setOpen(false);
+    setBusy(a.uuid);
+    try {
+      const list = await api.selectAccount(a.uuid);
+      onSwitched?.(list);
+      toast("Playing as " + a.name, "ok");
+      setOpen(false);
+    } catch (e) {
+      toast(msg(e), "error");
+    } finally {
+      setBusy("");
+    }
+  }
   return (
     <aside className="rail" data-tauri-drag-region>
       <div className="rail-logo" data-tauri-drag-region>
@@ -47,10 +77,27 @@ export default function SideRail({
           <Icon name="gear" size={19} />
           <span>Settings</span>
         </button>
-        <button className="rail-account" onClick={onAccounts} title={account ? account.name + " (switch account)" : "Sign in"}>
+        <div className="rail-account-wrap" ref={box}>
+        {open && (
+          <div className="acc-switch glass">
+            {accounts.map((a) => (
+              <button key={a.uuid} className={"acc-switch-row" + (a.active ? " on" : "")} disabled={busy !== ""} onClick={() => pick(a)}>
+                <Face skin={a.skin_url} name={a.name} size={22} />
+                <span>{a.name}</span>
+                {a.active ? <Icon name="check" size={13} /> : busy === a.uuid ? <span className="spin-dot" /> : null}
+              </button>
+            ))}
+            <button className="acc-switch-row manage" onClick={() => (setOpen(false), onAccounts())}>
+              <Icon name="users" size={15} />
+              <span>{accounts.length ? "Add or manage" : "Sign in"}</span>
+            </button>
+          </div>
+        )}
+        <button className="rail-account" onClick={() => (accounts.length > 1 ? setOpen(!open) : onAccounts())} title={account ? account.name + " (switch account)" : "Sign in"}>
           <Face skin={account?.skin_url} name={account?.name} size={30} />
           <span className="rail-name">{account ? account.name : "Sign in"}</span>
         </button>
+        </div>
       </div>
     </aside>
   );

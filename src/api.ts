@@ -132,7 +132,12 @@ export type Wallet = {
 };
 export type Shop = { wallet: Wallet; items: ShopItem[] };
 /** Same fields as the mod's config. auraColor -1 = rainbow. */
-export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number; pet: string; petLeft: boolean; nametag: string; icon: string };
+export type Outfit = { name: string; look: Look };
+export type ShopSet = {
+  id: string; name: string; items: { kind: ShopKind; id: string; name: string; owned: boolean }[];
+  full_price: number; price: number; off: number; owned: boolean; why: string | null;
+};
+export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number; pet: string; petLeft: boolean; nametag: string; icon: string; petName?: string; petColor?: number; plainTag?: boolean };
 
 export type OptimisePlan = {
   ram_total_mb: number; cpu: string; cores: number; gpu: string; gpu_kind: "dedicated" | "integrated" | "unknown";
@@ -174,6 +179,7 @@ export const api = {
     invoke<void>("launch", { server: server ?? null, profile: profile ?? null, replay: replay ?? null }),
   shots: () => invoke<Shot[]>("shots_list"),
   replays: () => invoke<Replay[]>("replays_list"),
+  clips: () => invoke<Shot[]>("clips_list"),
   galleryDelete: (path: string) => invoke<void>("gallery_delete", { path }),
   shotCopy: (path: string) => invoke<void>("shot_copy", { path }),
   shotShare: (path: string) => invoke<void>("shot_share", { path }),
@@ -189,6 +195,10 @@ export const api = {
     invoke<{ friends: GiftFriend[]; price: number; points: number }>("server_get", { path: `/shop/giftable?kind=${kind}&id=${encodeURIComponent(id)}` }),
   gift: (to: string, kind: ShopKind, id: string, note: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/shop/gift", body: { to, kind, id, note } }),
   advent: () => invoke<Advent>("server_get", { path: "/advent" }),
+  outfits: () => invoke<{ outfits: Outfit[] }>("server_get", { path: "/outfits" }),
+  outfitsSave: (outfits: Outfit[]) => invoke<{ ok: boolean; outfits: Outfit[] }>("server_post", { path: "/outfits", body: { outfits } }),
+  sets: () => invoke<{ sets: ShopSet[]; wallet: Wallet }>("server_get", { path: "/shop/sets" }),
+  setBuy: (id: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/shop/buy_set", body: { id } }),
   adventOpen: (day: number) => invoke<{ ok: boolean; got: AdventReward; advent: Advent; wallet: Wallet }>("server_post", { path: "/advent/open", body: { day } }),
   inviteClaim: (who: string) => invoke<{ ok: boolean; wallet: Wallet }>("server_post", { path: "/ref/claim", body: { who } }),
   modpackInstall: (project: string, title: string, icon: string) => invoke<string>("modpack_install", { project, title, icon }),

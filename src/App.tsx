@@ -189,6 +189,8 @@ export default function App() {
         page={page}
         onPage={(p) => setPage(p as Page)}
         account={active}
+        accounts={info.accounts}
+        onSwitched={(a) => setInfo({ ...info, accounts: a })}
         onAccounts={() => setAccountsOpen(true)}
         badge={{ friends: unread, mods: updates.profile === activeProfile ? updateCount(updates) : 0 }}
       />

@@ -22,7 +22,8 @@ const WINGS: &[(&str, &str)] = &[
 const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
 const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers"),
     ("bunny_hat", "Bunny hat"), ("axolotl_hat", "Axolotl hat"), ("frog_hat", "Frog hat")];
-const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix"), ("snow", "Snowfall")];
+const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix"), ("snow", "Snowfall"),
+    ("trail_stars", "Star trail"), ("trail_petals", "Petal trail"), ("trail_snow", "Snow trail"), ("trail_hearts", "Heart trail"), ("trail_cape", "Cape trail")];
 const PETS: &[(&str, &str)] = &[
     ("bee", "Bee"), ("ender_dragon", "Mini Ender Dragon"), ("allay", "Allay"), ("bat", "Bat"), ("parrot", "Parrot"), ("fox", "Fox"),
     ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"),
@@ -37,6 +38,8 @@ const ICONS: &[(&str, &str)] = &[
     ("gingerbread", "Gingerbread"), ("bell", "Bell"), ("xmas_star", "Christmas star"), ("santa_hat", "Santa hat"),
     ("snowflake", "Snowflake"), ("reindeer", "Reindeer"), ("heart", "Heart"), ("crown", "Crown"), ("fire", "Fire"),
     ("diamond", "Diamond"), ("lightning", "Lightning"), ("music", "Music note"), ("skull", "Skull"), ("sparkle", "Sparkle"),
+    // animated
+    ("heartbeat", "Beating heart"), ("flame", "Living flame"), ("twinkle", "Twinkling star"), ("bolt", "Flashing bolt"), ("orb", "Rainbow orb"), ("ghost", "Ghost"),
 ];
 /// Com Client's capes (bundled in the mod, many animated), in the mod's Locker order. No official Minecraft capes.
 const CUSTOM_CAPES: &[(&str, &str)] = &[
@@ -142,6 +145,10 @@ pub struct Look {
     pub pet_left: bool,
     pub nametag: String,
     pub icon: String,
+    /// a name over the pet, its colour (-1 own colours, -2 rainbow, else a tint) and "others see a plain name tag"
+    pub pet_name: String,
+    pub pet_color: i64,
+    pub plain_tag: bool,
 }
 
 impl Default for Look {
@@ -159,6 +166,9 @@ impl Default for Look {
             pet_left: false,
             nametag: "none".into(),
             icon: "none".into(),
+            pet_name: String::new(),
+            pet_color: -1,
+            plain_tag: false,
         }
     }
 }
@@ -197,6 +207,9 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
     l.nametag = st("nametag", "none");
     l.icon = st("icon", "none");
     l.pet_left = cfg["petLeft"].as_bool().unwrap_or(false);
+    l.pet_name = st("petName", "");
+    l.pet_color = cfg["petColor"].as_i64().unwrap_or(-1);
+    l.plain_tag = cfg["plainTag"].as_bool().unwrap_or(false);
     l.halo_color = cfg["haloColor"].as_i64().unwrap_or(l.halo_color);
     l.hat_color = cfg["hatColor"].as_i64().unwrap_or(l.hat_color);
     l.aura_color = if cfg["auraRainbow"].as_bool().unwrap_or(false) { -1 } else { cfg["auraColor"].as_i64().unwrap_or(l.aura_color) };
@@ -234,6 +247,9 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
         o.insert("petLeft".into(), json!(look.pet_left));
         o.insert("nametag".into(), json!(look.nametag));
         o.insert("icon".into(), json!(look.icon));
+        o.insert("petName".into(), json!(look.pet_name));
+        o.insert("petColor".into(), json!(look.pet_color));
+        o.insert("plainTag".into(), json!(look.plain_tag));
         o.insert("auraRainbow".into(), json!(look.aura_color == -1));
         if look.aura_color != -1 {
             o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));
