@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { buildPart, loadTex } from "./pets.js";
 
 // hats made of voxels (voxels.py): the same models and textures as the mod, loaded from HAT_BASE
-const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "cone_hat", "fire_horns"]);
+const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "cone_hat", "fire_horns", "pumpkin_hat"]);
 let HAT_BASE = "/assets/cosmetics/hats";
 let hatModels = null;
 function setHatBase(b) {

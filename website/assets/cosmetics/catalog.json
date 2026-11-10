@@ -278,6 +278,10 @@
   {
    "id": "fire_horns",
    "name": "Fire horns"
+  },
+  {
+   "id": "pumpkin_hat",
+   "name": "Pumpkin hat"
   }
  ],
  "auras": [
