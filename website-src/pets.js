@@ -9,8 +9,10 @@ const PETS = {
   axolotl: [false, 0.5], chicken: [false, 0.5], slime: [false, 0.45],
   // Com Client's own chibi pets (voxels.py): head bobs, ears and tails wiggle
   goat: [false, 0.48], lamb: [false, 0.6], pumpkin_cat: [false, 0.55], koala: [false, 0.6], duck: [false, 0.6], penguin: [false, 0.55],
+  // coins that hover beside you and spin
+  coin_btc: [true, 0.62], coin_eth: [true, 0.62], coin_com: [true, 0.62], coin_gem: [true, 0.62],
 };
-const OWN = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin"]);
+const OWN = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin", "coin_btc", "coin_eth", "coin_com", "coin_gem"]);
 
 let modelsP = null;
 const loadModels = (base) => (modelsP ||= fetch(`${base}/models.json`).then((r) => r.json()));
@@ -173,6 +175,7 @@ export async function loadPet(id, base, left) {
         if (P("head")) P("head").rotation.x = P("head").userData.rest.pitch + Math.sin(t * 2.2) * 0.06;
         for (const n of ["left_ear", "right_ear"]) if (P(n)) P(n).rotation.z = P(n).userData.rest.roll + (n.startsWith("left") ? 1 : -1) * Math.max(0, Math.sin(t * 3.1)) * 0.25;
         if (P("tail")) P("tail").rotation.y = Math.sin(t * 6) * 0.4;
+        if (P("spin")) P("spin").rotation.y = t * 2.4;
         for (const n of ["left_wing", "right_wing"]) if (P(n)) P(n).rotation.z = P(n).userData.rest.roll + (n.startsWith("left") ? -1 : 1) * Math.max(0, Math.sin(t * 9)) * Math.max(0, Math.sin(t * 0.9)) * 0.6;
         return;
       }

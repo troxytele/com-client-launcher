@@ -270,6 +270,14 @@
   {
    "id": "frog_hat",
    "name": "Frog hat"
+  },
+  {
+   "id": "cone_hat",
+   "name": "Cone hat"
+  },
+  {
+   "id": "fire_horns",
+   "name": "Fire horns"
   }
  ],
  "auras": [
@@ -378,6 +386,22 @@
   {
    "id": "penguin",
    "name": "Penguin"
+  },
+  {
+   "id": "coin_btc",
+   "name": "Bitcoin"
+  },
+  {
+   "id": "coin_eth",
+   "name": "Ethereum"
+  },
+  {
+   "id": "coin_com",
+   "name": "Com Coin"
+  },
+  {
+   "id": "coin_gem",
+   "name": "Amethyst Coin"
   }
  ],
  "nametags": [

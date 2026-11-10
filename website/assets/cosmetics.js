@@ -140,7 +140,7 @@
   function showPet() {
     // the pet itself is in the 3D preview now
   }
-  const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat"]);
+  const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "cone_hat", "fire_horns"]);
   function iconImg(id, cls, dir = "icons") {
     const img = el("img", cls);
     img.src = `/assets/cosmetics/${dir}/${id}.png`;
