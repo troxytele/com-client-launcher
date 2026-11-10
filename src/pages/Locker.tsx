@@ -14,7 +14,7 @@ import { WING_SHAPES, wingShape } from "../../website-src/wings.js";
 // Com Client's own voxel pets and hats (the card picture is a rendered PNG)
 // the advent calendar's items: hidden until you have them (they're a surprise)
 const ADVENT_ITEMS = new Set(["cape:cc_northpole", "wings:snowflake", ...["tree", "snowman", "present", "candy_cane", "gingerbread", "bell", "xmas_star", "santa_hat", "snowflake", "reindeer"].map((i) => "icon:" + i)]);
-const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "cone_hat", "fire_horns", "pumpkin_hat"]);
+const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat"]);
 
 type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "nametags" | "icons";
 const TABS: { id: Tab; label: string; field: ShopKind }[] = [

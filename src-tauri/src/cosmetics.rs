@@ -21,7 +21,7 @@ const WINGS: &[(&str, &str)] = &[
 ];
 const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
 const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers"),
-    ("bunny_hat", "Bunny hat"), ("axolotl_hat", "Axolotl hat"), ("frog_hat", "Frog hat"), ("cone_hat", "Cone hat"), ("fire_horns", "Fire horns"), ("pumpkin_hat", "Pumpkin hat")];
+    ("bunny_hat", "Bunny hat"), ("axolotl_hat", "Axolotl hat"), ("frog_hat", "Frog hat"), ("fire_horns", "Fire horns"), ("pumpkin_hat", "Pumpkin hat")];
 const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix"), ("snow", "Snowfall"),
     ("trail_stars", "Star trail"), ("trail_petals", "Petal trail"), ("trail_snow", "Snow trail"), ("trail_hearts", "Heart trail"), ("trail_cape", "Cape trail")];
 const PETS: &[(&str, &str)] = &[
