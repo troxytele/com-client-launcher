@@ -4859,3 +4859,14 @@ html.festive .fairy-lights {
   font-size: 11.5px;
   font-weight: 600;
 }
+
+/* new profile: version picker */
+.vpick { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 12px; }
+.vpick-card { display: flex; align-items: center; gap: 14px; text-align: left; padding: 14px 16px; border-radius: 14px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: inherit; cursor: pointer;
+  transition: background .15s, border-color .15s, transform .15s; }
+.vpick-card:hover:not(:disabled) { background: rgba(185,166,255,0.10); border-color: rgba(185,166,255,0.45); transform: translateY(-1px); }
+.vpick-card:disabled { opacity: .45; cursor: default; }
+.vpick-text { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.vpick-text b { font-size: 15px; }
+.vpick-tag { align-self: flex-start; font-size: 11px; padding: 1px 8px; border-radius: 99px; background: rgba(185,166,255,0.16); color: #cfc3ff; }

@@ -13,8 +13,8 @@ import { ImportBlock } from "./Settings";
 // Versions a profile can use. 1.21.11 runs Com Client on Fabric; 1.8.9 runs Legacy Fabric (Com Client for 1.8.9 is
 // on its way: until its release is out, a 1.8.9 profile starts with just Legacy Fabric and the mods you add).
 const VERSIONS = [
-  { id: "1.21.11", ready: true, note: "Com Client" },
-  { id: "1.8.9", ready: true, note: "Legacy Fabric · PvP" },
+  { id: "1.21.11", ready: true, note: "Com Client", icon: "item:mace", blurb: "The full client: modules, cosmetics, emotes, knives. Newest Minecraft with Fabric." },
+  { id: "1.8.9", ready: true, note: "Legacy Fabric · PvP", icon: "item:diamond_sword", blurb: "Classic 1.8 PvP: old combat, no attack cooldown. Com Client on Legacy Fabric." },
 ];
 
 const POPULAR = [
@@ -102,7 +102,9 @@ export default function Profiles({
     reload();
   }
 
-  async function create() {
+  const [creating, setCreating] = useState(false);
+  async function create(version: string) {
+    setCreating(false);
     try {
       const list = await api.saveProfile({
         ...info.profiles[0],
@@ -115,6 +117,7 @@ export default function Profiles({
         sessions: [],
         last_played: 0,
         java_args: "",
+        version,
       });
       reload();
       setEditId(list[list.length - 1].id);
@@ -143,6 +146,24 @@ export default function Profiles({
 
   return (
     <div className="page profiles-page">
+      {creating && (
+        <Modal title="New profile: pick a version" onClose={() => setCreating(false)} width={520}>
+          <div className="vpick">
+            {VERSIONS.map((v) => (
+              <button key={v.id} className="vpick-card" disabled={!v.ready} onClick={() => create(v.id)}>
+                <ProfileIcon icon={v.icon} size={44} />
+                <div className="vpick-text">
+                  <b>Minecraft {v.id}</b>
+                  <span className="vpick-tag">{v.note}</span>
+                  <small className="muted">{v.blurb}</small>
+                </div>
+                <Icon name="chevron" size={16} />
+              </button>
+            ))}
+          </div>
+          <p className="muted small">You can change the version later in the profile's settings.</p>
+        </Modal>
+      )}
       {importing && (
         <ImportDialog
           onClose={() => setImporting(false)}
@@ -163,7 +184,7 @@ export default function Profiles({
           <button className="btn" disabled={!!busy} onClick={() => setImporting(true)}>
             <Icon name="download" size={14} /> Import
           </button>
-          <button className="btn primary" onClick={create}>
+          <button className="btn primary" onClick={() => setCreating(true)}>
             <Icon name="plus" size={14} /> New profile
           </button>
         </div>
