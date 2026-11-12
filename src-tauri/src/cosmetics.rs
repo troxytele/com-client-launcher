@@ -18,6 +18,7 @@ const WINGS: &[(&str, &str)] = &[
     ("frost", "Frost"), ("candy_cane", "Candy Cane"), ("snowflake", "Snowflake"), ("golden", "Golden"), ("celestial", "Celestial"),
     ("seraph", "Seraph"), ("void", "Void"), ("phoenix", "Phoenix"), ("monarch", "Monarch"), ("morpho", "Morpho"),
     ("pixie", "Pixie"), ("bat", "Bat"), ("emerald", "Emerald Drake"),
+    ("crystal", "Crystal Shards"), ("flame", "Flame Wings"), ("leaf", "Leafwing"), ("bone", "Bone Wings"), ("peacock", "Peacock"), ("ribbon", "Ethereal Ribbons"),
 ];
 const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
 const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers"),
@@ -29,6 +30,7 @@ const PETS: &[(&str, &str)] = &[
     ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"),
     ("goat", "Goat"), ("lamb", "Lamb"), ("pumpkin_cat", "Pumpkin Cat"), ("koala", "Koala"), ("duck", "Duck"), ("penguin", "Penguin"),
     ("coin_btc", "Bitcoin"), ("coin_eth", "Ethereum"), ("coin_ltc", "Litecoin"),
+    ("capybara", "Capybara"), ("red_panda", "Red Panda"), ("bunny", "Bunny"), ("owl", "Owl"), ("corgi", "Corgi"), ("panda", "Panda"),
 ];
 const NAMETAGS: &[(&str, &str)] = &[
     ("fire", "Fire"), ("ocean", "Ocean"), ("gold", "Gold"), ("toxic", "Toxic"), ("candy", "Candy"), ("galaxy", "Galaxy"), ("rainbow", "Rainbow"),
@@ -54,6 +56,8 @@ const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_fireflies", "Fireflies"), ("cc_hearts", "Hearts"),
     ("cc_sunset", "Sunset"), ("cc_sakura", "Sakura"),
     ("cc_honeycomb", "Honeycomb"), ("cc_mint", "Mint"),
+    ("cc_synthwave", "Synthwave"), ("cc_event_horizon", "Event Horizon"), ("cc_koi", "Koi Pond"), ("cc_dragon_scale", "Dragon Scale"),
+    ("cc_lanterns", "Lantern Festival"), ("cc_petal_storm", "Petal Storm"),
 ];
 
 #[derive(Serialize, Clone, Debug)]

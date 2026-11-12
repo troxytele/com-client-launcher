@@ -232,7 +232,15 @@ pub fn spawn(paths: &Paths, plan: &Plan, on_line: impl Fn(String) + Send + Sync 
 fn extract_natives(paths: &Paths, plan: &Plan) -> Result<()> {
     let dir = paths.versions().join(&plan.vanilla.id).join("natives");
     std::fs::create_dir_all(&dir)?;
-    for (key, jar) in &plan.vanilla.libraries {
+    // vanilla's natives, with Legacy Fabric's newer LWJGL natives replacing the same ones
+    let mut natives: Vec<(&String, &PathBuf)> = Vec::new();
+    for (key, jar) in plan.vanilla.libraries.iter().chain(plan.fabric.libraries.iter()) {
+        match natives.iter().position(|(k, _)| *k == key) {
+            Some(i) => natives[i] = (key, jar),
+            None => natives.push((key, jar)),
+        }
+    }
+    for (key, jar) in natives {
         if !key.contains(":natives-") || !jar.is_file() {
             continue;
         }

@@ -46,10 +46,25 @@ pub async fn install(paths: &Paths, mc: &str, pinned: Option<&str>, rep: &Report
     let mut libraries = Vec::new();
     for lib in profile["libraries"].as_array().cloned().unwrap_or_default() {
         let name = lib["name"].as_str().unwrap_or_default();
-        let Some(rel) = maven_path(name) else { continue };
+        // libraries only for another OS (Legacy Fabric lists some LWJGL ones per OS)
+        if !crate::minecraft::rules_allow(lib.get("rules"), &std::collections::HashMap::new()) {
+            continue;
+        }
         let fallback = if crate::config::is_legacy(mc) { "https://maven.legacyfabric.net/" } else { "https://maven.fabricmc.net/" };
         let base = lib["url"].as_str().unwrap_or(fallback);
         let base = if base.ends_with('/') { base.to_string() } else { format!("{base}/") };
+        // natives-only libraries (Legacy Fabric's lwjgl-platform / jinput-platform): there is no plain jar, only
+        // "<name>-natives-<os>.jar", which gets unpacked at launch like vanilla's
+        if let Some(natives) = lib.get("natives") {
+            let Some(cls) = natives.get(crate::paths::os_name()).and_then(|c| c.as_str()) else { continue };
+            let cls = cls.replace("${arch}", if cfg!(target_pointer_width = "32") { "32" } else { "64" });
+            let Some(rel) = maven_path(&format!("{name}:{cls}")) else { continue };
+            let path = paths.libraries().join(&rel);
+            files.push(Download::new(format!("{base}{rel}"), &path, None, 0));
+            libraries.push((format!("{}:{cls}", maven_key(name)), path));
+            continue;
+        }
+        let Some(rel) = maven_path(name) else { continue };
         let path = paths.libraries().join(&rel);
         files.push(Download::new(format!("{base}{rel}"), &path, lib["sha1"].as_str().map(String::from), lib["size"].as_u64().unwrap_or(0)));
         libraries.push((maven_key(name), path));
