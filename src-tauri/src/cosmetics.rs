@@ -50,7 +50,7 @@ const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_frostbite", "Frostbite"), ("cc_prism", "Prism"),
     ("cc_rose_red", "Red Rose"), ("cc_rose_white", "White Rose"), ("cc_sun", "Sun"), ("cc_moon", "Moon"),
     ("cc_heart_left", "Heart (left half)"), ("cc_heart_right", "Heart (right half)"), ("cc_yin", "Yin"), ("cc_yang", "Yang"),
-    ("cc_mono_black", "Mono Black"), ("cc_mono_white", "Mono White"), ("cc_gg", "GG"),
+    ("cc_mono_black", "Mono Black"), ("cc_mono_white", "Mono White"), ("cc_gg", "GG"), ("cc_crystal_pvp", "Crystal PvP"),
     ("cc_aurora", "Aurora"), ("cc_galaxy", "Galaxy"), ("cc_nebula", "Nebula"), ("cc_lava", "Lava"),
     ("cc_rainbow", "Rainbow Flow"), ("cc_storm", "Thunderstorm"), ("cc_waves", "Waves"),
     ("cc_fireflies", "Fireflies"), ("cc_hearts", "Hearts"),

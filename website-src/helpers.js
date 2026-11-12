@@ -277,7 +277,7 @@ const CUSTOM_CAPES = {
   cc_prism: [16, 110],
   cc_rose_red: [16, 120], cc_rose_white: [16, 120], cc_sun: [16, 150], cc_moon: [16, 150],
   cc_heart_left: [16, 90], cc_heart_right: [16, 90], cc_yin: [16, 180], cc_yang: [16, 180],
-  cc_mono_black: [20, 250], cc_mono_white: [20, 250], cc_gg: [24, 250],
+  cc_mono_black: [20, 250], cc_mono_white: [20, 250], cc_gg: [24, 250], cc_crystal_pvp: [44, 120],
   cc_aurora: [16, 110], cc_galaxy: [16, 130], cc_nebula: [16, 140], cc_lava: [16, 100],
   cc_rainbow: [16, 90], cc_storm: [16, 100], cc_waves: [16, 110], cc_fireflies: [16, 140],
   cc_hearts: [12, 120],
