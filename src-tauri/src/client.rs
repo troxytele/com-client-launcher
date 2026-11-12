@@ -229,12 +229,70 @@ pub struct NewsItem {
     pub url: String,
 }
 
+/// The newest launcher release as a news item, if it came out in the last 14 days and has notes ("- " lines in
+/// its description, written by the release workflow from the commits since the release before).
+async fn latest_release_news() -> Option<NewsItem> {
+    let url = format!("https://api.github.com/repos/{}/releases/latest", config::LAUNCHER_REPO);
+    let rel: Value = net::get_json(&url).await.ok()?;
+    let notes: Vec<String> = rel["body"].as_str()?.lines()
+        .filter_map(|l| l.trim().strip_prefix("- ").map(|x| x.trim().to_string()))
+        .filter(|l| !l.is_empty())
+        .collect();
+    if notes.is_empty() {
+        return None;
+    }
+    let published = rel["published_at"].as_str().unwrap_or_default();
+    let day = days_from_iso(published)?;
+    let today = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok()?.as_secs() / 86400) as i64;
+    if today - day > 14 {
+        return None;
+    }
+    let version = rel["tag_name"].as_str().unwrap_or_default().trim_start_matches('v').to_string();
+    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let (y, m, d) = (published.get(0..4)?, published.get(5..7)?.parse::<usize>().ok()?, published.get(8..10)?.parse::<u32>().ok()?);
+    Some(NewsItem {
+        title: format!("What's new in {version}"),
+        body: notes.join(" · "),
+        date: format!("{d} {} {y}", months.get(m.wrapping_sub(1)).unwrap_or(&"")),
+        tag: "Launcher update".into(),
+        url: rel["html_url"].as_str().unwrap_or_default().to_string(),
+    })
+}
+
+/// The "- " lines of the launcher release v<version> (empty if there is none or it has no notes).
+pub async fn release_notes(version: &str) -> Vec<String> {
+    let url = format!("https://api.github.com/repos/{}/releases/tags/v{}", config::LAUNCHER_REPO, version);
+    let Ok(rel) = net::get_json::<Value>(&url).await else { return Vec::new() };
+    rel["body"].as_str().unwrap_or_default().lines()
+        .filter_map(|l| l.trim().strip_prefix("- ").map(|x| x.trim().to_string()))
+        .filter(|l| !l.is_empty())
+        .collect()
+}
+
+/// Days since 1970 for "2026-11-12T10:09:59Z".
+fn days_from_iso(s: &str) -> Option<i64> {
+    let y: i64 = s.get(0..4)?.parse().ok()?;
+    let m: i64 = s.get(5..7)?.parse().ok()?;
+    let d: i64 = s.get(8..10)?.parse().ok()?;
+    // civil-from-days inverse (Howard Hinnant)
+    let y = if m <= 2 { y - 1 } else { y };
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = y - era * 400;
+    let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    Some(era * 146097 + doe - 719468)
+}
+
 /// news.json from the launcher repo (cached for offline starts).
 pub async fn news(paths: &Paths) -> Vec<NewsItem> {
     let cache = paths.file("news.json");
     if !config::LAUNCHER_REPO.starts_with("YOUR_GITHUB_NAME") {
         let url = format!("https://raw.githubusercontent.com/{}/main/news.json", config::LAUNCHER_REPO);
-        if let Ok(v) = net::get_json::<Vec<NewsItem>>(&url).await {
+        if let Ok(mut v) = net::get_json::<Vec<NewsItem>>(&url).await {
+            // the newest launcher update leads for two weeks, with the notes from its release
+            if let Some(r) = latest_release_news().await {
+                v.insert(0, r);
+            }
             let _ = std::fs::write(&cache, serde_json::to_string(&v).unwrap_or_default());
             return v;
         }
@@ -249,4 +307,14 @@ pub async fn news(paths: &Paths) -> Vec<NewsItem> {
         tag: "Launcher".into(),
         url: String::new(),
     }]
+}
+
+#[cfg(test)]
+mod release_news_tests {
+    #[test]
+    fn days() {
+        assert_eq!(super::days_from_iso("1970-01-01T00:00:00Z"), Some(0));
+        assert_eq!(super::days_from_iso("2026-11-12T10:09:59Z"), Some(20769));
+        assert_eq!(super::days_from_iso("2024-03-01T00:00:00Z"), Some(19783));
+    }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { api } from "../api";
 import Icon from "./Icon";
 import { Modal } from "./Ui";
 
@@ -171,7 +172,7 @@ export const CHANGELOG: { version: string; items: [string, string, string][] }[]
 const KEY = "seenVersion";
 
 export default function WhatsNew({ version }: { version: string }) {
-  const [show, setShow] = useState(false);
+  const [items, setItems] = useState<[string, string, string][] | null>(null);
   useEffect(() => {
     let seen: string | null = null;
     try {
@@ -181,29 +182,46 @@ export default function WhatsNew({ version }: { version: string }) {
       return;
     }
     // a brand-new install doesn't need a list of changes; an update does
-    const hasNotes = CHANGELOG.some((c) => c.version === version);
-    if (hasNotes && seen !== version && (seen !== null || localStorage.getItem("look") !== null)) setShow(true);
+    if (seen === version || (seen === null && localStorage.getItem("look") === null)) return;
+    const own = CHANGELOG.find((c) => c.version === version);
+    if (own) {
+      setItems(own.items);
+      return;
+    }
+    // no hand-written list: the notes of the GitHub release ("Title: text" lines)
+    api
+      .releaseNotes(version)
+      .then((lines) => {
+        if (!lines.length) return;
+        setItems(
+          lines.map((l) => {
+            const i = l.indexOf(": ");
+            return i > 0 && i < 48 ? ["sparkle", l.slice(0, i), l.slice(i + 2)] : ["sparkle", l, ""];
+          }),
+        );
+      })
+      .catch(() => {});
   }, [version]);
-  if (!show) return null;
-  const notes = CHANGELOG.find((c) => c.version === version)!;
+  if (!items) return null;
+  const close = () => setItems(null);
   return (
-    <Modal title={"What's new in " + version} onClose={() => setShow(false)} width={520}>
+    <Modal title={"What's new in " + version} onClose={close} width={520}>
       <div className="whatsnew">
-        {notes.items.map(([icon, title, text]) => (
+        {items.map(([icon, title, text]) => (
           <div key={title} className="wn-item">
             <span className="wn-icon">
               <Icon name={icon} size={17} />
             </span>
             <div>
               <b>{title}</b>
-              <p>{text}</p>
+              {text && <p>{text}</p>}
             </div>
           </div>
         ))}
       </div>
       <div className="block-foot">
         <span className="grow" />
-        <button className="btn primary" onClick={() => setShow(false)}>
+        <button className="btn primary" onClick={close}>
           Nice <Icon name="arrowRight" size={13} />
         </button>
       </div>

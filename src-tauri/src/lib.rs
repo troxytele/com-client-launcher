@@ -613,6 +613,11 @@ async fn repair(state: State<'_, AppState>) -> Res<u32> {
 }
 
 // ------------------------------------------------------------------ news, friends
+#[tauri::command]
+async fn release_notes(version: String) -> Res<Vec<String>> {
+    Ok(client::release_notes(&version).await)
+}
+
 
 #[tauri::command]
 async fn news(state: State<'_, AppState>) -> Res<Vec<client::NewsItem>> {
@@ -769,6 +774,18 @@ async fn shot_copy(state: State<'_, AppState>, path: String) -> Res<()> {
 async fn shot_share(state: State<'_, AppState>, path: String) -> Res<()> {
     let paths = state.paths.clone();
     tokio::task::spawn_blocking(move || gallery::share(&paths, &path)).await.map_err(|e| e.to_string())?.map_err(err)
+}
+
+/// Uploads a screenshot to the Com Client server: returns its comclient.xyz/s/<id> link.
+#[tauri::command]
+async fn shot_link(state: State<'_, AppState>, path: String) -> Res<String> {
+    let paths = state.paths.clone();
+    let jpg = tokio::task::spawn_blocking(move || gallery::link_jpeg(&paths, &path)).await.map_err(|e| e.to_string())?.map_err(err)?;
+    use base64::Engine;
+    let body = serde_json::json!({ "data": base64::engine::general_purpose::STANDARD.encode(jpg) });
+    let acc = store::fresh_account(&state.paths).await.map_err(err)?;
+    let r = social::request(&acc, "POST", "/shots", Some(body)).await.map_err(err)?;
+    r["url"].as_str().map(String::from).ok_or_else(|| "The server sent no link".to_string())
 }
 
 // ------------------------------------------------------------------ friends + chat (Com Client server)
@@ -1039,6 +1056,7 @@ pub fn run() {
             kill_game,
             repair,
             news,
+            release_notes,
             social,
             mods_list,
             mod_toggle,
@@ -1073,6 +1091,7 @@ pub fn run() {
             gallery_delete,
             shot_copy,
             shot_share,
+            shot_link,
             server_get,
             server_post,
             cosmetics_catalog,

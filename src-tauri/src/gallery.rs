@@ -262,3 +262,30 @@ mod tests {
         let _ = std::fs::remove_dir_all(root);
     }
 }
+
+/// A screenshot made small enough to share as a link: at most 1920x1080, JPEG, under 1.15 MB.
+pub fn link_jpeg(paths: &Paths, path: &str) -> Result<Vec<u8>> {
+    if !allowed(paths, Path::new(path)) {
+        bail!("That file isn't in a screenshots folder");
+    }
+    let img = image::open(path).map_err(|e| anyhow::anyhow!("Couldn't read the picture ({e})"))?;
+    let mut img = img.to_rgb8();
+    if img.width() > 1920 || img.height() > 1080 {
+        let s = (1920.0 / img.width() as f64).min(1080.0 / img.height() as f64);
+        let (w, h) = (((img.width() as f64 * s).round() as u32).max(1), ((img.height() as f64 * s).round() as u32).max(1));
+        img = image::imageops::resize(&img, w, h, image::imageops::FilterType::Triangle);
+    }
+    let encode = |img: &image::RgbImage, q: u8| -> Result<Vec<u8>> {
+        let mut out = Vec::new();
+        image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, q).encode_image(img)?;
+        Ok(out)
+    };
+    for q in [90u8, 82, 72, 60, 45] {
+        let jpg = encode(&img, q)?;
+        if jpg.len() <= 1_150_000 {
+            return Ok(jpg);
+        }
+    }
+    let small = image::imageops::resize(&img, img.width() * 2 / 3, img.height() * 2 / 3, image::imageops::FilterType::Triangle);
+    encode(&small, 70)
+}

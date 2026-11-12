@@ -3,7 +3,7 @@
 #
 # How to publish a new launcher version:
 #   1. Raise "version" in src-tauri/tauri.conf.json AND package.json (e.g. 0.1.0 -> 0.1.1)
-#   2. Commit + push
+#   2. Commit + push. Lines starting with "- " in the commit messages become the release notes.
 #   It releases by itself once the "Check" build of that push succeeded (only when that version has no release yet).
 #   You can still start it by hand: GitHub -> Actions -> "Release launcher" -> Run workflow
 name: Release launcher
@@ -27,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
 
       # skip when this version is already released (pushes that don't raise the version)
       - name: New version?
@@ -42,6 +43,25 @@ jobs:
           else
             echo "new=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # release notes: every "- " line in the commit messages since the last release (shown on the launcher's
+      # Home tab, in the update dialog and on comclient.xyz/changelog)
+      - name: Release notes
+        if: steps.ver.outputs.new == 'true'
+        id: notes
+        shell: bash
+        run: |
+          prev=$(git describe --tags --abbrev=0 --match 'v*' HEAD 2>/dev/null || true)
+          range="HEAD"; [ -n "$prev" ] && range="$prev..HEAD"
+          notes=$(git log $range --format=%B | grep -E '^- ' | grep -viE 'co-authored|claude-session' | awk '!seen[$0]++' | head -40 || true)
+          [ -z "$notes" ] && notes="- Fixes and improvements"
+          {
+            echo 'body<<EOF_NOTES'
+            echo "$notes"
+            echo
+            echo 'Download the setup .exe below. Installed launchers update themselves.'
+            echo 'EOF_NOTES'
+          } >> "$GITHUB_OUTPUT"
 
       - if: steps.ver.outputs.new == 'true'
         uses: actions/setup-node@v4
@@ -70,7 +90,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: Com Client Launcher v__VERSION__
-          releaseBody: Download the setup .exe below. Installed launchers update themselves.
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true

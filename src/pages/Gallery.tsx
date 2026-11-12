@@ -90,6 +90,20 @@ function Shots({ profiles }: { profiles: Profile[] }) {
       toast(msg(e), "error");
     }
   }
+  const [linking, setLinking] = useState<string | null>(null);
+  async function link(s: Shot) {
+    if (linking) return;
+    setLinking(s.path);
+    try {
+      const url = await api.shotLink(s.path);
+      await navigator.clipboard.writeText(url).catch(() => {});
+      toast("Link copied: " + url.replace("https://", "") + " (anyone can open it for 30 days)", "ok");
+    } catch (e) {
+      toast(msg(e), "error");
+    } finally {
+      setLinking(null);
+    }
+  }
   async function remove(s: Shot) {
     try {
       await api.galleryDelete(s.path);
@@ -152,6 +166,9 @@ function Shots({ profiles }: { profiles: Profile[] }) {
                 <button className="icon-btn" title="Copy picture" onClick={() => copy(s)}>
                   <Icon name="copy" size={15} />
                 </button>
+                <button className="icon-btn" title="Get a link (comclient.xyz)" disabled={linking === s.path} onClick={() => link(s)}>
+                  <Icon name="link" size={15} />
+                </button>
                 <button className="icon-btn" title="Share (copies the file, Ctrl+V in Discord)" onClick={() => share(s)}>
                   <Icon name="share" size={15} />
                 </button>
@@ -184,6 +201,9 @@ function Shots({ profiles }: { profiles: Profile[] }) {
             </button>
             <button className="btn small" onClick={() => copy(cur)}>
               <Icon name="copy" size={14} /> Copy
+            </button>
+            <button className="btn small" disabled={linking === cur.path} onClick={() => link(cur)}>
+              <Icon name="link" size={14} /> {linking === cur.path ? "Uploading…" : "Get link"}
             </button>
             <button className="btn small" onClick={() => share(cur)}>
               <Icon name="share" size={14} /> Share
