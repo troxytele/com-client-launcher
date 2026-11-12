@@ -113,7 +113,18 @@ pub fn arguments(paths: &Paths, plan: &Plan) -> Vec<String> {
             .map(|s| s.to_string()),
     );
     args.extend(split_args(&p.java_args));
-    collect(&v["arguments"]["jvm"], &mut args);
+    if v.get("arguments").is_some() {
+        collect(&v["arguments"]["jvm"], &mut args);
+    } else {
+        // old versions (1.8.9) have no JVM arguments in their version file: the classic ones
+        if cfg!(target_os = "macos") {
+            args.push("-XstartOnFirstThread".into());
+        }
+        args.push(fill("-Djava.library.path=${natives_directory}"));
+        args.push(fill("-Dminecraft.launcher.brand=${launcher_name}"));
+        args.push("-cp".into());
+        args.push(fill("${classpath}"));
+    }
     args.extend(plan.fabric.jvm_args.iter().map(|s| fill(s)));
     if let Some((path, arg)) = &plan.vanilla.log_config {
         args.push(arg.replace("${path}", &native(path)));
@@ -126,14 +137,31 @@ pub fn arguments(paths: &Paths, plan: &Plan) -> Vec<String> {
         args.push(format!("-Dfabric.addMods={}", list.join(sep)));
     }
     args.push(plan.fabric.main_class.clone());
-    collect(&v["arguments"]["game"], &mut args);
+    if v.get("arguments").is_some() {
+        collect(&v["arguments"]["game"], &mut args);
+    } else if let Some(old) = v["minecraftArguments"].as_str() {
+        // old versions: one string of game arguments
+        args.extend(old.split_whitespace().map(|s| fill(s)));
+        if features.get("has_custom_resolution").copied().unwrap_or(false) {
+            args.extend(["--width".to_string(), p.width.to_string(), "--height".to_string(), p.height.to_string()]);
+        }
+    }
     args.extend(plan.fabric.game_args.iter().map(|s| fill(s)));
     if p.fullscreen {
         args.push("--fullscreen".into());
     }
     if let Some(server) = plan.join.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
-        args.push("--quickPlayMultiplayer".into());
-        args.push(server.to_string());
+        if v.get("arguments").is_some() {
+            args.push("--quickPlayMultiplayer".into());
+            args.push(server.to_string());
+        } else {
+            // old versions: --server host --port port
+            let (host, port) = match server.rsplit_once(':') {
+                Some((h, p)) if p.parse::<u16>().is_ok() => (h.to_string(), p.to_string()),
+                _ => (server.to_string(), "25565".to_string()),
+            };
+            args.extend(["--server".to_string(), host, "--port".to_string(), port]);
+        }
     }
     args
 }
@@ -163,6 +191,7 @@ pub fn split_args(s: &str) -> Vec<String> {
 /// Starts the game. Every log line goes to `on_line`.
 pub fn spawn(paths: &Paths, plan: &Plan, on_line: impl Fn(String) + Send + Sync + 'static) -> Result<Child> {
     std::fs::create_dir_all(&plan.game_dir)?;
+    extract_natives(paths, plan)?;
     let args = arguments(paths, plan);
     let shown: Vec<String> = args
         .iter()
@@ -196,6 +225,37 @@ pub fn spawn(paths: &Paths, plan: &Plan, on_line: impl Fn(String) + Send + Sync 
         });
     }
     Ok(child)
+}
+
+/// Old versions (1.8.9, LWJGL 2) ship their native libraries inside "natives-<os>" jars: unpack them into the natives
+/// folder (new versions load them from the classpath themselves).
+fn extract_natives(paths: &Paths, plan: &Plan) -> Result<()> {
+    let dir = paths.versions().join(&plan.vanilla.id).join("natives");
+    std::fs::create_dir_all(&dir)?;
+    for (key, jar) in &plan.vanilla.libraries {
+        if !key.contains(":natives-") || !jar.is_file() {
+            continue;
+        }
+        let file = std::fs::File::open(jar)?;
+        let Ok(mut zip) = zip::ZipArchive::new(file) else { continue };
+        for i in 0..zip.len() {
+            let mut entry = zip.by_index(i)?;
+            let name = entry.name().to_string();
+            if entry.is_dir() || name.starts_with("META-INF") || name.contains("..") {
+                continue;
+            }
+            let out = dir.join(&name);
+            if out.is_file() && out.metadata().map(|m| m.len()).unwrap_or(0) == entry.size() {
+                continue;
+            }
+            if let Some(parent) = out.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            let mut f = std::fs::File::create(&out)?;
+            std::io::copy(&mut entry, &mut f)?;
+        }
+    }
+    Ok(())
 }
 
 /// The newest crash report written after `since` (unix seconds).
@@ -286,6 +346,49 @@ mod plan_tests {
         assert!(s.contains("-Dfabric.addMods=/x/com.jar"));
         assert!(s.contains("--width 1280 --height 720") && !s.contains("--demo"));
         assert!(s.contains("--uuid 11111111222233334444555555555555") && s.contains("--accessToken TOKEN") && s.contains("--xuid 77"));
+        let main = a.iter().position(|x| x == "net.fabricmc.loader.impl.launch.knot.KnotClient").unwrap();
+        assert!(a.iter().position(|x| x == "--username").unwrap() > main && a.iter().position(|x| x == "-cp").unwrap() < main);
+        assert!(!s.contains("${"));
+    }
+
+    #[test]
+    fn builds_an_old_version_command_line() {
+        // 1.8.9: no "arguments", one minecraftArguments string, natives in the folder, --server/--port to join
+        let json: Value = serde_json::from_str(r#"{
+          "minecraftArguments": "--username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userProperties ${user_properties} --userType ${user_type}"
+        }"#).unwrap();
+        let paths = Paths::new(std::env::temp_dir().join("cc-launch-test-old"));
+        let plan = Plan {
+            join: Some("mc.hypixel.net".into()),
+            replay: None,
+            java: PathBuf::from("java"),
+            vanilla: Vanilla {
+                id: "1.8.9".into(),
+                json,
+                client_jar: PathBuf::from("/x/1.8.9.jar"),
+                libraries: vec![("org.lwjgl.lwjgl:lwjgl".into(), PathBuf::from("/x/lwjgl.jar"))],
+                assets_index: "1.8".into(),
+                log_config: None,
+            },
+            fabric: Fabric {
+                loader: "fabric-loader-0.16.0-1.8.9".into(),
+                main_class: "net.fabricmc.loader.impl.launch.knot.KnotClient".into(),
+                libraries: vec![],
+                jvm_args: vec![],
+                game_args: vec![],
+            },
+            extra_mods: vec![],
+            game_dir: PathBuf::from("/g"),
+            profile: Profile { ram_mb: 2048, version: "1.8.9".into(), ..Default::default() },
+            account: Account { uuid: "11111111-2222-3333-4444-555555555555".into(), name: "Steve".into(), flow: "browser".into(),
+                refresh_token: String::new(), mc_token: "TOKEN".into(), mc_expires: 0, skin_url: String::new(), xuid: "77".into() },
+        };
+        let a = arguments(&paths, &plan);
+        let s = a.join(" ");
+        println!("{s}");
+        assert!(s.contains("-Djava.library.path=") && s.contains("-cp"));
+        assert!(s.contains("--assetIndex 1.8") && s.contains("--accessToken TOKEN") && s.contains("--userProperties {}"));
+        assert!(s.contains("--server mc.hypixel.net --port 25565") && !s.contains("quickPlay"));
         let main = a.iter().position(|x| x == "net.fabricmc.loader.impl.launch.knot.KnotClient").unwrap();
         assert!(a.iter().position(|x| x == "--username").unwrap() > main && a.iter().position(|x| x == "-cp").unwrap() < main);
         assert!(!s.contains("${"));

@@ -39,11 +39,12 @@ fn project_type(kind: &str) -> &'static str {
     }
 }
 
-fn loaders(kind: &str) -> Vec<&'static str> {
+fn loaders(kind: &str, mc: &str) -> Vec<&'static str> {
     match kind {
         "resourcepack" => vec!["minecraft"],
+        "shader" if crate::config::is_legacy(mc) => vec!["optifine"],
         "shader" => vec!["iris", "optifine", "canvas"],
-        _ => vec!["fabric"],
+        _ => crate::config::mod_loaders(mc),
     }
 }
 
@@ -51,7 +52,7 @@ fn loaders(kind: &str) -> Vec<&'static str> {
 pub async fn search(query: &str, kind: &str, mc: &str, sort: &str, offset: u32) -> Result<SearchResult> {
     let mut facets = vec![vec![format!("project_type:{}", project_type(kind))], vec![format!("versions:{mc}")]];
     if kind == "mod" || kind == "modpack" {
-        facets.push(vec!["categories:fabric".into()]);
+        facets.push(crate::config::mod_loaders(mc).iter().map(|l| format!("categories:{l}")).collect());
     }
     let url = format!(
         "{API}/search?query={}&facets={}&index={}&offset={}&limit=24",
@@ -89,7 +90,7 @@ pub async fn best_version(project: &str, kind: &str, mc: &str) -> Result<Value> 
         "{API}/project/{}/version?game_versions={}&loaders={}",
         urlencoding::encode(project),
         urlencoding::encode(&json!([mc]).to_string()),
-        urlencoding::encode(&json!(loaders(kind)).to_string())
+        urlencoding::encode(&json!(loaders(kind, mc)).to_string())
     );
     let list: Value = net::get_json(&url).await?;
     let arr = list.as_array().cloned().unwrap_or_default();
@@ -133,7 +134,7 @@ pub async fn install(project: &str, kind: &str, mc: &str, game_dir: &Path) -> Re
                     continue;
                 }
                 if let Some(pid) = dep["project_id"].as_str() {
-                    // Fabric API is already loaded by the launcher
+                    // Fabric API is already loaded by the launcher (a second Legacy Fabric API copy is skipped at launch)
                     if pid == "P7dR8mSH" || have.contains(pid) {
                         continue;
                     }
@@ -162,7 +163,7 @@ pub async fn updates(game_dir: &Path, kind: &str, mc: &str) -> Result<Vec<Update
     if hashes.is_empty() {
         return Ok(vec![]);
     }
-    let body = json!({"hashes": hashes, "algorithm": "sha1", "loaders": loaders(kind), "game_versions": [mc]});
+    let body = json!({"hashes": hashes, "algorithm": "sha1", "loaders": loaders(kind, mc), "game_versions": [mc]});
     let r = net::client().post(format!("{API}/version_files/update")).json(&body).send().await?;
     if !r.status().is_success() {
         return Ok(vec![]);

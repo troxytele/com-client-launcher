@@ -445,11 +445,12 @@ async fn prewarm(state: State<'_, AppState>) -> Res<bool> {
     let profile = Profiles::load(&paths).get(&settings.active_profile);
     let rep = Reporter::new(|_p: Progress| {});
     let work = async {
-        let vanilla = minecraft::install(&paths, config::MC_VERSION, &rep).await?;
+        let mc = config::profile_mc(&profile);
+        let vanilla = minecraft::install(&paths, &mc, &rep).await?;
         let component = vanilla.json["javaVersion"]["component"].as_str().unwrap_or("java-runtime-delta").to_string();
         java::ensure(&paths, &component, &rep).await?;
-        fabric::install(&paths, config::MC_VERSION, None, &rep).await?;
-        client::ensure(&paths, config::MC_VERSION, Some(&settings.custom_client_jar), profile.replay_mod, profile.performance_mods, &rep).await?;
+        fabric::install(&paths, &mc, None, &rep).await?;
+        client::ensure(&paths, &mc, Some(&settings.custom_client_jar), profile.replay_mod, profile.performance_mods, &rep).await?;
         anyhow::Ok(())
     };
     let ok = work.await.is_ok();
@@ -475,11 +476,13 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
     let account = store::fresh_account(&paths).await?;
     // if the background check is still going, wait for it (it's checking the same files), then this is quick
     let _files = files_lock().lock().await;
-    let vanilla = minecraft::install(&paths, config::MC_VERSION, &rep).await?;
+    // each profile runs its own Minecraft version (1.21.11 with Com Client, 1.8.9 on Legacy Fabric)
+    let mc = config::profile_mc(&profile);
+    let vanilla = minecraft::install(&paths, &mc, &rep).await?;
     let component = vanilla.json["javaVersion"]["component"].as_str().unwrap_or("java-runtime-delta").to_string();
     let java = java::ensure(&paths, &component, &rep).await?;
-    let fabric = fabric::install(&paths, config::MC_VERSION, None, &rep).await?;
-    let jars = client::ensure(&paths, config::MC_VERSION, Some(&settings.custom_client_jar), profile.replay_mod, profile.performance_mods, &rep).await?;
+    let fabric = fabric::install(&paths, &mc, None, &rep).await?;
+    let jars = client::ensure(&paths, &mc, Some(&settings.custom_client_jar), profile.replay_mod, profile.performance_mods, &rep).await?;
     drop(_files);
     // don't load a second copy of something the player put in their own mods folder
     let theirs = mods::mod_ids(&game_dir);
@@ -629,6 +632,12 @@ fn active_game_dir(paths: &Paths) -> std::path::PathBuf {
     store::game_dir(paths, &Profiles::load(paths).get(&s.active_profile))
 }
 
+/// The Minecraft version of the selected profile: mods, packs and shaders are searched and installed for it.
+fn active_mc(paths: &Paths) -> String {
+    let s = Settings::load(paths);
+    config::profile_mc(&Profiles::load(paths).get(&s.active_profile))
+}
+
 #[tauri::command]
 async fn mods_list(state: State<'_, AppState>, kind: String) -> Res<Vec<mods::InstalledItem>> {
     let dir = active_game_dir(&state.paths);
@@ -647,7 +656,7 @@ fn mod_delete(state: State<'_, AppState>, kind: String, file: String) -> Res<()>
 
 #[tauri::command]
 async fn mods_updates(state: State<'_, AppState>, kind: String) -> Res<Vec<modrinth::Update>> {
-    modrinth::updates(&active_game_dir(&state.paths), &kind, config::MC_VERSION).await.map_err(err)
+    modrinth::updates(&active_game_dir(&state.paths), &kind, &active_mc(&state.paths)).await.map_err(err)
 }
 
 #[tauri::command]
@@ -656,15 +665,15 @@ async fn mod_update(state: State<'_, AppState>, kind: String, update: modrinth::
 }
 
 #[tauri::command]
-async fn modrinth_search(query: String, kind: String, sort: String, offset: u32) -> Res<modrinth::SearchResult> {
-    modrinth::search(&query, &kind, config::MC_VERSION, &sort, offset).await.map_err(err)
+async fn modrinth_search(state: State<'_, AppState>, query: String, kind: String, sort: String, offset: u32) -> Res<modrinth::SearchResult> {
+    modrinth::search(&query, &kind, &active_mc(&state.paths), &sort, offset).await.map_err(err)
 }
 
 #[tauri::command]
 async fn modrinth_install(state: State<'_, AppState>, project: String, kind: String) -> Res<Vec<String>> {
     let dir = active_game_dir(&state.paths);
     std::fs::create_dir_all(mods::folder(&dir, &kind)).map_err(|e| e.to_string())?;
-    modrinth::install(&project, &kind, config::MC_VERSION, &dir).await.map_err(err)
+    modrinth::install(&project, &kind, &active_mc(&state.paths), &dir).await.map_err(err)
 }
 
 /// Opens a folder in Explorer: game, mods, resourcepacks, shaderpacks, screenshots, logs, crash, launcher.

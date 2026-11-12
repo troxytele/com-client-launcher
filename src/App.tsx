@@ -231,7 +231,8 @@ export default function App() {
               skinKey={skinKey}
             />
           )}
-          {page === "profiles" && <Profiles info={info} reload={reload} running={phase !== "idle"} onPlay={(srv) => { setPage("home"); play(srv); }} />}
+          {page === "profiles" && <Profiles info={info} reload={reload} running={phase !== "idle"} onPlay={(srv) => { setPage("home"); play(srv); }}
+            onMods={() => setPage("mods")} />}
           {page === "skins" && (
             <Skins
               signedIn={!!active}
@@ -242,6 +243,7 @@ export default function App() {
           {page === "mods" && (
             <Mods
               profileName={profile.name}
+              version={profile.version || info.mc_version}
               running={phase === "running"}
               onModpack={async (id) => {
                 await selectProfile(id);

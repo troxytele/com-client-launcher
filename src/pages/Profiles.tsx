@@ -10,8 +10,12 @@ import ProfileIcon, { iconUrl } from "../components/ProfileIcon";
 import { Modal, Spinner, Switch } from "../components/Ui";
 import { ImportBlock } from "./Settings";
 
-// Versions a profile can use. Only the one Com Client is built for right now; more come later.
-const VERSIONS = [{ id: "1.21.11", ready: true }];
+// Versions a profile can use. 1.21.11 runs Com Client on Fabric; 1.8.9 runs Legacy Fabric (Com Client for 1.8.9 is
+// on its way: until its release is out, a 1.8.9 profile starts with just Legacy Fabric and the mods you add).
+const VERSIONS = [
+  { id: "1.21.11", ready: true, note: "Com Client" },
+  { id: "1.8.9", ready: true, note: "Legacy Fabric · PvP" },
+];
 
 const POPULAR = [
   "block:grass_block", "item:diamond_sword", "item:netherite_sword", "item:mace", "item:totem_of_undying", "item:ender_pearl",
@@ -27,11 +31,14 @@ export default function Profiles({
   reload,
   running,
   onPlay,
+  onMods,
 }: {
   info: Info;
   reload: () => void;
   running: boolean;
   onPlay: (server?: string) => void;
+  /** Open Mods & Packs for this profile (it becomes the selected one): the search only shows its version's mods. */
+  onMods?: () => void;
 }) {
   const [editId, setEditId] = useState(info.settings.active_profile);
   const profile = info.profiles.find((p) => p.id === editId) ?? info.profiles[0];
@@ -252,10 +259,9 @@ export default function Profiles({
                   <select value={p.version || VERSIONS[0].id} onChange={(e) => setP({ ...p, version: e.target.value })}>
                     {VERSIONS.map((v) => (
                       <option key={v.id} value={v.id} disabled={!v.ready}>
-                        Minecraft {v.id}
+                        Minecraft {v.id} · {v.note}
                       </option>
                     ))}
-                    <option disabled>More versions soon</option>
                   </select>
                   <span className={"autosave " + saved}>
                     {dirty || saved === "saving" ? (
@@ -283,6 +289,23 @@ export default function Profiles({
                   </button>
                 )}
               </div>
+            </div>
+            <div className="pversion">
+              <Icon name="cube" size={15} />
+              <span>
+                <b>Minecraft {p.version || VERSIONS[0].id}</b>
+                {(p.version || VERSIONS[0].id) === "1.8.9"
+                  ? " · Legacy Fabric. Only mods made for 1.8.9 show up in this profile's mod search."
+                  : " · Fabric with Com Client. Only mods made for this version show up in this profile's mod search."}
+              </span>
+              {onMods && (
+                <button className="btn small" onClick={async () => {
+                  if (!selected) await select(p.id);
+                  onMods();
+                }}>
+                  <Icon name="search" size={13} /> Mods for {p.version || VERSIONS[0].id}
+                </button>
+              )}
             </div>
             <div className="pactions">
               <button className="btn small" disabled={!!busy} onClick={() => act("dup", async () => {

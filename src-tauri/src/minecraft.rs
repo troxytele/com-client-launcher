@@ -101,8 +101,11 @@ pub async fn install(paths: &Paths, id: &str, rep: &Reporter) -> Result<Vanilla>
                 a["size"].as_u64().unwrap_or(0)));
             libraries.push((crate::paths::maven_key(name), path));
         }
-        // old style natives (not used by 1.21, kept for safety)
+        // old style natives (1.8.9's LWJGL 2; unpacked at launch)
         if let Some(cls) = lib.get("natives").and_then(|n| n.get(os_name())).and_then(|c| c.as_str()) {
+            // old versions: "natives-windows", some with the bitness in it ("natives-windows-${arch}")
+            let cls = cls.replace("${arch}", if cfg!(target_pointer_width = "32") { "32" } else { "64" });
+            let cls = cls.as_str();
             if let Some(n) = lib["downloads"]["classifiers"].get(cls) {
                 let path = paths.libraries().join(n["path"].as_str().unwrap_or_default());
                 files.push(Download::new(n["url"].as_str().unwrap_or_default(), &path, n["sha1"].as_str().map(String::from),

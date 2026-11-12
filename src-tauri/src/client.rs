@@ -24,34 +24,40 @@ pub struct Installed {
     pub extra: std::collections::HashMap<String, String>,
 }
 
-fn installed_path(paths: &Paths) -> PathBuf {
-    paths.client().join("installed.json")
+/// What we installed, one file per Minecraft version (installed.json for the main one).
+fn installed_path(paths: &Paths, mc: &str) -> PathBuf {
+    if config::is_legacy(mc) { paths.client().join(format!("installed-{mc}.json")) } else { paths.client().join("installed.json") }
 }
 
 pub fn installed(paths: &Paths) -> Installed {
-    std::fs::read_to_string(installed_path(paths)).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+    installed_for(paths, config::MC_VERSION)
 }
 
-fn save(paths: &Paths, i: &Installed) {
+pub fn installed_for(paths: &Paths, mc: &str) -> Installed {
+    std::fs::read_to_string(installed_path(paths, mc)).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+}
+
+fn save(paths: &Paths, i: &Installed, mc: &str) {
     let _ = std::fs::create_dir_all(paths.client());
-    let _ = std::fs::write(installed_path(paths), serde_json::to_string_pretty(i).unwrap_or_default());
+    let _ = std::fs::write(installed_path(paths, mc), serde_json::to_string_pretty(i).unwrap_or_default());
 }
 
 /// The jars to load. `custom` = a test jar picked in the settings (instead of the GitHub release).
 pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool, perf: bool, rep: &Reporter) -> Result<Vec<PathBuf>> {
     rep.stage("Updating Com Client", 0, 0);
-    let mut state = installed(paths);
+    let mut state = installed_for(paths, mc);
     let mut jars = Vec::new();
 
     // Com Client
-    if let Some(c) = custom.filter(|c| !c.trim().is_empty()) {
+    // the test jar from the settings is a build for the main version
+    if let Some(c) = custom.filter(|c| !c.trim().is_empty() && !config::is_legacy(mc)) {
         let p = PathBuf::from(c.trim());
         if !p.is_file() {
             bail!("The test jar from the settings doesn't exist: {}", p.display());
         }
         jars.push(p);
     } else {
-        match latest_client().await {
+        match latest_client(mc).await {
             Ok((tag, name, url, hash, size)) => {
                 let path = paths.client().join(&name);
                 let d = Download { url, path: path.clone(), hash, size, executable: false };
@@ -63,28 +69,31 @@ pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool,
                     }
                     state.client_version = tag;
                     state.client_file = name;
-                    save(paths, &state);
+                    save(paths, &state, mc);
                 }
                 jars.push(path);
             }
             Err(e) => {
                 // offline / GitHub down: start with the one we have
                 let have = paths.client().join(&state.client_file);
-                if state.client_file.is_empty() || !have.is_file() {
+                if !state.client_file.is_empty() && have.is_file() {
+                    jars.push(have);
+                } else if !config::is_legacy(mc) {
                     return Err(e);
                 }
-                jars.push(have);
+                // an old version without a Com Client build yet starts with Legacy Fabric and the profile's own mods
             }
         }
     }
 
-    // Fabric API
-    match latest_modrinth("fabric-api", mc).await {
+    // Fabric API (Legacy Fabric API on old versions)
+    let api = if config::is_legacy(mc) { "legacy-fabric-api" } else { "fabric-api" };
+    match latest_modrinth(api, mc).await {
         Ok((version, name, url, sha1, size)) => {
             let path = paths.client().join(&name);
             let d = Download::new(url, &path, Some(sha1), size);
             if !net::is_valid(&d) {
-                rep.stage("Downloading Fabric API", 0, 0);
+                rep.stage(if config::is_legacy(mc) { "Downloading Legacy Fabric API" } else { "Downloading Fabric API" }, 0, 0);
                 net::fetch(&d, None).await?;
                 if !state.fabric_api_file.is_empty() && state.fabric_api_file != name {
                     let _ = std::fs::remove_file(paths.client().join(&state.fabric_api_file));
@@ -92,7 +101,7 @@ pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool,
             }
             state.fabric_api_version = version;
             state.fabric_api_file = name;
-            save(paths, &state);
+            save(paths, &state, mc);
             jars.push(path);
         }
         Err(e) => {
@@ -109,7 +118,7 @@ pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool,
     if replay {
         wanted.push(("replaymod", "ReplayMod"));
     }
-    if perf {
+    if perf && !config::is_legacy(mc) {
         wanted.extend([("sodium", "Sodium"), ("lithium", "Lithium"), ("ferrite-core", "FerriteCore"), ("entityculling", "EntityCulling")]);
     }
     for (slug, title) in wanted {
@@ -117,7 +126,7 @@ pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool,
             jars.push(p);
         }
     }
-    save(paths, &state);
+    save(paths, &state, mc);
     Ok(jars)
 }
 
@@ -149,7 +158,7 @@ async fn optional(paths: &Paths, state: &mut Installed, slug: &str, title: &str,
 }
 
 /// (tag, file name, url, hash, size) of the .jar in the newest GitHub release of the mod.
-async fn latest_client() -> Result<(String, String, String, Hash, u64)> {
+async fn latest_client(mc: &str) -> Result<(String, String, String, Hash, u64)> {
     if config::CLIENT_REPO.starts_with("YOUR_GITHUB_NAME") {
         bail!("Com Client isn't published yet. Put your GitHub name into src-tauri/src/config.rs, or pick a test jar in Settings → Developer.");
     }
@@ -168,10 +177,12 @@ async fn latest_client() -> Result<(String, String, String, Hash, u64)> {
         .and_then(|a| {
             a.iter().find(|x| {
                 let n = x["name"].as_str().unwrap_or_default();
-                n.ends_with(".jar") && !n.contains("-sources") && !n.contains("-dev")
+                // the main version's jar has no old version in its name; an old version's jar has it (com-client-1.8.9.jar)
+                let for_this = if config::is_legacy(mc) { n.contains(mc) } else { !config::LEGACY_VERSIONS.iter().any(|v| n.contains(v)) };
+                n.ends_with(".jar") && !n.contains("-sources") && !n.contains("-dev") && for_this
             })
         })
-        .ok_or_else(|| anyhow!("The newest Com Client release ({tag}) has no .jar"))?;
+        .ok_or_else(|| anyhow!("The newest Com Client release ({tag}) has no .jar for Minecraft {mc}"))?;
     let name = asset["name"].as_str().unwrap_or("com-client.jar").to_string();
     let hash = asset["digest"]
         .as_str()
@@ -186,7 +197,7 @@ async fn latest_modrinth(project: &str, mc: &str) -> Result<(String, String, Str
     let url = format!(
         "https://api.modrinth.com/v2/project/{project}/version?game_versions={}&loaders={}",
         urlencoding::encode(&format!("[\"{mc}\"]")),
-        urlencoding::encode("[\"fabric\"]")
+        urlencoding::encode(&serde_json::to_string(&config::mod_loaders(mc)).unwrap_or_default())
     );
     let versions: Value = net::get_json(&url).await?;
     let v = versions.as_array().and_then(|a| a.first()).ok_or_else(|| anyhow!("No {project} for Minecraft {mc} yet"))?;

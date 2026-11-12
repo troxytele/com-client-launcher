@@ -22,7 +22,8 @@ const SORTS = [
   { id: "updated", label: "Updated" },
 ];
 
-export default function Mods({ profileName, running, onModpack }: { profileName: string; running: boolean; onModpack: (id: string) => void }) {
+export default function Mods({ profileName, version, running, onModpack }: { profileName: string; version: string; running: boolean; onModpack: (id: string) => void }) {
+  const legacy = version === "1.8.9";
   const [importing, setImporting] = useState(false);
   const [kind, setKind] = useState<Kind>("mod");
   const [tab, setTab] = useState<"installed" | "browse">("installed");
@@ -34,7 +35,10 @@ export default function Mods({ profileName, running, onModpack }: { profileName:
         <div>
           <h1>Mods & Packs</h1>
           <p className="muted">
-            For the profile <b>{profileName}</b>. Com Client and Fabric API are built in and don't show here.
+            For the profile <b>{profileName}</b> · <span className="vchip">Minecraft {version}</span>{" "}
+            {legacy
+              ? "Only mods made for 1.8.9 (Legacy Fabric) show up. Legacy Fabric API is built in."
+              : "Only mods made for this version show up. Com Client and Fabric API are built in and don't show here."}
           </p>
         </div>
         {k.folder && (
