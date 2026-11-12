@@ -73,6 +73,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
     if (wings) wings.tick(now);
     const halo = extras.halo;
     if (pet) pet.tick(now);
+    if (extras.hat && extras.hat.userData.tick) extras.hat.userData.tick(now); // the fire of the Fire horns
     if (halo) {
       halo.position.y = 11 + Math.sin(now / 700) * 0.25;
       if (halo.userData.spin) halo.rotation.y = -(now / 1000) * 0.21; // the wreath turns slowly, like in game
@@ -144,6 +145,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
       for (const k of ["halo", "hat"]) {
         if (extras[k]) {
           head.remove(extras[k]);
+          if (extras[k].userData.dispose) extras[k].userData.dispose();
           delete extras[k];
         }
       }
@@ -151,6 +153,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
       if (look.hat && look.hat !== "none") head.add((extras.hat = makeHat(look.hat, look.hatColor & 0xffffff)));
       // the pet: the game's own mob model on (or beside) the shoulder
       const key = look.pet && look.pet !== "none" ? look.pet + (look.petLeft ? ":left" : "") : "";
+      if (pet) pet.setColor(look.petColor ?? -1);
       if (key !== petKey) {
         petKey = key;
         const mine2 = ++petCall;
@@ -164,6 +167,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
             if (!p) return;
             if (mine2 !== petCall) return p.dispose();
             pet = p;
+            p.setColor(look.petColor ?? -1);
             v.playerObject.add(p.group);
           });
       }

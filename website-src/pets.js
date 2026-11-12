@@ -9,10 +9,11 @@ const PETS = {
   axolotl: [false, 0.5], chicken: [false, 0.5], slime: [false, 0.45],
   // Com Client's own chibi pets (voxels.py): head bobs, ears and tails wiggle
   goat: [false, 0.48], lamb: [false, 0.6], pumpkin_cat: [false, 0.55], koala: [false, 0.6], duck: [false, 0.6], penguin: [false, 0.55],
+  capybara: [false, 0.5], red_panda: [false, 0.55], bunny: [false, 0.6], owl: [false, 0.55], corgi: [false, 0.5], panda: [false, 0.55],
   // coins that hover beside you and spin
   coin_btc: [true, 0.62], coin_eth: [true, 0.62], coin_ltc: [true, 0.62],
 };
-const OWN = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin", "coin_btc", "coin_eth", "coin_ltc"]);
+const OWN = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin", "capybara", "red_panda", "bunny", "owl", "corgi", "panda", "coin_btc", "coin_eth", "coin_ltc"]);
 
 let modelsP = null;
 const loadModels = (base) => (modelsP ||= fetch(`${base}/models.json`).then((r) => r.json()));
@@ -155,11 +156,32 @@ export async function loadPet(id, base, left) {
   const base0 = flies ? [side * 12.5, 8 + 5.1, -1.9] : [side * 6.4, 8, 0];
   holder.position.set(...base0);
   const wings = Object.entries(parts).filter(([n]) => n.includes("wing"));
+  // the Locker's pet colour, like Pets.java: -1 own colours, -2 rainbow, else a tint mixed 30% with white so the
+  // shading stays (multiplied straight onto the texture, like the game)
+  let tint = -1;
+  const mats = [];
+  holder.traverse((o) => o.material && !mats.includes(o.material) && mats.push(o.material));
+  const paint = (rgb) => {
+    const ch = (s) => { const c = (rgb >> s) & 255; return (c + ((255 - c) * 30) / 100) / 255; };
+    for (const m of mats) m.color.setRGB(ch(16), ch(8), ch(0));
+  };
+  const hue = (h) => {
+    h -= Math.floor(h);
+    const sat = 0.65, i = Math.floor(h * 6), f = h * 6 - i, p = 1 - sat, q = 1 - sat * f, u = 1 - sat * (1 - f);
+    const [r, g, b] = [[1, u, p], [q, 1, p], [p, 1, u], [p, q, 1], [u, p, 1], [1, p, q]][i % 6];
+    return (Math.round(r * 255) << 16) | (Math.round(g * 255) << 8) | Math.round(b * 255);
+  };
   const spinY = (n) => id === "bat" || id === "allay";
   return {
     group: holder,
+    setColor(c) {
+      tint = c ?? -1;
+      if (tint === -1) for (const m of mats) m.color.setRGB(1, 1, 1);
+      else if (tint >= 0) paint(tint & 0xffffff);
+    },
     tick(now) {
       const t = now / 1000;
+      if (tint === -2) paint(hue(t / 6)); // Fx.hue(age / 120): once around every 6 seconds
       if (flies) {
         holder.position.y = base0[1] + Math.sin(t * 2) * 1.1;
         holder.rotation.y = Math.sin(t * 0.6) * 0.25;
@@ -191,7 +213,7 @@ export async function loadPet(id, base, left) {
     },
     dispose() {
       holder.traverse((o) => o.geometry && o.geometry.dispose());
-      mat.dispose();
+      for (const m of mats) m.dispose();
     },
   };
 }

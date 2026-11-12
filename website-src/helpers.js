@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { buildPart, loadTex } from "./pets.js";
+import { fireHorns } from "./horns.js";
 
 // hats made of voxels (voxels.py): the same models and textures as the mod, loaded from HAT_BASE
 const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat"]);
@@ -235,7 +236,9 @@ const modBox = (x0, y0, z0, x1, y1, z1, color) => box(x1 - x0, y1 - y0, z1 - z0,
 /** Blocky hats, like the mod's. */
 function makeHat(style, color) {
   const g = new THREE.Group();
-  if (VOXEL_HATS.has(style)) {
+  if (style === "fire_horns") {
+    fireHorns(g, HAT_BASE, color); // the real horn mesh and its fire, like in game
+  } else if (VOXEL_HATS.has(style)) {
     voxelHat(style, g);
   } else if (style === "crown") {
     const gold = 0xf2c230;
@@ -280,6 +283,8 @@ const CUSTOM_CAPES = {
   cc_hearts: [12, 120],
   cc_sunset: [16, 140], cc_sakura: [1, 1000],
   cc_honeycomb: [1, 1000], cc_mint: [1, 1000],
+  cc_synthwave: [16, 110], cc_event_horizon: [16, 110], cc_koi: [16, 140], cc_dragon_scale: [16, 110],
+  cc_lanterns: [16, 150], cc_petal_storm: [16, 120],
 };
 
 /** Cuts a cape strip into one canvas per frame. */

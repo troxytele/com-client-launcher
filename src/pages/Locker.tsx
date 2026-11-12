@@ -4,7 +4,7 @@ import { toast } from "../stores";
 import Icon from "../components/Icon";
 import Coin from "../components/Coin";
 import LockerPreview from "../components/LockerPreview";
-import { AuraArt, HaloArt, HatArt } from "../components/CosmeticArt";
+import { AuraArt, HaloArt } from "../components/CosmeticArt";
 import { Empty, Modal, Spinner } from "../components/Ui";
 import GiftDialog from "../components/GiftDialog";
 import NameTag from "../components/NameTag";
@@ -178,7 +178,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       case "halo":
         return <HaloArt id={id} color={look.haloColor} />;
       case "hat":
-        return VOXEL_HATS.has(id) ? <img className="voxel-art" src={`/cosmetics/hats/${id}.png`} alt="" /> : <HatArt id={id} color={look.hatColor} />;
+        return <img className="voxel-art" src={`/cosmetics/hats/${id}.png`} alt="" />; // the same 3D renders as the game's Locker
       case "pet":
         return <img className="voxel-art" src={`/cosmetics/pets/${id}.png`} alt="" />;
       case "nametag":
@@ -358,17 +358,9 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                   Right shoulder
                 </button>
               </div>
-              <span className="muted small">Name</span>
-              <input
-                className="pet-name"
-                placeholder="Name over your pet"
-                maxLength={16}
-                value={look.petName ?? ""}
-                onChange={(e) => setLook({ ...look, petName: e.target.value.replace(/[^A-Za-z0-9 _'-]/g, "") })}
-              />
             </div>
           )}
-          {view === "shop" && tab === "pets" && (
+          {tab === "pets" && (
             <div className="colour-bar">
               <span className="muted small">Colour</span>
               {PET_COLORS.map((c) => (
@@ -506,7 +498,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   );
 }
 
-const KNOWN_WINGS = new Set(Object.keys({ heaven: 1, purple: 1, dragon: 1, devil: 1, blue_dragon: 1, frost: 1, candy_cane: 1, snowflake: 1, golden: 1, celestial: 1, seraph: 1, void: 1, phoenix: 1, monarch: 1, morpho: 1, pixie: 1, bat: 1, emerald: 1 }));
+const KNOWN_WINGS = new Set(Object.keys({ heaven: 1, purple: 1, dragon: 1, devil: 1, blue_dragon: 1, frost: 1, candy_cane: 1, snowflake: 1, golden: 1, celestial: 1, seraph: 1, void: 1, phoenix: 1, monarch: 1, morpho: 1, pixie: 1, bat: 1, emerald: 1, crystal: 1, flame: 1, leaf: 1, bone: 1, peacock: 1, ribbon: 1 }));
 
 function timeLeft(end: number) {
   const s = Math.max(0, end - Date.now() / 1000);

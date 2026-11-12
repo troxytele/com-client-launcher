@@ -17,7 +17,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
   const canvas = useRef<HTMLCanvasElement>(null);
   const viewer = useRef<SkinViewer | null>(null);
   const extras = useRef<{ halo?: THREE.Group; hat?: THREE.Group; aura?: THREE.Group }>({});
-  const pet = useRef<{ group: THREE.Group; tick(now: number): void; dispose(): void } | null>(null);
+  const pet = useRef<{ group: THREE.Group; tick(now: number): void; setColor(c: number): void; dispose(): void } | null>(null);
   const wingObj = useRef<{ group: THREE.Group; tick(now: number): void; dispose(): void } | null>(null);
   const lookRef = useRef(look);
   lookRef.current = look;
@@ -73,6 +73,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
       for (; i < dots.length; i++) dots[i].visible = false;
       // wings: the elytra shape held out to the sides and beating, like the client (WingsFeature.java)
       wingObj.current?.tick(now);
+      extras.current.hat?.userData.tick?.(now); // the fire of the Fire horns
       // orbiting sparks of the halo
       const halo = extras.current.halo;
       if (halo) {
@@ -156,6 +157,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
       const old = extras.current[k];
       if (old) {
         head.remove(old);
+        old.userData.dispose?.();
         delete extras.current[k];
       }
     }
@@ -180,6 +182,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
       if (gone) return p.dispose();
       mine = p;
       pet.current = p;
+      p.setColor(lookRef.current.petColor ?? -1);
       v.playerObject.add(p.group);
     });
     return () => {
@@ -191,6 +194,11 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
       }
     };
   }, [look.pet, look.petLeft]);
+
+  // the pet's colour (own colours, a tint or a rainbow), the same as in game
+  useEffect(() => {
+    pet.current?.setColor(look.petColor ?? -1);
+  }, [look.petColor, look.pet]);
 
   return (
     <div ref={box_} className="skin-model locker-model">

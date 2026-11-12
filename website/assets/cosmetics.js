@@ -212,7 +212,7 @@
       const b = el("button", "g-item" + (look[field] === item.id ? " on" : ""));
       b.title = item.name;
       const art = kind === "capes" ? capeArt(item.id) : kind === "wings" ? wingArt(item.id) : kind === "pets" ? petArt(item.id)
-        : kind === "hats" && VOXEL_HATS.has(item.id) ? iconImg(item.id, "art voxel", "hats")
+        : kind === "hats" ? iconImg(item.id, "art voxel", "hats")
         : kind === "nametags" ? nametagArt(item) : kind === "icons" ? iconImg(item.id, "art nameicon") : iconArt(kind, item.id);
       b.append(art, el("small", null, item.name));
       if (kind === "wings") b.append(el("small", "g-type", wingType(item.id)));
