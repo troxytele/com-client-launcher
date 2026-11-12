@@ -6,6 +6,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.36",
+    items: [
+      ["sparkle", "Crystal PvP cape", "A new animated cape: DTAP, QD and TRIPPLE TAP scrolling down with end crystals in between."],
+      ["sparkle", "Owl fixed", "The owl pet's eyes look like eyes again."],
+    ],
+  },
+  {
     version: "0.6.22",
     items: [
       ["play", "You, as others see you", "The Play tab shows your skin wearing your cape, wings, hat, halo, aura and pet, with your name in its name tag style."],
