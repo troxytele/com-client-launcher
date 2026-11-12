@@ -3,7 +3,7 @@ import { buildPart, loadTex } from "./pets.js";
 import { fireHorns } from "./horns.js";
 
 // hats made of voxels (voxels.py): the same models and textures as the mod, loaded from HAT_BASE
-const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat"]);
+const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat", "headband_com", "headband_gg", "headband_pvp", "headband_ez", "headband_mvp", "headband_rainbow", "headband_ninja", "bow_white", "bow_pink", "bow_black", "bow_red", "bow_blue", "bow_purple", "double_bow_white", "double_bow_pink", "double_bow_black", "double_bow_red", "double_bow_blue", "double_bow_purple", "koala_hat", "bandana_fire_white", "bandana_fire_black", "bandana_fire_red", "bandana_fire_blue", "bandana_fire_toxic", "bandana_fire_purple", "bandana_galaxy", "bandana_stars", "bandana_aurora", "bandana_lava", "bandana_ocean", "bandana_lightning", "bandana_matrix", "bandana_neon", "bandana_sakura", "bandana_frost", "bandana_gg", "bandana_ez", "bandana_pvp", "bandana_mvp", "bandana_toxic", "bandana_king", "bandana_glitch", "bandana_noob"]);
 let HAT_BASE = "/assets/cosmetics/hats";
 let hatModels = null;
 function setHatBase(b) {
@@ -19,8 +19,27 @@ function voxelHat(style, g) {
       const mat = new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.1, side: THREE.DoubleSide });
       const flip = new THREE.Group(); // the game's model space (+y down, front at -z) -> three.js
       flip.rotation.x = Math.PI;
-      flip.add(buildPart(m.root, m.w, m.h, mat, {}));
+      const parts = {};
+      flip.add(buildPart(m.root, m.w, m.h, mat, parts));
       g.add(flip);
+      // animated hats (like the game's VoxelModels.animate): frame-by-frame bandanas, swaying ribbons, ears
+      const anim = Object.entries(parts);
+      if (anim.some(([n]) => n.startsWith("anim") || n.startsWith("ribbon") || n.endsWith("_ear"))) {
+        g.userData.tick = (now) => {
+          const age = now / 50;
+          for (const [n, p] of anim) {
+            const r = p.userData.rest;
+            if (n.startsWith("anim")) {
+              const [f, c] = n.slice(4).split("_").map(Number);
+              p.visible = Math.floor(age / 2) % c === f;
+            } else if (n.startsWith("ribbon")) {
+              p.rotation.x = r.pitch + Math.sin(age * 0.12 + (n.endsWith("l") ? 1 : 0)) * 0.12;
+            } else if (n.endsWith("_ear")) {
+              p.rotation.z = r.roll + (n.startsWith("left") ? 1 : -1) * Math.max(0, Math.sin(age * 0.155)) * 0.25;
+            }
+          }
+        };
+      }
     })
     .catch(() => {});
 }

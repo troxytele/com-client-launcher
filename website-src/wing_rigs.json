@@ -773,6 +773,9 @@
     }
   },
   "designs": {
+    "rose_fairy": "fairy",
+    "lilac_fairy": "fairy",
+    "mint_fairy": "fairy",
     "heaven": "feather",
     "seraph": "feather",
     "golden": "feather",

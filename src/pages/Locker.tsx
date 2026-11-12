@@ -14,9 +14,9 @@ import { WING_SHAPES, wingShape } from "../../website-src/wings.js";
 // Com Client's own voxel pets and hats (the card picture is a rendered PNG)
 // the advent calendar's items: hidden until you have them (they're a surprise)
 const ADVENT_ITEMS = new Set(["cape:cc_northpole", "wings:snowflake", ...["tree", "snowman", "present", "candy_cane", "gingerbread", "bell", "xmas_star", "santa_hat", "snowflake", "reindeer"].map((i) => "icon:" + i)]);
-const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat"]);
+const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat", "headband_com", "headband_gg", "headband_pvp", "headband_ez", "headband_mvp", "headband_rainbow", "headband_ninja", "bow_white", "bow_pink", "bow_black", "bow_red", "bow_blue", "bow_purple", "double_bow_white", "double_bow_pink", "double_bow_black", "double_bow_red", "double_bow_blue", "double_bow_purple", "koala_hat", "bandana_fire_white", "bandana_fire_black", "bandana_fire_red", "bandana_fire_blue", "bandana_fire_toxic", "bandana_fire_purple", "bandana_galaxy", "bandana_stars", "bandana_aurora", "bandana_lava", "bandana_ocean", "bandana_lightning", "bandana_matrix", "bandana_neon", "bandana_sakura", "bandana_frost", "bandana_gg", "bandana_ez", "bandana_pvp", "bandana_mvp", "bandana_toxic", "bandana_king", "bandana_glitch", "bandana_noob"]);
 
-type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "nametags" | "icons";
+type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "shields" | "nametags" | "icons";
 const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "capes", label: "Capes", field: "cape" },
   { id: "wings", label: "Wings", field: "wings" },
@@ -24,6 +24,7 @@ const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "hats", label: "Hats", field: "hat" },
   { id: "auras", label: "Auras", field: "aura" },
   { id: "pets", label: "Pets", field: "pet" },
+  { id: "shields", label: "Shields", field: "shield" },
   { id: "nametags", label: "Name tags", field: "nametag" },
   { id: "icons", label: "Icons", field: "icon" },
 ];
@@ -35,7 +36,7 @@ const PET_COLORS = [-1, 0xffd24a, 0x6fd3ff, 0xff7ab8, 0x8cff9e, 0xb48cff, 0x3a3a
 const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a, 0xffffff, 0x4f7bff];
 
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
-const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none", petName: "", petColor: -1, plainTag: false };
+const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none", petName: "", petColor: -1, plainTag: false, shield: "none" };
 
 // what you're trying on, kept while you look at other pages (cleared once it's saved)
 let draft: Look | null = null;
@@ -181,6 +182,8 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
         return <img className="voxel-art" src={`/cosmetics/hats/${id}.png`} alt="" />; // the same 3D renders as the game's Locker
       case "pet":
         return <img className="voxel-art" src={`/cosmetics/pets/${id}.png`} alt="" />;
+      case "shield":
+        return <img className="voxel-art" src={`/cosmetics/shields/${id}.webp`} alt="" />; // animated, like in game
       case "nametag":
         return <NameTag style={id} name={skin?.name || "Name"} className="nametag-art" still />;
       case "icon":
@@ -498,7 +501,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   );
 }
 
-const KNOWN_WINGS = new Set(Object.keys({ heaven: 1, purple: 1, dragon: 1, devil: 1, blue_dragon: 1, frost: 1, candy_cane: 1, snowflake: 1, golden: 1, celestial: 1, seraph: 1, void: 1, phoenix: 1, monarch: 1, morpho: 1, pixie: 1, bat: 1, emerald: 1, crystal: 1, flame: 1, leaf: 1, bone: 1, peacock: 1, ribbon: 1 }));
+const KNOWN_WINGS = new Set(Object.keys({ heaven: 1, purple: 1, dragon: 1, devil: 1, blue_dragon: 1, frost: 1, candy_cane: 1, snowflake: 1, golden: 1, celestial: 1, seraph: 1, void: 1, phoenix: 1, monarch: 1, morpho: 1, pixie: 1, bat: 1, emerald: 1, crystal: 1, flame: 1, leaf: 1, bone: 1, peacock: 1, ribbon: 1, rose_fairy: 1, lilac_fairy: 1, mint_fairy: 1 }));
 
 function timeLeft(end: number) {
   const s = Math.max(0, end - Date.now() / 1000);

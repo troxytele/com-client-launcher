@@ -4,16 +4,62 @@ import * as THREE from "three";
 
 // id -> [flies, scale] (Pets.java)
 const PETS = {
-  bee: [true, 0.55], ender_dragon: [true, 0.06], allay: [true, 0.55], bat: [true, 0.5],
-  parrot: [false, 1.0], fox: [false, 0.42], cat: [false, 0.42], frog: [false, 0.55],
-  axolotl: [false, 0.5], chicken: [false, 0.5], slime: [false, 0.45],
-  // Com Client's own chibi pets (voxels.py): head bobs, ears and tails wiggle
-  goat: [false, 0.48], lamb: [false, 0.6], pumpkin_cat: [false, 0.55], koala: [false, 0.6], duck: [false, 0.6], penguin: [false, 0.55],
-  capybara: [false, 0.5], red_panda: [false, 0.55], bunny: [false, 0.6], owl: [false, 0.55], corgi: [false, 0.5], panda: [false, 0.55],
-  // coins that hover beside you and spin
-  coin_btc: [true, 0.62], coin_eth: [true, 0.62], coin_ltc: [true, 0.62],
+  bee: [true, 0.55],
+  ender_dragon: [true, 0.5],
+  allay: [true, 0.55],
+  bat: [true, 0.55],
+  parrot: [false, 0.55],
+  fox: [false, 0.5],
+  cat: [false, 0.55],
+  frog: [false, 0.55],
+  axolotl: [false, 0.55],
+  chicken: [false, 0.55],
+  slime: [false, 0.45],
+  goat: [false, 0.48],
+  lamb: [false, 0.6],
+  pumpkin_cat: [false, 0.55],
+  koala: [false, 0.6],
+  duck: [false, 0.6],
+  penguin: [false, 0.55],
+  capybara: [false, 0.5],
+  red_panda: [false, 0.55],
+  bunny: [false, 0.6],
+  owl: [false, 0.55],
+  corgi: [false, 0.5],
+  panda: [false, 0.55],
+  coin_btc: [true, 0.62],
+  coin_eth: [true, 0.62],
+  coin_ltc: [true, 0.62],
+  warden: [false, 0.5],
+  sniffer: [false, 0.5],
+  baby_turtle: [false, 0.55],
+  turtle: [false, 0.5],
+  creeper: [false, 0.55],
+  ghast: [true, 0.42],
+  mooshroom: [false, 0.55],
+  blaze: [true, 0.55],
+  camel: [false, 0.5],
+  hamster: [false, 0.55],
+  hedgehog: [false, 0.55],
+  otter: [false, 0.55],
+  sloth: [false, 0.55],
+  seal: [false, 0.55],
+  shiba: [false, 0.55],
+  husky: [false, 0.55],
+  black_cat: [false, 0.55],
+  white_cat: [false, 0.55],
+  pig: [false, 0.55],
+  snail: [false, 0.55],
+  jellyfish: [true, 0.55],
+  dragon_green: [true, 0.55],
+  dragon_gold: [true, 0.55],
+  dragon_ice: [true, 0.55],
+  phoenix: [true, 0.55],
+  ghost: [true, 0.55],
+  snowman: [false, 0.5],
 };
-const OWN = new Set(["goat", "lamb", "pumpkin_cat", "koala", "duck", "penguin", "capybara", "red_panda", "bunny", "owl", "corgi", "panda", "coin_btc", "coin_eth", "coin_ltc"]);
+// every pet is Com Client's own chibi voxel model now
+const OWN = new Set(Object.keys(PETS));
 
 let modelsP = null;
 const loadModels = (base) => (modelsP ||= fetch(`${base}/models.json`).then((r) => r.json()));
@@ -105,7 +151,7 @@ function buildPart(p, tw, th, mat, parts) {
 
 /** Sitting poses for pets that sit on the shoulder (from the game's FelineEntityModel). */
 function pose(id, parts) {
-  if (id === "cat") {
+  if (id === "cat" && !OWN.has(id)) {
     const s = (n, f) => parts[n] && f(parts[n]);
     s("body", (b) => { b.rotation.x = Math.PI / 4; b.position.y += -4; b.position.z += 5; });
     s("head", (h) => { h.position.y += -3.3; h.position.z += 1; });
@@ -135,17 +181,9 @@ export async function loadPet(id, base, left) {
   flip.scale.setScalar(scale);
   holder.add(flip);
   const parts = {};
-  if (id === "slime") {
-    const inner = models.slime_inner, outer = models.slime_outer;
-    const ig = buildPart(inner.root, inner.w, inner.h, mat, parts);
-    ig.position.y -= 24;
-    flip.add(ig);
-    const glass = new THREE.MeshLambertMaterial({ map: tex, transparent: true, opacity: 0.65, depthWrite: false, side: THREE.DoubleSide });
-    const og = buildPart(outer.root, outer.w, outer.h, glass, {});
-    og.position.y -= 24;
-    flip.add(og);
-  } else {
+  {
     const m = models[id];
+    if (!m) return null;
     const root = buildPart(m.root, m.w, m.h, mat, parts);
     root.position.y -= 24; // the mob stands on y = 24 px: put its feet on the shoulder
     flip.add(root);
@@ -198,6 +236,18 @@ export async function loadPet(id, base, left) {
         for (const n of ["left_ear", "right_ear"]) if (P(n)) P(n).rotation.z = P(n).userData.rest.roll + (n.startsWith("left") ? 1 : -1) * Math.max(0, Math.sin(t * 3.1)) * 0.25;
         if (P("tail")) P("tail").rotation.y = Math.sin(t * 6) * 0.4;
         if (P("spin")) P("spin").rotation.y = t * 2.4;
+        const age = t * 20;
+        for (const [n, g] of Object.entries(parts)) {
+          const r = g.userData.rest;
+          if (!r) continue;
+          if (n === "waddle") g.rotation.z = r.roll + Math.sin(age * 0.22) * 0.08;
+          else if (n === "sway") g.rotation.z = r.roll + Math.sin(age * 0.05) * 0.06;
+          else if (n === "sniff") g.rotation.x = r.pitch + Math.max(0, Math.sin(age * 0.9)) * Math.max(0, Math.sin(age * 0.08)) * 0.25;
+          else if (n.startsWith("tentacle")) g.rotation.x = r.pitch + Math.sin(age * 0.15 + n.length) * 0.18;
+          else if (n.startsWith("gill")) g.rotation.z = r.roll + (n.startsWith("gill_l") ? 1 : -1) * Math.sin(age * 0.2) * 0.12;
+          else if (n === "flash") g.visible = age % 90 > 80 && Math.floor(age % 90) % 3 !== 0;
+          else if (n === "flicker") { const k = age % 110; g.visible = !((k > 96 && k < 100) || (k > 102 && k < 104)); }
+        }
         for (const n of ["left_wing", "right_wing"]) if (P(n)) P(n).rotation.z = P(n).userData.rest.roll + (n.startsWith("left") ? -1 : 1) * Math.max(0, Math.sin(t * 9)) * Math.max(0, Math.sin(t * 0.9)) * 0.6;
         return;
       }

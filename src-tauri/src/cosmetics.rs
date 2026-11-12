@@ -19,18 +19,20 @@ const WINGS: &[(&str, &str)] = &[
     ("seraph", "Seraph"), ("void", "Void"), ("phoenix", "Phoenix"), ("monarch", "Monarch"), ("morpho", "Morpho"),
     ("pixie", "Pixie"), ("bat", "Bat"), ("emerald", "Emerald Drake"),
     ("crystal", "Crystal Shards"), ("flame", "Flame Wings"), ("leaf", "Leafwing"), ("bone", "Bone Wings"), ("peacock", "Peacock"), ("ribbon", "Ethereal Ribbons"),
+    ("rose_fairy", "Rose Fairy"), ("lilac_fairy", "Lilac Fairy"), ("mint_fairy", "Mint Fairy"),
 ];
 const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
-const HATS: &[(&str, &str)] = &[("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers"),
-    ("bunny_hat", "Bunny hat"), ("axolotl_hat", "Axolotl hat"), ("frog_hat", "Frog hat"), ("fire_horns", "Fire horns"), ("pumpkin_hat", "Pumpkin hat")];
+const HATS: &[(&str, &str)] = &[
+    ("crown", "Crown"), ("cat_ears", "Cat ears"), ("dog_ears", "Dog ears"), ("santa", "Santa hat"), ("antlers", "Reindeer antlers"), ("bunny_hat", "Bunny hat"), ("axolotl_hat", "Axolotl hat"), ("frog_hat", "Frog hat"), ("fire_horns", "Fire horns"), ("pumpkin_hat", "Pumpkin hat"), ("headband_com", "COM headband"), ("headband_gg", "GG headband"), ("headband_pvp", "PVP headband"), ("headband_ez", "EZ headband"), ("headband_mvp", "MVP headband"), ("headband_rainbow", "Rainbow LOL headband"), ("headband_ninja", "Ninja headband"), ("bow_white", "White bow"), ("double_bow_white", "White double bow"), ("bow_pink", "Pink bow"), ("double_bow_pink", "Pink double bow"), ("bow_black", "Black bow"), ("double_bow_black", "Black double bow"), ("bow_red", "Red bow"), ("double_bow_red", "Red double bow"), ("bow_blue", "Blue bow"), ("double_bow_blue", "Blue double bow"), ("bow_purple", "Purple bow"), ("double_bow_purple", "Purple double bow"), ("koala_hat", "Koala hat"), ("bandana_fire_white", "Fire bandana (white)"), ("bandana_fire_black", "Fire bandana (black)"), ("bandana_fire_red", "Inferno bandana"), ("bandana_fire_blue", "Blue flame bandana"), ("bandana_fire_toxic", "Toxic flame bandana"), ("bandana_fire_purple", "Soulfire bandana"), ("bandana_galaxy", "Galaxy bandana"), ("bandana_stars", "Starry bandana"), ("bandana_aurora", "Aurora bandana"), ("bandana_lava", "Lava bandana"), ("bandana_ocean", "Ocean wave bandana"), ("bandana_lightning", "Thunder bandana"), ("bandana_matrix", "Code rain bandana"), ("bandana_neon", "Neon bandana"), ("bandana_sakura", "Sakura bandana"), ("bandana_frost", "Snowfall bandana"), ("bandana_gg", "GG fire bandana"), ("bandana_ez", "EZ flame bandana"), ("bandana_pvp", "PVP inferno bandana"), ("bandana_mvp", "MVP gold bandana"), ("bandana_toxic", "1V1 toxic bandana"), ("bandana_king", "KING bandana"), ("bandana_glitch", "GLITCH bandana"), ("bandana_noob", "NOOB bandana"),
+];
 const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix"), ("snow", "Snowfall"),
     ("trail_stars", "Star trail"), ("trail_petals", "Petal trail"), ("trail_snow", "Snow trail"), ("trail_hearts", "Heart trail"), ("trail_cape", "Cape trail")];
 const PETS: &[(&str, &str)] = &[
-    ("bee", "Bee"), ("ender_dragon", "Mini Ender Dragon"), ("allay", "Allay"), ("bat", "Bat"), ("parrot", "Parrot"), ("fox", "Fox"),
-    ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"),
-    ("goat", "Goat"), ("lamb", "Lamb"), ("pumpkin_cat", "Pumpkin Cat"), ("koala", "Koala"), ("duck", "Duck"), ("penguin", "Penguin"),
-    ("coin_btc", "Bitcoin"), ("coin_eth", "Ethereum"), ("coin_ltc", "Litecoin"),
-    ("capybara", "Capybara"), ("red_panda", "Red Panda"), ("bunny", "Bunny"), ("owl", "Owl"), ("corgi", "Corgi"), ("panda", "Panda"),
+    ("bee", "Bee"), ("ender_dragon", "Mini Ender Dragon"), ("allay", "Allay"), ("bat", "Bat"), ("parrot", "Parrot"), ("fox", "Fox"), ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"), ("goat", "Goat"), ("lamb", "Lamb"), ("pumpkin_cat", "Pumpkin Cat"), ("koala", "Koala"), ("duck", "Duck"), ("penguin", "Penguin"), ("coin_btc", "Bitcoin"), ("coin_eth", "Ethereum"), ("coin_ltc", "Litecoin"), ("capybara", "Capybara"), ("red_panda", "Red Panda"), ("bunny", "Bunny"), ("owl", "Owl"), ("corgi", "Corgi"), ("panda", "Panda"), ("warden", "Mini Warden"), ("sniffer", "Sniffer"), ("baby_turtle", "Baby Turtle"), ("turtle", "Sea Turtle"), ("creeper", "Mini Creeper"), ("ghast", "Mini Ghast"), ("mooshroom", "Mooshroom Calf"), ("blaze", "Mini Blaze"), ("camel", "Camel"), ("hamster", "Hamster"), ("hedgehog", "Hedgehog"), ("otter", "Otter"), ("sloth", "Sloth"), ("seal", "Seal"), ("shiba", "Shiba Inu"), ("husky", "Husky"), ("black_cat", "Black Cat"), ("white_cat", "White Cat"), ("pig", "Saddled Pig"), ("snail", "Snail"), ("jellyfish", "Jellyfish"), ("dragon_green", "Green Baby Dragon"), ("dragon_gold", "Golden Baby Dragon"), ("dragon_ice", "Ice Baby Dragon"), ("phoenix", "Phoenix"), ("ghost", "Ghost"), ("snowman", "Snowman"),
+];
+/// Shield skins (1.21.11: Com Client's own shield texture instead of wood and banners).
+const SHIELDS: &[(&str, &str)] = &[
+    ("flame", "Flame shield"), ("frost", "Frost shield"), ("galaxy", "Galaxy shield"), ("gold", "Royal Gold shield"), ("sakura", "Sakura shield"), ("dragon", "Dragon Eye shield"), ("heart", "Heart shield"), ("void", "Void portal shield"), ("lava", "Lava shield"), ("ocean", "Ocean shield"), ("aurora", "Aurora shield"), ("lightning", "Thunder shield"), ("matrix", "Code rain shield"), ("toxic", "Toxic shield"),
 ];
 const NAMETAGS: &[(&str, &str)] = &[
     ("fire", "Fire"), ("ocean", "Ocean"), ("gold", "Gold"), ("toxic", "Toxic"), ("candy", "Candy"), ("galaxy", "Galaxy"), ("rainbow", "Rainbow"),
@@ -76,6 +78,7 @@ pub struct Catalog {
     pub pets: Vec<Item>,
     pub nametags: Vec<Item>,
     pub icons: Vec<Item>,
+    pub shields: Vec<Item>,
 }
 
 fn items(list: &[(&str, &str)]) -> Vec<Item> {
@@ -93,6 +96,7 @@ pub async fn catalog(_paths: &Paths) -> Catalog {
         pets: items(PETS),
         nametags: items(NAMETAGS),
         icons: items(ICONS),
+        shields: items(SHIELDS),
     }
 }
 
@@ -113,6 +117,9 @@ pub async fn texture(paths: &Paths, kind: &str, id: &str) -> Result<String> {
         "wings" => {
             if !WINGS.iter().any(|(w, _)| *w == id) {
                 bail!("Unknown wings");
+            }
+            if id.ends_with("_fairy") {
+                return jar_file(paths, &format!("assets/comclient/textures/wing_{id}.png"));
             }
             jar_file(paths, &format!("assets/comclient/textures/cosmetics/wings/{id}.png"))
         }
@@ -154,6 +161,8 @@ pub struct Look {
     pub pet_name: String,
     pub pet_color: i64,
     pub plain_tag: bool,
+    /// shield skin (1.21.11), "none" = the normal shield
+    pub shield: String,
 }
 
 impl Default for Look {
@@ -174,6 +183,7 @@ impl Default for Look {
             pet_name: String::new(),
             pet_color: -1,
             plain_tag: false,
+            shield: "none".into(),
         }
     }
 }
@@ -215,6 +225,7 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
     l.pet_name = st("petName", "");
     l.pet_color = cfg["petColor"].as_i64().unwrap_or(-1);
     l.plain_tag = cfg["plainTag"].as_bool().unwrap_or(false);
+    l.shield = st("shield", "none");
     l.halo_color = cfg["haloColor"].as_i64().unwrap_or(l.halo_color);
     l.hat_color = cfg["hatColor"].as_i64().unwrap_or(l.hat_color);
     l.aura_color = if cfg["auraRainbow"].as_bool().unwrap_or(false) { -1 } else { cfg["auraColor"].as_i64().unwrap_or(l.aura_color) };
@@ -226,7 +237,7 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
 pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
     if !valid(&look.cape, CUSTOM_CAPES) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
         || !valid(&look.hat, HATS) || !valid(&look.aura, AURAS) || !valid(&look.pet, PETS) || !valid(&look.nametag, NAMETAGS)
-        || !valid(&look.icon, ICONS)
+        || !valid(&look.icon, ICONS) || !valid(&look.shield, SHIELDS)
     {
         bail!("Unknown cosmetic");
     }
@@ -255,6 +266,7 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
         o.insert("petName".into(), json!(look.pet_name));
         o.insert("petColor".into(), json!(look.pet_color));
         o.insert("plainTag".into(), json!(look.plain_tag));
+        o.insert("shield".into(), json!(look.shield));
         o.insert("auraRainbow".into(), json!(look.aura_color == -1));
         if look.aura_color != -1 {
             o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));
