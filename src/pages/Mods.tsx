@@ -244,9 +244,35 @@ function InstalledList({ kind, running, onBrowse }: { kind: Kind; running: boole
                   <div className="item-title">
                     <b>{m.name}</b>
                     {m.version && <span className="muted small">{m.version}</span>}
+                    {m.folder && <span className="tag" title="An unzipped pack: a folder instead of a .zip">Folder</span>}
                     {u && <span className="tag accent">→ {u.version}</span>}
                   </div>
                   <p>{m.description || m.file}</p>
+                  {m.problem && (
+                    <p className="item-problem">
+                      <Icon name="alert" size={13} /> {m.problem}
+                      {m.problem.includes("too deep") && (
+                        <button
+                          className="btn small"
+                          disabled={busy === m.file}
+                          onClick={async () => {
+                            setBusy(m.file);
+                            try {
+                              await api.packFixNested(kind, m.file);
+                              toast(`Fixed ${m.name}: Minecraft sees it now`, "ok");
+                              load();
+                            } catch (e) {
+                              toast(msg(e), "error");
+                            } finally {
+                              setBusy(null);
+                            }
+                          }}
+                        >
+                          {busy === m.file ? <Spinner size={12} /> : <Icon name="check" size={13} />} Fix it
+                        </button>
+                      )}
+                    </p>
+                  )}
                   <span className="muted small">
                     {m.authors && <>by {m.authors} · </>}
                     {fmtBytes(m.size)}

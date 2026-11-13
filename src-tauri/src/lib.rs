@@ -663,6 +663,11 @@ fn mod_toggle(state: State<'_, AppState>, kind: String, file: String) -> Res<Str
 }
 
 #[tauri::command]
+fn pack_fix_nested(state: State<'_, AppState>, kind: String, file: String) -> Res<()> {
+    mods::fix_nested(&active_game_dir(&state.paths), &kind, &file).map_err(err)
+}
+
+#[tauri::command]
 fn mod_delete(state: State<'_, AppState>, kind: String, file: String) -> Res<()> {
     mods::delete(&active_game_dir(&state.paths), &kind, &file).map_err(err)
 }
@@ -1069,6 +1074,7 @@ pub fn run() {
             mods_list,
             mod_toggle,
             mod_delete,
+            pack_fix_nested,
             mods_updates,
             mod_update,
             modrinth_search,

@@ -81,6 +81,8 @@ export type Kind = "mod" | "resourcepack" | "shader" | "modpack";
 export type Installed = {
   file: string; id: string; name: string; version: string; description: string; authors: string; icon: string;
   enabled: boolean; size: number; sha1: string;
+  /** an unzipped pack (a folder); problem says why Minecraft won't load it ("" = fine) */
+  folder: boolean; problem: string;
 };
 export type Hit = { id: string; slug: string; title: string; description: string; icon: string; author: string; downloads: number; follows: number; categories: string[] };
 export type SearchResult = { hits: Hit[]; total: number };
@@ -224,6 +226,7 @@ export const api = {
   modsList: (kind: Kind) => invoke<Installed[]>("mods_list", { kind }),
   modToggle: (kind: Kind, file: string) => invoke<string>("mod_toggle", { kind, file }),
   modDelete: (kind: Kind, file: string) => invoke<void>("mod_delete", { kind, file }),
+  packFixNested: (kind: Kind, file: string) => invoke<void>("pack_fix_nested", { kind, file }),
   modsUpdates: (kind: Kind) => invoke<Update[]>("mods_updates", { kind }),
   modUpdate: (kind: Kind, update: Update) => invoke<void>("mod_update", { kind, update }),
   search: (query: string, kind: Kind, sort: string, offset: number) =>
