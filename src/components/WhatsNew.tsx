@@ -6,6 +6,16 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.44",
+    items: [
+      ["play", "Several games at once", "Play another profile (or another account) while one is running: each game shows in the launch bar with its own stop button."],
+      ["wrench", "Checks your mods before playing", "Missing mods, the same mod twice, mods for another Minecraft version and Forge mods are found before the game starts, each with a one-click fix."],
+      ["link", "Desktop shortcuts", "Profiles → Desktop shortcut puts an icon on your desktop that starts that profile straight away."],
+      ["folder", "Storage", "See how much space every profile, world and the game files take, and clean up old logs, crash reports and unused versions."],
+      ["plus", "Install in several profiles", "The arrow next to Install on Mods → Discover installs a mod in more than one profile at once."],
+    ],
+  },
+  {
     version: "0.6.36",
     items: [
       ["sparkle", "Crystal PvP cape", "A new animated cape: DTAP, QD and TRIPPLE TAP scrolling down with end crystals in between."],

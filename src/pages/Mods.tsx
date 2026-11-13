@@ -66,8 +66,8 @@ export default function Mods({ profileName, version, running, onModpack, profile
               role="tab"
               aria-selected={p.id === activeId}
               className={"mods-profile" + (p.id === activeId ? " on" : "")}
-              disabled={running || !!switching}
-              title={running ? "Close the game to switch profiles" : `Show the mods of ${p.name}`}
+              disabled={!!switching}
+              title={`Show the mods of ${p.name}`}
               onClick={async () => {
                 if (p.id === activeId) return;
                 setSwitching(p.id);
@@ -136,7 +136,7 @@ export default function Mods({ profileName, version, running, onModpack, profile
       ) : tab === "installed" ? (
         <InstalledList key={activeId} kind={kind} running={running} onBrowse={() => setTab("browse")} />
       ) : (
-        <Browse key={activeId} kind={kind} />
+        <Browse key={activeId} kind={kind} profiles={profiles} activeId={activeId} />
       )}
     </div>
   );
@@ -318,7 +318,36 @@ function InstalledList({ kind, running, onBrowse }: { kind: Kind; running: boole
   );
 }
 
-function Browse({ kind, onModpack }: { kind: Kind; onModpack?: (id: string) => void }) {
+function Browse({ kind, onModpack, profiles = [], activeId }: { kind: Kind; onModpack?: (id: string) => void; profiles?: Profile[]; activeId?: string }) {
+  // "install in several profiles": which hit's picker is open, and the profiles ticked in it
+  const [pickFor, setPickFor] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
+  async function installMany(h: Hit, ids: string[]) {
+    setPickFor(null);
+    setInstalling((s) => ({ ...s, [h.id]: "busy" }));
+    try {
+      const res = await api.installTo(h.id, kind, ids);
+      const ok = res.filter((r) => !r.error);
+      const bad = res.filter((r) => r.error);
+      setInstalling((s) => ({ ...s, [h.id]: "done" }));
+      if (ok.length) toast(`Installed ${h.title} in ${ok.map((r) => r.name).join(", ")}`, "ok");
+      for (const r of bad) toast(`${r.name}: ${r.error}`, "error");
+      if (!ok.length) {
+        setInstalling((s) => {
+          const n = { ...s };
+          delete n[h.id];
+          return n;
+        });
+      }
+    } catch (e) {
+      setInstalling((s) => {
+        const n = { ...s };
+        delete n[h.id];
+        return n;
+      });
+      toast(msg(e), "error");
+    }
+  }
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("relevance");
   const [hits, setHits] = useState<Hit[]>([]);
@@ -433,10 +462,44 @@ function Browse({ kind, onModpack }: { kind: Kind; onModpack?: (id: string) => v
                 <span className="muted small">
                   <Icon name="download" size={12} /> {fmtNum(h.downloads)}
                 </span>
-                <button className={"btn small" + (st === "done" ? "" : " primary")} disabled={!!st} onClick={() => install(h)}>
-                  {st === "busy" ? <Spinner size={12} /> : st === "done" ? <Icon name="check" size={14} /> : <Icon name="plus" size={14} />}
-                  {st === "done" ? "Installed" : st === "busy" && kind === "modpack" ? packStage || "Installing…" : "Install"}
-                </button>
+                <div className="install-split">
+                  <button className={"btn small" + (st === "done" ? "" : " primary")} disabled={!!st} onClick={() => install(h)}>
+                    {st === "busy" ? <Spinner size={12} /> : st === "done" ? <Icon name="check" size={14} /> : <Icon name="plus" size={14} />}
+                    {st === "done" ? "Installed" : st === "busy" && kind === "modpack" ? packStage || "Installing…" : "Install"}
+                  </button>
+                  {kind !== "modpack" && profiles.length > 1 && !st && (
+                    <button
+                      className="btn small primary install-more"
+                      title="Install in several profiles"
+                      onClick={() => {
+                        setPicked(activeId ? [activeId] : []);
+                        setPickFor(pickFor === h.id ? null : h.id);
+                      }}
+                    >
+                      <Icon name="chevronDown" size={13} />
+                    </button>
+                  )}
+                  {pickFor === h.id && (
+                    <div className="install-pick" onMouseLeave={() => setPickFor(null)}>
+                      <small className="muted">Install in</small>
+                      {profiles.map((p) => (
+                        <label key={p.id} className="install-pick-row">
+                          <input
+                            type="checkbox"
+                            checked={picked.includes(p.id)}
+                            onChange={(e) => setPicked((x) => (e.target.checked ? [...x, p.id] : x.filter((y) => y !== p.id)))}
+                          />
+                          <span>
+                            {p.name} <small className="muted">{p.version || "1.21.11"}</small>
+                          </span>
+                        </label>
+                      ))}
+                      <button className="btn small primary" disabled={!picked.length} onClick={() => installMany(h, picked)}>
+                        <Icon name="plus" size={13} /> Install in {picked.length} profile{picked.length === 1 ? "" : "s"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );

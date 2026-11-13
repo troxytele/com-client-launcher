@@ -7,6 +7,7 @@ import Icon from "../components/Icon";
 import ImportDialog from "../components/ImportDialog";
 import Optimise from "../components/Optimise";
 import ProfileIcon, { iconUrl } from "../components/ProfileIcon";
+import logoUrl from "../assets/logo.png";
 import { Modal, Spinner, Switch } from "../components/Ui";
 import { ImportBlock } from "./Settings";
 
@@ -370,6 +371,18 @@ export default function Profiles({
               </button>
               <button className="btn small" onClick={() => api.openFolder("profile:" + p.id)}>
                 <Icon name="folder" size={14} /> Folder
+              </button>
+              <button
+                className="btn small"
+                disabled={!!busy}
+                title="Puts an icon on your desktop that starts this profile straight away"
+                onClick={() => act("shortcut", async () => {
+                  const png = await iconPng(p.icon).catch(() => undefined);
+                  await api.createShortcut(p.id, png);
+                  toast(`"${p.name}" is on your desktop now: double-click it to play`, "ok");
+                })}
+              >
+                {busy === "shortcut" ? <Spinner size={12} /> : <Icon name="link" size={14} />} Desktop shortcut
               </button>
               <button className="btn small" disabled={running} onClick={() => setOptimise(true)} title="Checks your PC and picks memory, performance mods and video settings">
                 <Icon name="bolt" size={14} /> Auto-optimise
@@ -741,4 +754,21 @@ function IconPicker({ current, onPick, onClose }: { current: string; onPick: (ic
       </div>
     </Modal>
   );
+}
+
+/** The profile's picture as a 256x256 PNG (for the desktop shortcut's icon): Minecraft items stay sharp. */
+async function iconPng(icon: string): Promise<string> {
+  const url = (await iconUrl(icon || "")) || logoUrl;
+  const img = new Image();
+  img.src = url;
+  await img.decode();
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const g = c.getContext("2d")!;
+  const pixel = icon.startsWith("item:") || icon.startsWith("block:");
+  g.imageSmoothingEnabled = !pixel;
+  const s = Math.min(256 / img.width, 256 / img.height);
+  const w = img.width * s, h = img.height * s;
+  g.drawImage(img, (256 - w) / 2, (256 - h) / 2, w, h);
+  return c.toDataURL("image/png");
 }

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ago, api, fmtTime, CurrentSkin, Info, Look, msg, NewsItem, Progress, Social } from "../api";
+import { ago, api, fmtTime, CurrentSkin, GameInfo, Info, Look, msg, NewsItem, Progress, Social } from "../api";
 import NameTag from "../components/NameTag";
 import { CUSTOM_CAPES } from "../../website-src/helpers.js";
 import Icon from "../components/Icon";
@@ -20,7 +20,10 @@ type Props = {
   error: string | null;
   onPlay: (server?: string) => void;
   onProfiles: () => void;
-  onStop: () => void;
+  /** stops one game (or all, without an id) */
+  onStop: (id?: number) => void;
+  /** the games running now */
+  games?: GameInfo[];
   onProfile: (id: string) => void;
   onAccounts: () => void;
   onLogs: () => void;
@@ -31,7 +34,7 @@ type Props = {
 
 // The Play page: a big banner with the latest news and your player, more news below, and the launch bar at the
 // bottom (profile, friends online, progress, PLAY).
-export default function Home({ info, phase, progress, error, onPlay, onProfiles, onStop, onProfile, onAccounts, onLogs, onSkins, onMods, skinKey }: Props) {
+export default function Home({ info, phase, progress, error, onPlay, onProfiles, onStop, onProfile, onAccounts, onLogs, onSkins, onMods, skinKey, games = [] }: Props) {
   const updates = useUpdates();
   const nUpdates = updates.profile === info.settings.active_profile ? updateCount(updates) : 0;
   const [updating, setUpdating] = useState<string | null>(null);
@@ -198,7 +201,7 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
       {/* ------------------------------------------------ launch bar */}
       <footer className="launchbar">
         <div className="lb-profile">
-          <button className="lb-profile-btn" disabled={phase !== "idle"} onClick={() => setPickProfile(!pickProfile)}>
+          <button className="lb-profile-btn" disabled={phase === "preparing"} onClick={() => setPickProfile(!pickProfile)}>
             <ProfileIcon icon={profile?.icon ?? ""} size={40} className="lb-icon" />
             <span className="lb-text">
               <b>{profile?.name}</b>
@@ -293,7 +296,7 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
           )}
         </div>
 
-        {phase === "idle" && active && (profile?.servers?.length ?? 0) > 0 && (
+        {phase !== "preparing" && games.length === 0 && active && (profile?.servers?.length ?? 0) > 0 && (
           <div className="lb-servers">
             {profile!.servers.slice(0, 3).map((srv) => (
               <button key={srv.address} className="lb-server" title={"Play and join " + srv.address} onClick={() => onPlay(srv.address)}>
@@ -307,17 +310,32 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
           </div>
         )}
 
-        {phase === "running" ? (
-          <button className="play-btn running" onClick={onStop}>
-            <Icon name="stop" size={16} fill /> STOP
-          </button>
-        ) : (
-          <button className={"play-btn" + (phase === "preparing" ? " busy" : "")} onClick={() => onPlay()} disabled={phase === "preparing"}>
-            {phase === "preparing" && <span className="play-fill" style={{ width: (pct ?? 0) + "%" }} />}
-            {phase === "preparing" ? <Spinner size={16} /> : <Icon name="play" size={18} fill />}
-            <span>{phase === "preparing" ? "STARTING" : active ? "PLAY" : "SIGN IN"}</span>
-          </button>
+        {games.length > 0 && (
+          <div className="lb-games" aria-label="Running games">
+            {games.map((g) => (
+              <div key={g.id} className="lb-game" title={`${g.profile} · ${g.account}`}>
+                <i className="lb-game-dot" />
+                <span>
+                  <b>{g.profile}</b>
+                  <small>{g.account}</small>
+                </span>
+                <button className="lb-game-stop" title={`Stop ${g.profile}`} onClick={() => onStop(g.id)}>
+                  <Icon name="stop" size={11} fill />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
+        <button
+          className={"play-btn" + (phase === "preparing" ? " busy" : "") + (games.length ? " again" : "")}
+          onClick={() => onPlay()}
+          disabled={phase === "preparing"}
+          title={games.length ? `Start ${profile?.name ?? "this profile"} too (another Minecraft)` : undefined}
+        >
+          {phase === "preparing" && <span className="play-fill" style={{ width: (pct ?? 0) + "%" }} />}
+          {phase === "preparing" ? <Spinner size={16} /> : <Icon name={games.length ? "plus" : "play"} size={18} fill={!games.length} />}
+          <span>{phase === "preparing" ? "STARTING" : !active ? "SIGN IN" : games.length ? "PLAY ANOTHER" : "PLAY"}</span>
+        </button>
       </footer>
     </div>
   );

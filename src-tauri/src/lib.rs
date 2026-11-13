@@ -11,6 +11,7 @@ pub mod java;
 pub mod launch;
 pub mod minecraft;
 pub mod modpacks;
+pub mod modcheck;
 pub mod modrinth;
 pub mod mods;
 pub mod optimise;
@@ -22,6 +23,8 @@ pub mod skins;
 pub mod crashes;
 pub mod import;
 pub mod social;
+pub mod shortcuts;
+pub mod storage;
 pub mod store;
 
 use serde::Serialize;
@@ -37,20 +40,38 @@ use store::{AccountView, Accounts, Profile, Profiles, Settings};
 pub struct AppState {
     paths: Paths,
     busy: AtomicBool,
-    kill: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
-    running: AtomicBool,
     /// The last lines of the game log (the logs window shows them when it opens late).
     log: Mutex<std::collections::VecDeque<String>>,
-    /// The game that is running now.
-    game: Mutex<Option<GameInfo>>,
+    /// Every game running now (several Minecrafts can run at once), with a way to stop each.
+    games: Mutex<Vec<RunningGame>>,
+    /// the profile a desktop shortcut asked to start (`--play <id>`), until the window picks it up
+    startup_play: Mutex<Option<String>>,
 }
 
 #[derive(Serialize, Clone, Debug)]
 struct GameInfo {
+    /// launcher's own number for this game (stays the same while it runs)
+    id: u64,
     pid: u32,
     profile: String,
+    profile_id: String,
     account: String,
     started: i64,
+}
+
+struct RunningGame {
+    info: GameInfo,
+    kill: Option<tokio::sync::oneshot::Sender<()>>,
+}
+
+impl AppState {
+    fn any_running(&self) -> bool {
+        !self.games.lock().unwrap().is_empty()
+    }
+
+    fn game_infos(&self) -> Vec<GameInfo> {
+        self.games.lock().unwrap().iter().map(|g| g.info.clone()).collect()
+    }
 }
 
 const LOG_KEEP: usize = 8000;
@@ -83,6 +104,8 @@ struct Info {
     profiles: Vec<Profile>,
     client: client::Installed,
     running: bool,
+    /// every game running now
+    games: Vec<GameInfo>,
     client_repo_set: bool,
 }
 
@@ -188,7 +211,8 @@ fn get_info(state: State<'_, AppState>) -> Info {
         settings: Settings::load(p),
         profiles: Profiles::load(p).list,
         client: client::installed(p),
-        running: state.running.load(Ordering::SeqCst),
+        running: state.any_running(),
+        games: state.game_infos(),
         client_repo_set: !config::CLIENT_REPO.starts_with("YOUR_GITHUB_NAME"),
     }
 }
@@ -286,7 +310,7 @@ fn save_settings(app: AppHandle, state: State<'_, AppState>, settings: Settings)
     settings.save(&state.paths).map_err(err)?;
     if settings.discord_rpc {
         start_discord(&state.paths);
-        if !state.running.load(Ordering::SeqCst) {
+        if !state.any_running() {
             discord::set("In the launcher", &format!("Minecraft {}", config::MC_VERSION));
         }
     } else {
@@ -408,6 +432,10 @@ fn build_tray(app: &tauri::App) -> tauri::Result<()> {
 
 #[derive(Serialize, Clone)]
 struct GameExit {
+    id: u64,
+    profile: String,
+    /// games still running after this one
+    left: usize,
     code: Option<i32>,
     crashed: bool,
     killed: bool,
@@ -417,9 +445,7 @@ struct GameExit {
 /// Starts the game. `profile` = a profile other than the selected one, `replay` = open this recording right away.
 #[tauri::command]
 async fn launch(app: AppHandle, state: State<'_, AppState>, server: Option<String>, profile: Option<String>, replay: Option<String>) -> Res<()> {
-    if state.running.load(Ordering::SeqCst) {
-        return Err("The game is already running".into());
-    }
+    // several games can run at once; only one can be starting at a time
     if let Some(r) = replay.as_deref() {
         if !gallery::allowed(&state.paths, std::path::Path::new(r)) {
             return Err("That replay isn't in a profile's replay_recordings folder".into());
@@ -444,7 +470,7 @@ fn files_lock() -> &'static tokio::sync::Mutex<()> {
 /// (Play shows them properly).
 #[tauri::command]
 async fn prewarm(state: State<'_, AppState>) -> Res<bool> {
-    if state.running.load(Ordering::SeqCst) || state.busy.load(Ordering::SeqCst) {
+    if state.any_running() || state.busy.load(Ordering::SeqCst) {
         return Ok(false);
     }
     let Ok(_files) = files_lock().try_lock() else { return Ok(false) };
@@ -505,24 +531,39 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
     rep.stage("Starting Minecraft", 0, 0);
     let plan = launch::Plan { java, vanilla, fabric, extra_mods, game_dir: game_dir.clone(), profile: profile.clone(), account, join: server.clone(), replay };
     let app_log = app.clone();
-    state.log.lock().unwrap().clear();
+    if !state.any_running() {
+        state.log.lock().unwrap().clear();
+    }
+    let tag = profile.name.clone();
     let mut child = launch::spawn(&paths, &plan, move |line| {
+        // with more than one game running, each line says which game it's from
+        let several = app_log.state::<AppState>().games.lock().unwrap().len() > 1;
+        let line = if several { format!("[{tag}] {line}") } else { line };
         push_log(&app_log, &line);
         let _ = app_log.emit("game-log", line);
     })?;
     let started = auth::now();
-    *state.game.lock().unwrap() = Some(GameInfo {
+    static NEXT_GAME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let game_id = NEXT_GAME.fetch_add(1, Ordering::SeqCst);
+    let (kill_tx, kill_rx) = tokio::sync::oneshot::channel::<()>();
+    let info = GameInfo {
+        id: game_id,
         pid: child.id().unwrap_or(0),
         profile: profile.name.clone(),
+        profile_id: profile.id.clone(),
         account: plan.account.name.clone(),
         started,
-    });
-    state.running.store(true, Ordering::SeqCst);
+    };
+    let count = {
+        let mut games = state.games.lock().unwrap();
+        games.push(RunningGame { info: info.clone(), kill: Some(kill_tx) });
+        games.len()
+    };
     if settings.open_logs {
         let _ = open_logs(app);
     }
-    let _ = app.emit("game-started", ());
-    set_tray_tip(app, &format!("Com Client: playing {}", profile.name));
+    let _ = app.emit("game-started", info);
+    set_tray_tip(app, &if count > 1 { format!("Com Client: {count} games running") } else { format!("Com Client: playing {}", profile.name) });
     discord::clear(); // the mod shows its own Rich Presence in game
 
     if let Some(p) = profiles.list.iter_mut().find(|p| p.id == profile.id) {
@@ -535,7 +576,10 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
             "hide" => {
                 let _ = w.hide();
             }
-            "close" => {
+            "minimize" => {
+                let _ = w.minimize();
+            }
+            "close" if count == 1 => {
                 // the game keeps running on its own
                 std::mem::forget(child);
                 app.exit(0);
@@ -545,8 +589,6 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
         }
     }
 
-    let (kill_tx, kill_rx) = tokio::sync::oneshot::channel::<()>();
-    *state.kill.lock().unwrap() = Some(kill_tx);
     let app2 = app.clone();
     tokio::spawn(async move {
         let mut killed = false;
@@ -564,27 +606,140 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
         let st = app2.state::<AppState>();
         let secs = (auth::now() - started).max(0) as u64;
         Profiles::record(&st.paths, &profile.id, started, secs, server.as_deref().unwrap_or_default());
-        set_tray_tip(&app2, "Com Client Launcher");
-        st.running.store(false, Ordering::SeqCst);
-        *st.kill.lock().unwrap() = None;
-        *st.game.lock().unwrap() = None;
-        if let Some(w) = app2.get_webview_window("main") {
-            let _ = w.show();
-            let _ = w.unminimize();
-            if crashed {
-                let _ = w.set_focus();
+        let left = {
+            let mut games = st.games.lock().unwrap();
+            games.retain(|g| g.info.id != game_id);
+            games.len()
+        };
+        set_tray_tip(&app2, &match left {
+            0 => "Com Client Launcher".to_string(),
+            1 => format!("Com Client: playing {}", st.games.lock().unwrap()[0].info.profile),
+            n => format!("Com Client: {n} games running"),
+        });
+        // the launcher comes back when the last game closes (or when one crashes, to show why)
+        if left == 0 || crashed {
+            if let Some(w) = app2.get_webview_window("main") {
+                let _ = w.show();
+                let _ = w.unminimize();
+                if crashed {
+                    let _ = w.set_focus();
+                }
             }
         }
-        discord::set("In the launcher", &format!("Minecraft {}", config::MC_VERSION));
-        let _ = app2.emit("game-exit", GameExit { code, crashed, killed, crash_report: report });
+        if left == 0 {
+            discord::set("In the launcher", &format!("Minecraft {}", config::MC_VERSION));
+        }
+        let _ = app2.emit("game-exit", GameExit { id: game_id, profile: profile.name.clone(), left, code, crashed, killed, crash_report: report });
     });
     Ok(())
 }
 
+// ------------------------------------------------------------------ checking mods before playing
+
+fn profile_or_active(paths: &Paths, profile: Option<&str>) -> Profile {
+    let s = Settings::load(paths);
+    Profiles::load(paths).get(profile.unwrap_or(&s.active_profile))
+}
+
+/// Problems with a profile's own mods (missing mods, the same mod twice, another Minecraft version, Forge mods).
 #[tauri::command]
-fn kill_game(state: State<'_, AppState>) {
-    if let Some(tx) = state.kill.lock().unwrap().take() {
-        let _ = tx.send(());
+async fn mods_check(state: State<'_, AppState>, profile: Option<String>) -> Res<Vec<modcheck::Problem>> {
+    let p = profile_or_active(&state.paths, profile.as_deref());
+    let dir = store::game_dir(&state.paths, &p);
+    let mc = config::profile_mc(&p);
+    tokio::task::spawn_blocking(move || modcheck::check(&dir, &mc, p.performance_mods, p.replay_mod)).await.map_err(|e| e.to_string())
+}
+
+/// Does one fix from the check: "disable" a jar, or "install" a missing mod from Modrinth.
+#[tauri::command]
+async fn mods_check_fix(state: State<'_, AppState>, profile: Option<String>, fix: String, target: String) -> Res<String> {
+    let p = profile_or_active(&state.paths, profile.as_deref());
+    let dir = store::game_dir(&state.paths, &p);
+    match fix.as_str() {
+        "disable" => mods::toggle(&dir, "mod", &target).map(|_| format!("Switched off {target}")).map_err(err),
+        "install" => {
+            let mc = config::profile_mc(&p);
+            std::fs::create_dir_all(mods::folder(&dir, "mod")).map_err(|e| e.to_string())?;
+            // the mod id is usually its Modrinth name; if not, the best search hit for it
+            let names = match modrinth::install(&target, "mod", &mc, &dir).await {
+                Ok(n) => n,
+                Err(first) => {
+                    let hits = modrinth::search(&target, "mod", &mc, "relevance", 0).await.map_err(err)?.hits;
+                    let want = target.replace(['-', '_'], "").to_lowercase();
+                    let hit = hits
+                        .iter()
+                        .find(|h| h.slug.replace(['-', '_'], "").to_lowercase() == want || h.title.replace([' ', '-', '_'], "").to_lowercase() == want)
+                        .ok_or_else(|| format!("Couldn't find \"{target}\" for Minecraft {mc} on Modrinth ({first})"))?;
+                    modrinth::install(&hit.id, "mod", &mc, &dir).await.map_err(err)?
+                }
+            };
+            Ok(format!("Installed {}", names.join(", ")))
+        }
+        _ => Err("Unknown fix".into()),
+    }
+}
+
+// ------------------------------------------------------------------ storage
+
+#[tauri::command]
+async fn storage_report(state: State<'_, AppState>) -> Res<storage::Report> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || storage::report(&paths)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn storage_clean(state: State<'_, AppState>, key: String) -> Res<u64> {
+    if key == "versions" && (state.any_running() || state.busy.load(Ordering::SeqCst)) {
+        return Err("Close the game first".into());
+    }
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || storage::clean(&paths, &key)).await.map_err(|e| e.to_string())?.map_err(err)
+}
+
+/// Opens any folder the Storage page shows (only ones inside the launcher's folder or a profile's game folder).
+#[tauri::command]
+fn storage_open(app: AppHandle, state: State<'_, AppState>, path: String) -> Res<()> {
+    let p = std::path::PathBuf::from(&path);
+    let inside_launcher = p.starts_with(&state.paths.root);
+    let inside_profile = Profiles::load(&state.paths).list.iter().any(|x| p.starts_with(store::game_dir(&state.paths, x)));
+    if !(inside_launcher || inside_profile) || !p.exists() {
+        return Err("Can't open that folder".into());
+    }
+    app.opener().open_path(path, None::<&str>).map_err(|e| e.to_string())
+}
+
+// ------------------------------------------------------------------ desktop shortcuts
+
+/// Puts a shortcut on the desktop that starts this profile straight away. `png` = the profile's picture (for the icon).
+#[tauri::command]
+async fn create_shortcut(state: State<'_, AppState>, profile: String, png: Option<String>) -> Res<String> {
+    let p = Profiles::load(&state.paths).list.into_iter().find(|p| p.id == profile).ok_or("That profile is gone")?;
+    let dir = state.paths.root.join("shortcuts");
+    tokio::task::spawn_blocking(move || -> anyhow::Result<String> {
+        let icon = png.as_deref().and_then(|b| shortcuts::write_icon(&dir, &p.id, b).ok());
+        let at = shortcuts::create(&p.id, &p.name, icon.as_deref())?;
+        Ok(paths::native(&at))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+    .map_err(err)
+}
+
+/// The profile a desktop shortcut asked to start, once (the window asks right after it loads).
+#[tauri::command]
+fn take_startup_play(state: State<'_, AppState>) -> Option<String> {
+    state.startup_play.lock().unwrap().take()
+}
+
+/// Stops one game (`id`), or every game when no id is given.
+#[tauri::command]
+fn kill_game(state: State<'_, AppState>, id: Option<u64>) {
+    for g in state.games.lock().unwrap().iter_mut() {
+        if id.is_none_or(|i| i == g.info.id) {
+            if let Some(tx) = g.kill.take() {
+                let _ = tx.send(());
+            }
+        }
     }
 }
 
@@ -692,6 +847,37 @@ async fn modrinth_install(state: State<'_, AppState>, project: String, kind: Str
     let dir = active_game_dir(&state.paths);
     std::fs::create_dir_all(mods::folder(&dir, &kind)).map_err(|e| e.to_string())?;
     modrinth::install(&project, &kind, &active_mc(&state.paths), &dir).await.map_err(err)
+}
+
+#[derive(Serialize)]
+struct InstallResult {
+    profile: String,
+    name: String,
+    files: Vec<String>,
+    /// "" when it worked
+    error: String,
+}
+
+/// Installs a Modrinth project into several profiles at once, each in the version for its own Minecraft.
+#[tauri::command]
+async fn modrinth_install_to(state: State<'_, AppState>, project: String, kind: String, profiles: Vec<String>) -> Res<Vec<InstallResult>> {
+    let all = Profiles::load(&state.paths);
+    let mut out = Vec::new();
+    for id in profiles {
+        let Some(p) = all.list.iter().find(|p| p.id == id) else { continue };
+        let dir = store::game_dir(&state.paths, p);
+        let mc = config::profile_mc(p);
+        let r = async {
+            std::fs::create_dir_all(mods::folder(&dir, &kind))?;
+            modrinth::install(&project, &kind, &mc, &dir).await
+        }
+        .await;
+        out.push(match r {
+            Ok(files) => InstallResult { profile: p.id.clone(), name: p.name.clone(), files, error: String::new() },
+            Err(e) => InstallResult { profile: p.id.clone(), name: p.name.clone(), files: vec![], error: e.to_string() },
+        });
+    }
+    Ok(out)
 }
 
 /// Opens a folder in Explorer: game, mods, resourcepacks, shaderpacks, screenshots, logs, crash, launcher.
@@ -957,6 +1143,7 @@ fn log_clear(state: State<'_, AppState>) {
 #[derive(Serialize)]
 struct GameStats {
     running: bool,
+    id: u64,
     pid: u32,
     profile: String,
     account: String,
@@ -975,16 +1162,17 @@ fn play_log(state: State<'_, AppState>) -> Vec<store::LogEntry> {
 #[tauri::command]
 fn game_stats(state: State<'_, AppState>) -> GameStats {
     static SYS: std::sync::OnceLock<Mutex<sysinfo::System>> = std::sync::OnceLock::new();
-    let game = state.game.lock().unwrap().clone();
+    // the newest game (the logs window shows the one that was started last)
+    let game = state.game_infos().into_iter().last();
     let Some(g) = game else {
-        return GameStats { running: false, pid: 0, profile: String::new(), account: String::new(), started: 0, ram_mb: 0, cpu: 0.0 };
+        return GameStats { running: false, id: 0, pid: 0, profile: String::new(), account: String::new(), started: 0, ram_mb: 0, cpu: 0.0 };
     };
     let mut sys = SYS.get_or_init(|| Mutex::new(sysinfo::System::new())).lock().unwrap();
     let pid = sysinfo::Pid::from_u32(g.pid);
     sys.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[pid]), true);
     let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) as f32;
     let (ram_mb, cpu) = sys.process(pid).map(|p| (p.memory() / 1024 / 1024, p.cpu_usage() / cores)).unwrap_or((0, 0.0));
-    GameStats { running: true, pid: g.pid, profile: g.profile, account: g.account, started: g.started, ram_mb, cpu }
+    GameStats { running: true, id: g.id, pid: g.pid, profile: g.profile, account: g.account, started: g.started, ram_mb, cpu }
 }
 
 /// Uploads the log to mclo.gs (hides your name and IP there) and returns the link.
@@ -1021,7 +1209,12 @@ fn start_discord(paths: &Paths) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // a desktop shortcut while the launcher is already open: start that profile in this launcher
+            if let Some(id) = shortcuts::play_arg(args) {
+                let _ = app.emit("shortcut-play", id);
+                return;
+            }
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.show();
                 let _ = w.unminimize();
@@ -1047,10 +1240,9 @@ pub fn run() {
             app.manage(AppState {
                 paths,
                 busy: AtomicBool::new(false),
-                kill: Mutex::new(None),
-                running: AtomicBool::new(false),
+                games: Mutex::new(Vec::new()),
+                startup_play: Mutex::new(shortcuts::play_arg(std::env::args())),
                 log: Mutex::new(std::collections::VecDeque::new()),
-                game: Mutex::new(None),
             });
             Ok(())
         })
@@ -1067,6 +1259,14 @@ pub fn run() {
             delete_profile,
             launch,
             kill_game,
+            create_shortcut,
+            mods_check,
+            storage_report,
+            storage_clean,
+            storage_open,
+            modrinth_install_to,
+            mods_check_fix,
+            take_startup_play,
             repair,
             news,
             release_notes,

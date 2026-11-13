@@ -5,7 +5,7 @@ import { listen, UnlistenFn } from "@tauri-apps/api/event";
 export type Account = { uuid: string; name: string; skin_url: string; active: boolean };
 
 export type Settings = {
-  after_launch: "hide" | "keep" | "close";
+  after_launch: "hide" | "minimize" | "keep" | "close";
   discord_rpc: boolean;
   custom_client_jar: string;
   active_profile: string;
@@ -68,11 +68,30 @@ export type Info = {
   profiles: Profile[];
   client: { client_version: string; client_file: string; fabric_api_version: string; fabric_api_file: string };
   running: boolean;
+  /** every game running now (several can run at once) */
+  games: GameInfo[];
   client_repo_set: boolean;
 };
 
+/** One running game. */
+export type GameInfo = { id: number; pid: number; profile: string; profile_id: string; account: string; started: number };
+
+/** A problem with a profile's mods, found before playing, with a one-click fix. */
+export type ModProblem = { kind: "missing" | "duplicate" | "version" | "loader"; text: string; fix: "install" | "disable"; target: string; fix_label: string };
+
+export type InstallResult = { profile: string; name: string; files: string[]; error: string };
+
+export type StoragePart = { key: string; label: string; bytes: number; path: string };
+export type StorageReport = {
+  total: number;
+  free: number;
+  profiles: { id: string; name: string; icon: string; version: string; bytes: number; path: string; parts: StoragePart[]; worlds: { name: string; bytes: number; path: string }[] }[];
+  shared: StoragePart[];
+  cleanups: { key: string; label: string; detail: string; bytes: number; files: number }[];
+};
+
 export type Progress = { stage: string; done: number; total: number };
-export type GameExit = { code: number | null; crashed: boolean; killed: boolean; crash_report: string | null };
+export type GameExit = { id: number; profile: string; left: number; code: number | null; crashed: boolean; killed: boolean; crash_report: string | null };
 export type DeviceCode = { user_code: string; device_code: string; verification_uri: string; interval: number; expires_in: number };
 export type NewsItem = { title: string; body: string; date: string; tag: string; url: string };
 export type Friend = { uuid: string; name: string; username: string; online: boolean; activity: string; server: string; last_seen: number; level: number };
@@ -218,7 +237,16 @@ export const api = {
   modpackLookup: (input: string) => invoke<ModrinthPack>("modpack_lookup", { input }),
   modpackInstallFile: (file: string) => invoke<string>("modpack_install_file", { file }),
   prewarm: () => invoke<boolean>("prewarm"),
-  kill: () => invoke<void>("kill_game"),
+  /** stops one game, or every game without an id */
+  kill: (id?: number) => invoke<void>("kill_game", { id: id ?? null }),
+  createShortcut: (profile: string, png?: string) => invoke<string>("create_shortcut", { profile, png: png ?? null }),
+  takeStartupPlay: () => invoke<string | null>("take_startup_play"),
+  modsCheck: (profile?: string) => invoke<ModProblem[]>("mods_check", { profile: profile ?? null }),
+  modsCheckFix: (profile: string | undefined, fix: string, target: string) => invoke<string>("mods_check_fix", { profile: profile ?? null, fix, target }),
+  installTo: (project: string, kind: Kind, profiles: string[]) => invoke<InstallResult[]>("modrinth_install_to", { project, kind, profiles }),
+  storageReport: () => invoke<StorageReport>("storage_report"),
+  storageClean: (key: string) => invoke<number>("storage_clean", { key }),
+  storageOpen: (path: string) => invoke<void>("storage_open", { path }),
   repair: () => invoke<number>("repair"),
   news: () => invoke<NewsItem[]>("news"),
   releaseNotes: (version: string) => invoke<string[]>("release_notes", { version }),
@@ -254,7 +282,9 @@ export const api = {
 export const on = {
   progress: (f: (p: Progress) => void): Promise<UnlistenFn> => listen<Progress>("progress", (e) => f(e.payload)),
   log: (f: (line: string) => void): Promise<UnlistenFn> => listen<string>("game-log", (e) => f(e.payload)),
-  started: (f: () => void): Promise<UnlistenFn> => listen("game-started", () => f()),
+  started: (f: (g: GameInfo) => void): Promise<UnlistenFn> => listen<GameInfo>("game-started", (e) => f(e.payload)),
+  /** a desktop shortcut asked to start this profile */
+  shortcutPlay: (f: (profile: string) => void): Promise<UnlistenFn> => listen<string>("shortcut-play", (e) => f(e.payload)),
   exit: (f: (e: GameExit) => void): Promise<UnlistenFn> => listen<GameExit>("game-exit", (e) => f(e.payload)),
   modpackProgress: (f: (p: Progress) => void): Promise<UnlistenFn> => listen<Progress>("modpack-progress", (e) => f(e.payload)),
 };

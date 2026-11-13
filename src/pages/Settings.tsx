@@ -127,10 +127,19 @@ export default function Settings({ info, reload, running }: { info: Info; reload
         <div className="setting">
           <div>
             <b>When the game starts</b>
-            <span>Hidden, it waits in the system tray (click the icon to open it) and comes back when you quit the game</span>
+            <span>
+              {s.after_launch === "hide"
+                ? "The launcher waits in the system tray (click the icon to open it) and comes back when you quit the game"
+                : s.after_launch === "minimize"
+                  ? "The launcher goes down to the taskbar and comes back when you quit the game"
+                  : s.after_launch === "close"
+                    ? "The launcher closes; start it again for your next game (the game itself keeps running)"
+                    : "The launcher stays open next to the game"}
+            </span>
           </div>
           <select value={s.after_launch} onChange={(e) => setSetting({ ...s, after_launch: e.target.value as S["after_launch"] })}>
             <option value="hide">Hide to tray, come back after</option>
+            <option value="minimize">Minimize, come back after</option>
             <option value="keep">Stay open</option>
             <option value="close">Close</option>
           </select>

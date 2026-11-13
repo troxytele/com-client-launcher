@@ -11,7 +11,7 @@ import logo from "./assets/logo.png";
 
 type Level = "error" | "warn" | "info" | "debug" | "launcher";
 type Line = { n: number; text: string; level: Level };
-type Stats = { running: boolean; pid: number; profile: string; account: string; started: number; ram_mb: number; cpu: number };
+type Stats = { running: boolean; id: number; pid: number; profile: string; account: string; started: number; ram_mb: number; cpu: number };
 
 const LEVELS: { id: Level; label: string }[] = [
   { id: "error", label: "Error" },
@@ -261,7 +261,7 @@ export default function LogsWindow() {
             </div>
           </div>
           <div className="lw-actions">
-            <button className="btn danger" disabled={!running} onClick={() => api.kill()}>
+            <button className="btn danger" disabled={!running} onClick={() => api.kill(stats?.id || undefined)}>
               <Icon name="stop" size={13} fill /> Stop game
             </button>
             <div className="row-gap">
