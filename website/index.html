@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Com Client · The beautiful Minecraft client</title>
-  <meta name="description" content="Com Client is a free Minecraft 1.21.11 client with a glass UI, 60+ modules, cosmetics, friends, chat and its own launcher.">
+  <meta name="description" content="Com Client is a free Minecraft client for 1.21.11 and 1.8.9 PvP with a glass UI, 60+ modules, cosmetics, friends, chat and its own launcher.">
   <meta name="theme-color" content="#050507">
   <link rel="canonical" href="https://comclient.xyz/">
   <meta property="og:type" content="website">
@@ -15,13 +15,13 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/assets/style.css?v=45e63dd4">
-  <link rel="stylesheet" href="/assets/pages.css?v=3f952299">
-  <script src="/assets/main.js?v=73ad29da" defer></script>
+  <link rel="stylesheet" href="/assets/style.css?v=4e1b9209">
+  <link rel="stylesheet" href="/assets/pages.css?v=81df2222">
+  <script src="/assets/main.js?v=dc322aba" defer></script>
   <script src="/assets/site.js?v=77ec6239" defer></script>
-  <script src="/assets/viewer.js?v=6da4147f" defer></script>
+  <script src="/assets/viewer.js?v=be694495" defer></script>
   <script src="/assets/clickgui.js?v=593131e2" defer></script>
-  <script src="/assets/home.js?v=6e71c03d" defer></script>
+  <script src="/assets/home.js?v=919a7186" defer></script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
@@ -47,7 +47,7 @@
       <div class="hero-top">
         <h1>Minecraft,<br>but beautiful.</h1>
         <div class="hero-side">
-          <p class="lead">A free client for Minecraft 1.21.11 that turns the game into black and white glass. 60+ modules, cosmetics other players see, friends and chat built in, and a launcher that sets it all up.</p>
+          <p class="lead">A free Minecraft client for 1.21.11 and 1.8.9 PvP that turns the game into black and white glass. 60+ modules, cosmetics other players see, friends and chat built in, and a launcher that sets it all up.</p>
           <div class="cta">
             <a class="btn primary big" href="/download" data-download>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7H3zM11.5 4.3 21 3v8.4h-9.5zM3 12.6h7.5v7L3 18.5zM11.5 12.6H21V21l-9.5-1.3z"/></svg>
@@ -55,6 +55,7 @@
            </a>
             <a class="btn ghost big" href="/download#how">How it works</a>
           </div>
+          <div class="ver-pills"><span class="ver-pill"><i></i>1.21.11 <em>Modern</em></span><span class="ver-pill pvp"><i></i>1.8.9 <em>PvP</em></span></div>
           <p class="fine"><span data-version>Launcher</span> for Windows 10 and 11. No Java or Minecraft install needed.</p>
           <p class="live-pill" id="live-pill" hidden><i></i><span></span></p>
         </div>
@@ -79,8 +80,17 @@
       </div>
     </section>
 
+    <!-- ============================================================ numbers -->
+    <section class="stats" aria-label="Com Client in numbers">
+      <div class="stat"><b data-count="60" data-suffix="+">60+</b><span>modules</span></div>
+      <div class="stat"><b data-count="200" data-suffix="+">200+</b><span>cosmetics</span></div>
+      <div class="stat"><b data-count="53">53</b><span>pets</span></div>
+      <div class="stat"><b data-count="2">2</b><span>versions: 1.21.11 and 1.8.9</span></div>
+      <div class="stat" id="stat-players" hidden><b data-count="0">0</b><span>players</span></div>
+    </section>
+
     <!-- ============================================================ features (bento) -->
-    <section id="features" class="section">
+    <section id="features" class="section glow-violet">
       <div class="sec-head left">
         <h2>Everything you want.<br>Nothing you don't.</h2>
         <p>Visual and quality-of-life modules only. No cheats, so it's safe on every server.</p>
@@ -100,6 +110,7 @@
             <p>Every Mojang cape, wings, halos, hats and auras. Free, in any colour.</p>
           </div>
           <figure class="live3d" id="live3d">
+            <div class="sk-3d" aria-hidden="true"></div>
             <canvas aria-label="A 3D player trying on Com Client cosmetics"></canvas>
             <figcaption id="live3d-name">Live preview</figcaption>
           </figure>
@@ -139,8 +150,30 @@
       </div>
     </section>
 
+    <!-- ============================================================ versions -->
+    <section id="versions" class="section glow-pink">
+      <div class="sec-head">
+        <h2>Two versions. One client.</h2>
+        <p>Pick the Minecraft you like in the launcher: each profile runs its own version, with its own mods.</p>
+      </div>
+      <div class="versions">
+        <article class="ver-card">
+          <span class="ver-tag">Modern</span>
+          <h3>1.21.11</h3>
+          <p>The newest Minecraft on Fabric with Sodium and Lithium. Every module, the glass UI, custom sky, emotes, shield skins and the full Social tab.</p>
+          <ul class="ver-list"><li>All 60+ modules</li><li>Shield skins and emotes</li><li>Modrinth mods, packs and shaders</li></ul>
+        </article>
+        <article class="ver-card pvp">
+          <span class="ver-tag">PvP</span>
+          <h3>1.8.9</h3>
+          <p>Classic 1.8 combat with no attack cooldown, for PvP servers. Com Client on Legacy Fabric with your cosmetics, HUD and friends.</p>
+          <ul class="ver-list"><li>Old combat, high FPS</li><li>Wings, pets, hats and capes</li><li>Legacy Fabric mods</li></ul>
+        </article>
+      </div>
+    </section>
+
     <!-- ============================================================ launcher -->
-    <section id="launcher" class="section">
+    <section id="launcher" class="section glow-blue">
       <div class="sec-head">
         <h2>One launcher. Zero setup.</h2>
         <p>It installs Minecraft, Fabric, Java and Com Client by itself and keeps them up to date.</p>
@@ -163,7 +196,7 @@
     </section>
 
     <!-- ============================================================ community -->
-    <section id="community" class="section">
+    <section id="community" class="section glow-green">
       <div class="sec-head">
         <h2>Every player gets a page</h2>
         <p>Your level, play time, badges, PvP tiers and cosmetics on <b>comclient.xyz/u/yourname</b>. Make it private any time in game.</p>
@@ -171,7 +204,7 @@
       <div class="community">
         <div class="glass top-week">
           <h3>Most played this week</h3>
-          <div id="top-week"><p class="loading">Loading…</p></div>
+          <div id="top-week" aria-busy="true"><div class="sk-row"><i></i><i></i><i></i></div><div class="sk-row"><i></i><i></i><i></i></div><div class="sk-row"><i></i><i></i><i></i></div><div class="sk-row"><i></i><i></i><i></i></div><div class="sk-row"><i></i><i></i><i></i></div></div>
           <a class="more" href="/players">All leaderboards</a>
         </div>
         <div class="glass find-box">
@@ -198,12 +231,12 @@
     </section>
 
     <!-- ============================================================ news -->
-    <section id="news" class="section">
+    <section id="news" class="section glow-violet">
       <div class="sec-head">
         <h2>What's happening</h2>
         <p>The same news you see in the launcher and in game.</p>
       </div>
-      <div class="news" id="news-list"><p class="loading">Loading…</p></div>
+      <div class="news" id="news-list" aria-busy="true"><div class="sk-card glass"><i></i><i></i><i></i><i></i></div><div class="sk-card glass"><i></i><i></i><i></i><i></i></div><div class="sk-card glass"><i></i><i></i><i></i><i></i></div></div>
     </section>
 
     <!-- ============================================================ faq -->
@@ -211,12 +244,14 @@
       <div class="sec-head">
         <h2>Good to know</h2>
       </div>
+      <div class="faq-grid">
       <details class="glass"><summary>Is Com Client free?</summary><p>Yes. The client, the launcher and the cosmetics are free.</p></details>
       <details class="glass"><summary>Can I get banned for using it?</summary><p>Com Client only has visual and quality-of-life modules: no cheats, no unfair advantages. Some servers have their own rules about client mods, so check the rules of the server you play on.</p></details>
-      <details class="glass"><summary>Which Minecraft version?</summary><p>Minecraft Java Edition 1.21.11 with Fabric. You need a Minecraft Java account (Microsoft sign-in).</p></details>
+      <details class="glass"><summary>Which Minecraft version?</summary><p>Minecraft Java Edition 1.21.11 (Fabric) and 1.8.9 for PvP (Legacy Fabric). Pick the version per profile in the launcher. You need a Minecraft Java account (Microsoft sign-in).</p></details>
       <details class="glass"><summary>Do I need to install Java or Fabric?</summary><p>No. The launcher downloads Minecraft, Java, Fabric and Com Client by itself and keeps them up to date.</p></details>
       <details class="glass"><summary>How do I get my profile page?</summary><p>Play with Com Client once: your page is at comclient.xyz/u/ followed by your Minecraft name (or your Com ID). Add a bio, photo, song and socials in game under Profile, or set it to friends only.</p></details>
       <details class="glass"><summary>Can I use my own mods?</summary><p>Yes. Every profile has its own mods folder, and the launcher has a Modrinth browser for mods, resource packs, shaders and whole modpacks.</p></details>
+      </div>
     </section>
 
     <!-- ============================================================ download -->
@@ -233,9 +268,15 @@
   </main>
 
   <footer class="footer">
-    <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
-    <nav><a href="/players">Players</a><a href="/help">Help</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/download">Download</a></nav>
-    <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+    <div class="f-brand">
+      <a class="brand" href="/"><img src="/assets/logo.png" alt=""><span>Com Client</span></a>
+      <p>The beautiful Minecraft client for 1.21.11 and 1.8.9 PvP. Free, with its own launcher.</p>
+      <a class="btn primary small" href="/download">Download for Windows</a>
+    </div>
+    <nav class="f-col" aria-label="Client"><b>Client</b><a href="/#features">Features</a><a href="/#versions">Versions</a><a href="/cosmetics">Cosmetics</a><a href="/download">Download</a></nav>
+    <nav class="f-col" aria-label="Community"><b>Community</b><a href="/players">Players</a><a href="/#news">News</a><a href="/changelog">Changelog</a></nav>
+    <nav class="f-col" aria-label="Help"><b>Help</b><a href="/help">Help &amp; FAQ</a><a href="/download#how">Install steps</a><a href="https://github.com/troxytele/com-client-launcher/releases" rel="noopener">All releases</a></nav>
+    <div class="f-legal"><p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p><p>© 2026 Com Client</p></div>
   </footer>
 </body>
 </html>

@@ -6,7 +6,7 @@
   const look = { cape: "none", wings: "heaven", halo: "ring", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "sparkles", auraColor: 0xa77bff, pet: "none", nametag: "none", icon: "none" };
   const FIELD = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", pets: "pet", nametags: "nametag", icons: "icon" };
   // wing types (WingsFeature.Shape): which design is which
-  const wingType = (id) => (["monarch", "morpho", "celestial"].includes(id) ? "Butterfly" : id === "pixie" ? "Fairy"
+  const wingType = (id) => (["monarch", "morpho", "celestial"].includes(id) ? "Butterfly" : id === "pixie" || id.endsWith("_fairy") ? "Fairy"
     : ["dragon", "devil", "blue_dragon", "bat", "emerald"].includes(id) ? "Dragon" : "Feathered");
   let skinName = "Steve"; // the name shown with a name tag style
   const COLOR = { halos: "haloColor", hats: "hatColor", auras: "auraColor" };
@@ -70,6 +70,7 @@
     document.querySelector(".gallery").before(b);
   }
   let kind = "capes";
+  let newOnly = false; // the "New" filter
   let viewer = null;
 
   // Com Client's own capes come with the website (an animated strip; the first frame is the picture)
@@ -140,7 +141,6 @@
   function showPet() {
     // the pet itself is in the 3D preview now
   }
-  const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat"]);
   function iconImg(id, cls, dir = "icons") {
     const img = el("img", cls);
     img.src = `/assets/cosmetics/${dir}/${id}.png`;
@@ -209,7 +209,9 @@
     none.addEventListener("click", () => pick("none"));
     box.append(none);
     for (const item of catalog[kind]) {
-      const b = el("button", "g-item" + (look[field] === item.id ? " on" : ""));
+      if (newOnly && !item.new) continue;
+      const b = el("button", "g-item" + (look[field] === item.id ? " on" : "") + (item.new ? " is-new" : ""));
+      if (item.new) b.append(el("span", "g-new", "New"));
       b.title = item.name;
       const art = kind === "capes" ? capeArt(item.id) : kind === "wings" ? wingArt(item.id) : kind === "pets" ? petArt(item.id)
         : kind === "hats" ? iconImg(item.id, "art voxel", "hats")
@@ -225,7 +227,7 @@
     const cbox = $("g-colors");
     cbox.textContent = "";
     const cf = COLOR[kind];
-    cbox.hidden = !cf || (kind === "hats" && (["crown", "santa", "antlers"].includes(look.hat) || VOXEL_HATS.has(look.hat))) || (kind === "auras" && look.aura === "snow") || (kind === "halos" && look.halo === "wreath");
+    cbox.hidden = !cf || (kind === "hats" && !["cat_ears", "dog_ears"].includes(look.hat)) || (kind === "auras" && look.aura === "snow") || (kind === "halos" && look.halo === "wreath");
     if (cf) {
       for (const c of kind === "hats" ? EAR_COLORS : SWATCHES) {
         const s = el("button", "swatch" + (look[cf] === c ? " on" : ""));
@@ -261,6 +263,8 @@
     t.addEventListener("click", () => {
       document.querySelectorAll(".g-tabs .tab").forEach((x) => x.classList.toggle("on", x === t));
       kind = t.dataset.kind;
+      newOnly = false;
+      syncNewFilter();
       render();
     }),
   );
@@ -337,6 +341,36 @@
     box.hidden = false;
   }).catch(() => {});
 
+  // ---- what's new: a dot on tabs with new items, a "New only" filter, and the strip of new things at the top
+  const newBtn = $("g-new-only");
+  function syncNewFilter() {
+    const has = catalog && catalog[kind].some((i) => i.new);
+    newBtn.hidden = !has;
+    newBtn.classList.toggle("on", newOnly);
+    newBtn.setAttribute("aria-pressed", String(newOnly));
+  }
+  newBtn.addEventListener("click", () => {
+    newOnly = !newOnly;
+    syncNewFilter();
+    render();
+  });
+  function markNewTabs() {
+    document.querySelectorAll(".g-tabs .tab").forEach((t) => t.classList.toggle("has-new", catalog[t.dataset.kind]?.some((i) => i.new)));
+    syncNewFilter();
+    const count = (k) => catalog[k].filter((i) => i.new).length;
+    document.querySelectorAll("[data-new-count]").forEach((n) => { n.textContent = String(count(n.dataset.newCount)); });
+  }
+  document.querySelectorAll(".wn-card[data-go]").forEach((c) =>
+    c.addEventListener("click", () => {
+      document.querySelector(`.g-tabs .tab[data-kind="${c.dataset.go}"]`)?.click();
+      newOnly = true;
+      syncNewFilter();
+      if (catalog) render();
+      if (c.dataset.pick && catalog) pick(c.dataset.pick);
+      document.querySelector(".gallery").scrollIntoView({ behavior: "smooth", block: "start" });
+    }),
+  );
+
   fetch("/assets/cosmetics/catalog.json")
     .then((r) => r.json())
     .then((c) => {
@@ -350,6 +384,7 @@
         viewer.setSkin(window.CC.STEVE, false);
       }
       look.wings = "none";
+      markNewTabs();
       apply();
       render();
     });

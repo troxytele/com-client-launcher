@@ -31,10 +31,17 @@
   const filtered = () => !!(fq.value.trim() || frole.value || ftier.value !== "0");
 
   let seq = 0;
-  function show() {
-    const mine = ++seq;
+  const skeleton = () => {
     board.textContent = "";
-    board.append(el("p", "loading", "Loading…"));
+    for (let k = 0; k < 8; k++) {
+      const r = el("div", "sk-row");
+      r.append(el("i"), el("i"), el("i"));
+      board.append(r);
+    }
+  };
+  function show(tries = 0) {
+    const mine = ++seq;
+    skeleton();
     const qs = new URLSearchParams({ by });
     if (fq.value.trim()) qs.set("q", fq.value.trim());
     if (frole.value) qs.set("role", frole.value);
@@ -77,8 +84,18 @@
       })
       .catch((e) => {
         if (mine !== seq) return;
+        // the free server sleeps and takes ~30 s to wake up: keep the skeleton and try a few more times
+        if (tries < 3) {
+          setTimeout(() => { if (mine === seq) show(tries + 1); }, 8000);
+          return;
+        }
         board.textContent = "";
-        board.append(el("p", "loading", "Couldn't load the leaderboard: " + e.message + ". The server may be waking up, try again in a moment."));
+        const box = el("div", "top-empty");
+        const again = el("button", "btn ghost small", "Try again");
+        again.type = "button";
+        again.addEventListener("click", () => show(0));
+        box.append(el("p", "loading", "Couldn't load the leaderboard right now (" + e.message + ")."), again);
+        board.append(box);
       });
   }
 
@@ -99,8 +116,8 @@
     clearTimeout(typing);
     typing = setTimeout(show, 300);
   });
-  frole.addEventListener("change", show);
-  ftier.addEventListener("change", show);
+  frole.addEventListener("change", () => show());
+  ftier.addEventListener("change", () => show());
   show();
 
   // top inviters this month

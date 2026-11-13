@@ -12,12 +12,12 @@
   <meta property="og:description" content="Every Com Client cape, wing, halo, hat and aura in 3D.">
   <meta property="og:image" content="https://comclient.xyz/assets/og.png">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
-  <link rel="stylesheet" href="/assets/style.css?v=45e63dd4">
-  <link rel="stylesheet" href="/assets/pages.css?v=3f952299">
-  <script src="/assets/main.js?v=73ad29da" defer></script>
+  <link rel="stylesheet" href="/assets/style.css?v=4e1b9209">
+  <link rel="stylesheet" href="/assets/pages.css?v=81df2222">
+  <script src="/assets/main.js?v=dc322aba" defer></script>
   <script src="/assets/site.js?v=77ec6239" defer></script>
-  <script src="/assets/viewer.js?v=6da4147f" defer></script>
-  <script src="/assets/cosmetics.js?v=1d9dd710" defer></script>
+  <script src="/assets/viewer.js?v=be694495" defer></script>
+  <script src="/assets/cosmetics.js?v=bf29d1d1" defer></script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
@@ -39,7 +39,34 @@
   <main>
     <section class="page-head">
       <h2>Try everything on</h2>
-      <p>Every cape, wing, halo, hat, aura, pet, name tag and name icon in Com Client, and every Com Client player sees what you wear. Unlock them with points you earn by playing, daily streaks, the advent calendar and inviting friends. Pick them in the launcher's Locker or in game.</p>
+      <p>Every cape, wing, halo, hat, aura, pet, name tag and name icon in Com Client, on 1.21.11 and 1.8.9, and every Com Client player sees what you wear. Unlock them with points you earn by playing, daily streaks, the advent calendar and inviting friends. Pick them in the launcher's Locker or in game.</p>
+    </section>
+    <section class="whats-new" aria-label="New cosmetics">
+      <button class="wn-card wn-pets" type="button" data-go="pets">
+        <span class="wn-tag">New</span>
+        <div class="wn-art"><img src="/assets/cosmetics/pets/hedgehog.png" alt="" loading="lazy"><img src="/assets/cosmetics/pets/phoenix.png" alt="" loading="lazy"><img src="/assets/cosmetics/pets/shiba.png" alt="" loading="lazy"></div>
+        <b><span data-new-count="pets">27</span> new pets</b><small>Phoenix, Shiba, Hedgehog, Mini Warden and more</small>
+      </button>
+      <button class="wn-card" type="button" data-go="hats">
+        <span class="wn-tag">New</span>
+        <div class="wn-art"><img src="/assets/cosmetics/hats/bandana_fire_red.png" alt="" loading="lazy"><img src="/assets/cosmetics/hats/double_bow_pink.png" alt="" loading="lazy"><img src="/assets/cosmetics/hats/koala_hat.png" alt="" loading="lazy"></div>
+        <b>Bandanas, bows &amp; headbands</b><small><span data-new-count="hats">44</span> animated and colour styles</small>
+      </button>
+      <button class="wn-card" type="button" data-go="wings" data-pick="rose_fairy">
+        <span class="wn-tag">New</span>
+        <div class="wn-art one"><img src="/assets/cosmetics/wings_card/rose_fairy.png" alt="" loading="lazy"></div>
+        <b>Fairy wings</b><small>Rose, Lilac and Mint</small>
+      </button>
+      <button class="wn-card" type="button" data-go="capes" data-pick="cc_crystal_pvp">
+        <span class="wn-tag">New</span>
+        <div class="wn-art one"><i class="wn-cape" aria-hidden="true"></i></div>
+        <b>Crystal PvP cape</b><small>A spinning End crystal, animated</small>
+      </button>
+      <div class="wn-card static">
+        <span class="wn-tag soft">In game</span>
+        <div class="wn-art"><img src="/assets/cosmetics/shields/dragon.webp" alt="" loading="lazy"><img src="/assets/cosmetics/shields/galaxy.webp" alt="" loading="lazy"><img src="/assets/cosmetics/shields/lava.webp" alt="" loading="lazy"></div>
+        <b>Shield skins</b><small>14 animated shields, in the Locker on 1.21.11</small>
+      </div>
     </section>
     <section class="gallery">
       <div class="g-stage glass">
@@ -62,6 +89,7 @@
           <button class="tab" data-kind="nametags">Name tags</button>
           <button class="tab" data-kind="icons">Icons</button>
         </div>
+        <div class="g-filter"><button class="g-new-only" id="g-new-only" type="button" aria-pressed="false" hidden>✦ New only</button></div>
         <div class="g-colors" id="g-colors" hidden></div>
         <div class="g-items" id="g-items"></div>
       </div>
@@ -83,9 +111,15 @@
   </main>
 
   <footer class="footer">
-    <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
-    <nav><a href="/players">Players</a><a href="/help">Help</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/download">Download</a></nav>
-    <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+    <div class="f-brand">
+      <a class="brand" href="/"><img src="/assets/logo.png" alt=""><span>Com Client</span></a>
+      <p>The beautiful Minecraft client for 1.21.11 and 1.8.9 PvP. Free, with its own launcher.</p>
+      <a class="btn primary small" href="/download">Download for Windows</a>
+    </div>
+    <nav class="f-col" aria-label="Client"><b>Client</b><a href="/#features">Features</a><a href="/#versions">Versions</a><a href="/cosmetics">Cosmetics</a><a href="/download">Download</a></nav>
+    <nav class="f-col" aria-label="Community"><b>Community</b><a href="/players">Players</a><a href="/#news">News</a><a href="/changelog">Changelog</a></nav>
+    <nav class="f-col" aria-label="Help"><b>Help</b><a href="/help">Help &amp; FAQ</a><a href="/download#how">Install steps</a><a href="https://github.com/troxytele/com-client-launcher/releases" rel="noopener">All releases</a></nav>
+    <div class="f-legal"><p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p><p>© 2026 Com Client</p></div>
   </footer>
 </body>
 </html>

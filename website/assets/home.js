@@ -8,6 +8,7 @@
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((items) => {
         list.textContent = "";
+        list.removeAttribute("aria-busy");
         for (const n of items.slice(0, 3)) {
           const a = el("article", "glass");
           const meta = el("div", "meta");
@@ -31,10 +32,11 @@
   }
   // ---- most played this week
   const top = document.getElementById("top-week");
-  if (top) {
+  const loadTop = (tries) => {
     get("/public/leaderboard?by=week")
       .then((d) => {
         top.textContent = "";
+        top.removeAttribute("aria-busy");
         const rows = d.rows.filter((r) => r.week_seconds > 0).slice(0, 5);
         if (!rows.length) {
           top.append(el("p", "loading", "Nobody played yet this week. Be the first!"));
@@ -57,10 +59,31 @@
         });
       })
       .catch(() => {
+        // the free server sleeps: it takes ~30 s to wake up, so try a few more times before giving up
+        if (tries < 3) {
+          setTimeout(() => loadTop(tries + 1), 8000);
+          return;
+        }
         top.textContent = "";
-        top.append(el("p", "loading", "The leaderboard is waking up, try again in a moment."));
+        top.removeAttribute("aria-busy");
+        const box = el("div", "top-empty");
+        const again = el("button", "btn ghost small", "Try again");
+        again.type = "button";
+        again.addEventListener("click", () => {
+          top.textContent = "";
+          top.setAttribute("aria-busy", "true");
+          for (let k = 0; k < 5; k++) {
+            const r = el("div", "sk-row");
+            r.append(el("i"), el("i"), el("i"));
+            top.append(r);
+          }
+          loadTop(0);
+        });
+        box.append(el("p", "loading", "The leaderboard couldn't load right now."), again);
+        top.append(box);
       });
-  }
+  };
+  if (top) loadTop(0);
   const find = document.getElementById("home-find");
   if (find) {
     find.addEventListener("submit", (e) => {
@@ -72,6 +95,17 @@
 
   // ---- a 3D player that keeps trying on different cosmetics
   const live = document.getElementById("live3d");
+  const fallback3d = () => {
+    if (!live || live.classList.contains("fallback")) return;
+    live.classList.add("fallback");
+    live.querySelector(".sk-3d")?.remove();
+    const img = el("img", "live3d-still");
+    img.src = "/assets/cosmetics/wings_card/heaven.png";
+    img.alt = "Heaven wings";
+    live.prepend(img);
+    document.getElementById("live3d-name").textContent = "Heaven wings";
+  };
+  if (live && !window.CCViewer) fallback3d();
   if (live && window.CCViewer) {
     const canvas = live.querySelector("canvas");
     let viewer = null;
@@ -90,7 +124,13 @@
     };
     const start = () => {
       if (viewer) return;
-      viewer = window.CCViewer.create(canvas, { width: live.clientWidth, height: live.clientHeight });
+      try {
+        viewer = window.CCViewer.create(canvas, { width: live.clientWidth, height: live.clientHeight });
+      } catch {
+        fallback3d(); // no WebGL: a still picture instead of an empty box
+        return;
+      }
+      setTimeout(() => live.classList.add("ready"), 600);
       new ResizeObserver(() => viewer.setSize(live.clientWidth, live.clientHeight)).observe(live);
       viewer.setSkin(window.CC.STEVE, false);
       show();
@@ -114,6 +154,14 @@
     get("/public/stats")
       .then((s) => {
         if (!s.players) return;
+        const st = document.getElementById("stat-players");
+        if (st) {
+          const b = st.querySelector("b");
+          b.dataset.count = String(s.players);
+          st.hidden = false;
+          st.parentElement.classList.add("five");
+          if (window.CCCount) window.CCCount(b);
+        }
         pill.querySelector("span").textContent = s.online > 0 ? `${s.online.toLocaleString()} playing right now` : `${s.players.toLocaleString()} players on Com Client`;
         if (!s.online) pill.querySelector("i").hidden = true;
         pill.hidden = false;

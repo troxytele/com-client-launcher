@@ -171,3 +171,85 @@
       list.append(p);
     });
 })();
+
+// ---------------------------------------------------------------- motion: fade in on scroll, tilt on hover, count up
+(() => {
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  // sections and cards fade up as they scroll in (a little after each other inside a group)
+  const REVEAL = ".sec-head, .tile, .stat, .ver-card, .lshot, .launcher-list, .community > *, .news > *, .faq-grid details, .download, .steps li, .dl-info > *, .wn-card, .page-head, .help-grid > *";
+  const items = [...document.querySelectorAll(REVEAL)].filter((n) => !n.closest(".hero"));
+  if (!still && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add("in");
+        io.unobserve(e.target);
+      }
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    items.forEach((n) => {
+      // anything already on screen when the page opens just shows
+      const r = n.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.92) return;
+      const sibs = n.parentElement ? [...n.parentElement.children].filter((c) => c.matches(REVEAL)) : [];
+      n.style.setProperty("--d", Math.min(sibs.indexOf(n), 6) * 70 + "ms");
+      n.classList.add("reveal");
+      io.observe(n);
+    });
+  }
+
+  // cards lean toward the pointer, with a soft light where it is
+  if (fine && !still) {
+    document.querySelectorAll(".tile, .ver-card, .news article, .steps li, .wn-card:not(.static), .stat, .dl-card").forEach((card) => {
+      card.classList.add("tilt");
+      let raf = 0;
+      card.addEventListener("pointermove", (e) => {
+        if (e.target.closest(".cg, canvas, input")) return; // the live Click GUI and 3D previews stay still
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          const r = card.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+          const max = r.width > 600 ? 2 : 5; // big tiles barely move
+          card.style.setProperty("--rx", ((0.5 - y) * max).toFixed(2) + "deg");
+          card.style.setProperty("--ry", ((x - 0.5) * max).toFixed(2) + "deg");
+          card.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+          card.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+          card.classList.add("lit");
+        });
+      });
+      card.addEventListener("pointerleave", () => {
+        cancelAnimationFrame(raf);
+        card.style.setProperty("--rx", "0deg");
+        card.style.setProperty("--ry", "0deg");
+        card.classList.remove("lit");
+      });
+    });
+  }
+
+  // numbers count up the first time they're seen
+  const count = (b) => {
+    const to = Number(b.dataset.count) || 0, suffix = b.dataset.suffix || "";
+    if (still || !to) { b.textContent = to.toLocaleString() + suffix; return; }
+    const t0 = performance.now(), dur = 1400;
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      b.textContent = Math.round(to * e).toLocaleString() + (p === 1 ? suffix : "");
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  window.CCCount = count;
+  const nums = document.querySelectorAll("[data-count]");
+  if (nums.length && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.dataset.counted = "1";
+        count(e.target);
+        io.unobserve(e.target);
+      }
+    }, { threshold: 0.6 });
+    nums.forEach((n) => io.observe(n));
+  }
+})();

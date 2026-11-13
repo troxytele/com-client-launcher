@@ -12,9 +12,9 @@
   <meta property="og:description" content="Download the free Com Client launcher for Windows: what you need, what it installs, and how to get playing.">
   <meta property="og:image" content="https://comclient.xyz/assets/og.png">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
-  <link rel="stylesheet" href="/assets/style.css?v=45e63dd4">
-  <link rel="stylesheet" href="/assets/pages.css?v=3f952299">
-  <script src="/assets/main.js?v=73ad29da" defer></script>
+  <link rel="stylesheet" href="/assets/style.css?v=4e1b9209">
+  <link rel="stylesheet" href="/assets/pages.css?v=81df2222">
+  <script src="/assets/main.js?v=dc322aba" defer></script>
   <script src="/assets/site.js?v=77ec6239" defer></script>
 </head>
 <body>
@@ -38,7 +38,7 @@
     <section class="dl-hero">
       <div>
         <h1 class="dl-title">Download<br>Com Client</h1>
-        <p class="lead">One launcher installs Minecraft 1.21.11, Java, Fabric and Com Client, and keeps all of it up to date. Free.</p>
+        <p class="lead">One launcher installs Minecraft, Java, Fabric and Com Client, and keeps all of it up to date. Play 1.21.11 or 1.8.9 PvP. Free.</p>
       </div>
       <div class="dl-card">
         <img src="/assets/logo.png" alt="" width="56" height="56">
@@ -68,7 +68,7 @@
         </li>
         <li>
           <h3>Press Play</h3>
-          <p>The first start downloads Minecraft, Java and the mods, a few hundred MB. Later starts are quick.</p>
+          <p>The first start downloads Minecraft, Java and the mods, a few hundred MB. Later starts are quick. For 1.8.9 PvP, add a profile under <b>Profiles</b> and pick 1.8.9.</p>
         </li>
       </ol>
     </section>
@@ -80,7 +80,7 @@
           <div><dt>System</dt><dd>Windows 10 or 11, 64-bit</dd></div>
           <div><dt>Account</dt><dd>Minecraft Java Edition (Microsoft sign-in)</dd></div>
           <div><dt>Memory</dt><dd>4 GB RAM, 8 GB or more is smoother</dd></div>
-          <div><dt>Graphics</dt><dd>Any graphics card that runs Minecraft 1.21</dd></div>
+          <div><dt>Graphics</dt><dd>Any graphics card that runs Minecraft 1.21 (1.8.9 runs on almost anything)</dd></div>
           <div><dt>Disk</dt><dd>About 1.5 GB free</dd></div>
           <div><dt>Internet</dt><dd>For the first start, sign-in and friends</dd></div>
         </dl>
@@ -88,7 +88,7 @@
       <div class="dl-col">
         <h2>What it installs</h2>
         <ul class="ticks">
-          <li>Minecraft 1.21.11 and the right Java, from Mojang</li>
+          <li>Minecraft 1.21.11 or 1.8.9 and the right Java, from Mojang</li>
           <li>Fabric, Sodium, Lithium and the other speed mods</li>
           <li>Com Client, updated by itself</li>
           <li>Nothing else: no toolbars, no ads, no background services</li>
@@ -103,9 +103,15 @@
   </main>
 
   <footer class="footer">
-    <div class="brand"><img src="/assets/logo.png" alt=""><span>Com Client</span></div>
-    <nav><a href="/players">Players</a><a href="/help">Help</a><a href="/cosmetics">Cosmetics</a><a href="/changelog">Changelog</a><a href="/download">Download</a></nav>
-    <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+    <div class="f-brand">
+      <a class="brand" href="/"><img src="/assets/logo.png" alt=""><span>Com Client</span></a>
+      <p>The beautiful Minecraft client for 1.21.11 and 1.8.9 PvP. Free, with its own launcher.</p>
+      <a class="btn primary small" href="/download">Download for Windows</a>
+    </div>
+    <nav class="f-col" aria-label="Client"><b>Client</b><a href="/#features">Features</a><a href="/#versions">Versions</a><a href="/cosmetics">Cosmetics</a><a href="/download">Download</a></nav>
+    <nav class="f-col" aria-label="Community"><b>Community</b><a href="/players">Players</a><a href="/#news">News</a><a href="/changelog">Changelog</a></nav>
+    <nav class="f-col" aria-label="Help"><b>Help</b><a href="/help">Help &amp; FAQ</a><a href="/download#how">Install steps</a><a href="https://github.com/troxytele/com-client-launcher/releases" rel="noopener">All releases</a></nav>
+    <div class="f-legal"><p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p><p>© 2026 Com Client</p></div>
   </footer>
 </body>
 </html>
