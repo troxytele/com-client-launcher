@@ -777,7 +777,8 @@
 "Screenshot editor": "Éditeur de captures",
 "Edit a screenshot in the Gallery: crop it, draw arrows, boxes and text, blur names or coordinates, then save a copy or share it.": "Modifie une capture dans la Galerie : rogne-la, dessine des flèches, des cadres et du texte, floute des noms ou des coordonnées, puis enregistre une copie ou partage-la.",
 "e.g. Notch": "ex. Notch",
-"https://modrinth.com/modpack/… or C:\\Users\\…\\pack.mrpack": "https://modrinth.com/modpack/… ou C:\\Users\\…\\pack.mrpack"
+"https://modrinth.com/modpack/… or C:\\Users\\…\\pack.mrpack": "https://modrinth.com/modpack/… ou C:\\Users\\…\\pack.mrpack",
+"Name icons": "Icônes de nom"
 },
 "templates": {
 "\"{0}\" is on your desktop now: double-click it to play": "« {0} » est maintenant sur ton bureau : double-clique pour jouer",
@@ -803,7 +804,7 @@
 "Outfit {0}": "Tenue {0}",
 "Removed {0} broken files. They download again when you play.": "{0} fichiers cassés retirés. Ils seront retéléchargés quand tu joueras.",
 "Report sent. {0} is blocked.": "Signalement envoyé. {0} est bloqué.",
-"Search {0}": "Rechercher {0}",
+"Search {0}": "Rechercher : {0}",
 "Send to {0} · {1} points": "Envoyer à {0} · {1} points",
 "Show the mods of {0}": "Afficher les mods de {0}",
 "Start {0} too (another Minecraft)": "Lancer aussi {0} (un autre Minecraft)",
@@ -863,6 +864,7 @@
 "{0} need the mod \"{1}\", which isn't installed.": "{0} ont besoin du mod « {1} », qui n'est pas installé.",
 "Install {0}": "Installer {0}",
 "{0} kB": "{0} ko",
-"played {0}": "joué {0}"
+"played {0}": "joué {0}",
+"Message {0}": "Message à {0}"
 }
 }

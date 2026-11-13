@@ -335,7 +335,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
             {view === "shop" && (tab === "capes" || tab === "wings" || tab === "icons") && (
               <div className="search small">
                 <Icon name="search" size={15} />
-                <input placeholder={`Search ${tab}`} value={query} onChange={(e) => setQuery(e.target.value)} />
+                <input placeholder={`Search ${TABS.find((t) => t.id === tab)?.label ?? tab}`} value={query} onChange={(e) => setQuery(e.target.value)} />
               </div>
             )}
           </div>

@@ -777,7 +777,8 @@
 "Screenshot editor": "Screenshot-Editor",
 "Edit a screenshot in the Gallery: crop it, draw arrows, boxes and text, blur names or coordinates, then save a copy or share it.": "Bearbeite einen Screenshot in der Galerie: zuschneiden, Pfeile, Rahmen und Text zeichnen, Namen oder Koordinaten verpixeln, dann eine Kopie speichern oder teilen.",
 "e.g. Notch": "z. B. Notch",
-"https://modrinth.com/modpack/… or C:\\Users\\…\\pack.mrpack": "https://modrinth.com/modpack/… oder C:\\Users\\…\\pack.mrpack"
+"https://modrinth.com/modpack/… or C:\\Users\\…\\pack.mrpack": "https://modrinth.com/modpack/… oder C:\\Users\\…\\pack.mrpack",
+"Name icons": "Namens-Icons"
 },
 "templates": {
 "\"{0}\" is on your desktop now: double-click it to play": "„{0}“ ist jetzt auf deinem Desktop: Doppelklick zum Spielen",
@@ -863,6 +864,7 @@
 "{0} need the mod \"{1}\", which isn't installed.": "{0} brauchen die Mod „{1}“, die nicht installiert ist.",
 "Install {0}": "{0} installieren",
 "{0} kB": "{0} kB",
-"played {0}": "gespielt {0}"
+"played {0}": "gespielt {0}",
+"Message {0}": "Nachricht an {0}"
 }
 }
