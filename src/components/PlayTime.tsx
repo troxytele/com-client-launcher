@@ -1,3 +1,4 @@
+import { getLang } from "../i18n";
 import { useEffect, useMemo, useState } from "react";
 import { api, LogEntry, Profile } from "../api";
 
@@ -61,8 +62,8 @@ export default function PlayTime({ profiles, version }: { profiles: Profile[]; v
         const d = new Date(today);
         d.setDate(today.getDate() - i);
         out.push({
-          label: i === 0 ? "Today" : d.toLocaleDateString([], { weekday: "short" }),
-          title: d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" }),
+          label: i === 0 ? "Today" : d.toLocaleDateString(getLang(), { weekday: "short" }),
+          title: d.toLocaleDateString(getLang(), { weekday: "long", day: "numeric", month: "short" }),
           secs: days.get(d.getTime()) || 0,
           now: i === 0,
         });
@@ -79,8 +80,8 @@ export default function PlayTime({ profiles, version }: { profiles: Profile[]; v
           secs += days.get(d.getTime()) || 0;
         }
         out.push({
-          label: i === 0 ? "This wk" : from.toLocaleDateString([], { day: "numeric", month: "short" }),
-          title: "Week of " + from.toLocaleDateString([], { day: "numeric", month: "long" }),
+          label: i === 0 ? "This wk" : from.toLocaleDateString(getLang(), { day: "numeric", month: "short" }),
+          title: "Week of " + from.toLocaleDateString(getLang(), { day: "numeric", month: "long" }),
           secs,
           now: i === 0,
         });

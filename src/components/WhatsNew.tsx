@@ -6,6 +6,13 @@ import { Modal } from "./Ui";
 // Shown once after the launcher updated itself. Newest version first.
 export const CHANGELOG: { version: string; items: [string, string, string][] }[] = [
   {
+    version: "0.6.45",
+    items: [
+      ["globe", "Deutsch, Español, Français", "The launcher speaks German, Spanish and French now. Pick your language in Settings → Appearance."],
+      ["edit", "Screenshot editor", "Edit a screenshot in the Gallery: crop it, draw arrows, boxes and text, blur names or coordinates, then save a copy or share it."],
+    ],
+  },
+  {
     version: "0.6.44",
     items: [
       ["play", "Several games at once", "Play another profile (or another account) while one is running: each game shows in the launch bar with its own stop button."],

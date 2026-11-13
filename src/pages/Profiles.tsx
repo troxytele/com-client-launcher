@@ -1,3 +1,4 @@
+import { getLang } from "../i18n";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PlayTime from "../components/PlayTime";
 import { open, save } from "@tauri-apps/plugin-dialog";
@@ -439,7 +440,7 @@ export default function Profiles({
                 <div className="sessions">
                   {p.sessions.slice(0, 6).map((s, i) => (
                     <div key={i}>
-                      <span>{new Date(s.start * 1000).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                      <span>{new Date(s.start * 1000).toLocaleString(getLang(), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                       <span className="muted">{s.server || "Singleplayer / menu"}</span>
                       <b>{fmtTime(s.secs)}</b>
                     </div>
@@ -626,7 +627,7 @@ function Bars({ sessions }: { sessions: { start: number; secs: number }[] }) {
       const d = new Date(today.getTime() - i * 86400_000);
       const from = d.getTime() / 1000;
       const secs = sessions.filter((s) => s.start >= from && s.start < from + 86400).reduce((n, s) => n + s.secs, 0);
-      out.push({ label: d.toLocaleDateString([], { weekday: "narrow" }), secs });
+      out.push({ label: d.toLocaleDateString(getLang(), { weekday: "narrow" }), secs });
     }
     return out;
   }, [sessions]);

@@ -203,6 +203,8 @@ export const api = {
   clips: () => invoke<Shot[]>("clips_list"),
   galleryDelete: (path: string) => invoke<void>("gallery_delete", { path }),
   shotCopy: (path: string) => invoke<void>("shot_copy", { path }),
+  /** saves the screenshot editor's result next to the original; returns the new file */
+  shotSaveEdit: (path: string, png: string) => invoke<string>("shot_save_edit", { path, png }),
   shotShare: (path: string) => invoke<void>("shot_share", { path }),
   shotLink: (path: string) => invoke<string>("shot_link", { path }),
   serverGet: <T,>(path: string) => invoke<T>("server_get", { path }),

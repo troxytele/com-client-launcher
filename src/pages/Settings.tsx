@@ -10,12 +10,15 @@ import { getLook, isHex, Look, onLook, setLook, THEMES } from "../theme";
 import { getSounds, setSounds, sfx, SoundPrefs } from "../sounds";
 import { ImportProgress, ImportSource, ago } from "../api";
 import { listen } from "@tauri-apps/api/event";
+import { getLang, Lang, LANGS, onLang, setLang } from "../i18n";
 
 export default function Settings({ info, reload, running }: { info: Info; reload: () => void; running: boolean }) {
   const [s, setS] = useState<S>(info.settings);
   const [repairing, setRepairing] = useState(false);
   const [checking, setChecking] = useState(false);
   const [look, setLookState] = useState<Look>(getLook());
+  const [lang, setLangState] = useState<Lang>(getLang());
+  useEffect(() => onLang(setLangState), []);
   useEffect(() => onLook(setLookState), []);
 
   useEffect(() => setS(info.settings), [info.settings]);
@@ -80,6 +83,19 @@ export default function Settings({ info, reload, running }: { info: Info; reload
             </div>
           </div>
         )}
+        <div className="setting">
+          <div>
+            <b>Language</b>
+            <span>The launcher's language. Com Client's menus in game follow your Minecraft language.</span>
+          </div>
+          <div className="seg small lang-seg" translate="no">
+            {LANGS.map((l) => (
+              <button key={l.id} className={lang === l.id ? "on" : ""} onClick={() => setLang(l.id)}>
+                {l.name}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="setting">
           <div>
             <b>Moving background</b>

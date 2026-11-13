@@ -975,6 +975,13 @@ async fn shot_share(state: State<'_, AppState>, path: String) -> Res<()> {
     tokio::task::spawn_blocking(move || gallery::share(&paths, &path)).await.map_err(|e| e.to_string())?.map_err(err)
 }
 
+/// Saves the screenshot editor's result next to the original. Returns the new file's path.
+#[tauri::command]
+async fn shot_save_edit(state: State<'_, AppState>, path: String, png: String) -> Res<String> {
+    let paths = state.paths.clone();
+    tokio::task::spawn_blocking(move || gallery::save_edited(&paths, &path, &png)).await.map_err(|e| e.to_string())?.map_err(err)
+}
+
 /// Uploads a screenshot to the Com Client server: returns its comclient.xyz/s/<id> link.
 #[tauri::command]
 async fn shot_link(state: State<'_, AppState>, path: String) -> Res<String> {
@@ -1306,6 +1313,7 @@ pub fn run() {
             gallery_delete,
             shot_copy,
             shot_share,
+            shot_save_edit,
             shot_link,
             server_get,
             server_post,

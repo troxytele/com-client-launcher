@@ -171,6 +171,37 @@ pub fn allowed(paths: &Paths, path: &Path) -> bool {
         .any(|(_, _, dir)| dir.canonicalize().map(|d| file.starts_with(d)).unwrap_or(false))
 }
 
+/// Saves an edited screenshot (a PNG from the editor) next to the original as "<name>-edited.png" (or -edited-2 ...),
+/// so the original stays. Returns the new file's path.
+pub fn save_edited(paths: &Paths, original: &str, png_b64: &str) -> Result<String> {
+    use base64::Engine;
+    let orig = PathBuf::from(original);
+    if !allowed(paths, &orig) {
+        bail!("That file isn't in a screenshots folder");
+    }
+    let b64 = png_b64.split_once("base64,").map(|(_, b)| b).unwrap_or(png_b64);
+    let bytes = base64::engine::general_purpose::STANDARD.decode(b64.trim())?;
+    // it has to be a real picture (and not something else saved into the screenshots folder)
+    let img = image::load_from_memory_with_format(&bytes, image::ImageFormat::Png).map_err(|_| anyhow::anyhow!("The edited picture is broken"))?;
+    if img.width() == 0 || img.height() == 0 || img.width() > 16384 || img.height() > 16384 {
+        bail!("The edited picture is broken");
+    }
+    let dir = orig.parent().ok_or_else(|| anyhow::anyhow!("No folder"))?;
+    let stem = orig.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "screenshot".into());
+    let stem = stem.split("-edited").next().unwrap_or(&stem).to_string();
+    let mut n = 1;
+    let out = loop {
+        let name = if n == 1 { format!("{stem}-edited.png") } else { format!("{stem}-edited-{n}.png") };
+        let p = dir.join(name);
+        if !p.exists() {
+            break p;
+        }
+        n += 1;
+    };
+    std::fs::write(&out, &bytes)?;
+    Ok(native(&out))
+}
+
 pub fn delete(paths: &Paths, path: &str) -> Result<()> {
     let p = PathBuf::from(path);
     if !allowed(paths, &p) {
@@ -257,6 +288,20 @@ mod tests {
         assert!(allowed(&paths, Path::new(&shots[0].path)));
         assert!(!allowed(&paths, &dir.join("options.txt")));
         assert!(delete(&paths, &native(&dir.join("options.txt"))).is_err());
+        // an edit is saved next to it, the original stays
+        let mut png = Vec::new();
+        image::DynamicImage::new_rgba8(4, 3).write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+        use base64::Engine;
+        let b = base64::engine::general_purpose::STANDARD.encode(&png);
+        std::fs::write(dir.join("screenshots/a.png"), &png).unwrap();
+        let e1 = save_edited(&paths, &shots[0].path, &format!("data:image/png;base64,{b}")).unwrap();
+        let e2 = save_edited(&paths, &e1, &b).unwrap();
+        assert!(e1.ends_with("a-edited.png") && e2.ends_with("a-edited-2.png"), "{e1} {e2}");
+        assert!(save_edited(&paths, &shots[0].path, "bm90IGEgcGljdHVyZQ==").is_err());
+        assert!(save_edited(&paths, &native(&dir.join("options.txt")), &b).is_err());
+        assert_eq!(screenshots(&paths).len(), 3);
+        delete(&paths, &e1).unwrap();
+        delete(&paths, &e2).unwrap();
         delete(&paths, &shots[0].path).unwrap();
         assert!(screenshots(&paths).is_empty());
         let _ = std::fs::remove_dir_all(root);

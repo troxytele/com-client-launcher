@@ -4,6 +4,7 @@ import { ago, api, fmtBytes, msg, Profile, Replay, Shot } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import { Empty, Modal, Spinner } from "../components/Ui";
+import ShotEditor from "../components/ShotEditor";
 
 /** A screenshot through the launcher's own picture protocol (only screenshots folders are served). */
 export function shotUrl(path: string) {
@@ -63,6 +64,7 @@ function Shots({ profiles }: { profiles: Profile[] }) {
   const [profile, setProfile] = useState("");
   const [open, setOpen] = useState<number | null>(null);
   const [del, setDel] = useState<Shot | null>(null);
+  const [editing, setEditing] = useState<Shot | null>(null);
 
   const load = useCallback(() => {
     api.shots().then(setShots).catch((e) => {
@@ -118,7 +120,7 @@ function Shots({ profiles }: { profiles: Profile[] }) {
 
   // arrow keys in the big view
   useEffect(() => {
-    if (open === null) return;
+    if (open === null || editing) return;
     const k = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") setOpen((i) => (i === null ? i : Math.min(shown.length - 1, i + 1)));
       if (e.key === "ArrowLeft") setOpen((i) => (i === null ? i : Math.max(0, i - 1)));
@@ -126,7 +128,7 @@ function Shots({ profiles }: { profiles: Profile[] }) {
     };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
-  }, [open, shown]);
+  }, [open, shown, editing]);
 
   if (!shots)
     return (
@@ -160,6 +162,9 @@ function Shots({ profiles }: { profiles: Profile[] }) {
                 <span>{s.profile_name}</span>
               </div>
               <div className="shot-tools" onClick={(e) => e.stopPropagation()}>
+                <button className="icon-btn" title="Edit: crop, draw, blur" onClick={() => setEditing(s)}>
+                  <Icon name="edit" size={15} />
+                </button>
                 <button className="icon-btn" title="Open" onClick={() => api.openFile(s.path)}>
                   <Icon name="external" size={15} />
                 </button>
@@ -196,6 +201,9 @@ function Shots({ profiles }: { profiles: Profile[] }) {
                 {cur.profile_name} · {new Date(cur.modified * 1000).toLocaleString()} · {fmtBytes(cur.size)}
               </span>
             </div>
+            <button className="btn small primary" onClick={() => setEditing(cur)}>
+              <Icon name="edit" size={14} /> Edit
+            </button>
             <button className="btn small" onClick={() => api.openFile(cur.path)}>
               <Icon name="external" size={14} /> Open
             </button>
@@ -216,6 +224,16 @@ function Shots({ profiles }: { profiles: Profile[] }) {
             </button>
           </div>
         </div>
+      )}
+      {editing && (
+        <ShotEditor
+          shot={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            // the copy shows up in the grid (the original stays where it was)
+            api.shots().then(setShots).catch(() => {});
+          }}
+        />
       )}
       {del && (
         <Modal title="Delete screenshot?" onClose={() => setDel(null)} width={400}>

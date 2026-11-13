@@ -2738,6 +2738,7 @@ input.pcard-rename {
 }
 .pactions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
   padding-top: 14px;
@@ -5065,3 +5066,26 @@ html.festive .fairy-lights {
 .install-pick-row { justify-content: flex-start; text-align: left; }
 .install-pick-row input { flex: none; width: 15px; height: 15px; margin: 0; padding: 0; }
 .install-pick-row span { flex: 1; min-width: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- screenshot editor */
+.sed { position: fixed; inset: 0; z-index: 5000; display: flex; flex-direction: column; gap: 10px; padding: 12px; background: rgba(4, 4, 6, 0.94); backdrop-filter: blur(10px); }
+.sed-top { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 15px; flex-wrap: wrap; }
+.sed-tools { display: flex; gap: 3px; }
+.sed-tool { display: flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 10px; border: 1px solid transparent; background: none; color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.sed-tool:hover { color: var(--text); background: var(--panel-hi); }
+.sed-tool.on { color: var(--on-accent); background: var(--accent); }
+.sed-sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; }
+.sed-colors { display: flex; gap: 5px; }
+.sed-color { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.18); cursor: pointer; padding: 0; }
+.sed-color.on { border-color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25); }
+.sed-size { width: 90px; }
+.sed-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.sed-canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 10px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); touch-action: none; cursor: crosshair; }
+.sed-canvas.tool-text { cursor: text; }
+.sed-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); margin: 0; padding: 6px 14px; border-radius: 99px; font-size: 12.5px; background: rgba(0, 0, 0, 0.7); border: 1px solid var(--line); color: var(--text); pointer-events: none; }
+@media (max-width: 1450px) { .sed-tool span { display: none; } .sed-tool { padding: 8px 9px; } .sed-size { width: 70px; } }
+
+.setting > .lang-seg {
+  flex-direction: row;
+  flex: none;
+}

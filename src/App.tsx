@@ -236,7 +236,7 @@ export default function App() {
             ))}
           </div>
           <span className="strip-title" data-tauri-drag-region>
-            COM CLIENT <i>/</i> {titles[page].toUpperCase()}
+            COM CLIENT <i>/</i> <span style={{ textTransform: "uppercase" }}>{titles[page]}</span>
           </span>
           <span className="grow" data-tauri-drag-region />
           <span className={"status-dot " + phase} data-tauri-drag-region>

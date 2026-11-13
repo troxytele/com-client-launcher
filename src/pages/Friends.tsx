@@ -1,3 +1,4 @@
+import { getLang } from "../i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ago, api, Chat, ChatSummary, msg, ServerFriend, ServerState } from "../api";
 import { toast } from "../stores";
@@ -391,7 +392,7 @@ function ChatView({ uuid, name, onChanged }: { uuid: string; name: string; onCha
             const gap = !prev || m.at - prev.at > 600;
             return (
               <div key={m.id} className={"msg-wrap" + (mine ? " mine" : "")}>
-                {gap && <div className="msg-time">{new Date(m.at * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}</div>}
+                {gap && <div className="msg-time">{new Date(m.at * 1000).toLocaleString(getLang(), { weekday: "short", hour: "2-digit", minute: "2-digit" })}</div>}
                 <div className="msg-line">
                   <div className={"msg" + (m.hidden ? " hidden-msg" : "")}>{m.text}</div>
                   {!mine && !m.hidden && (
