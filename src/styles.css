@@ -3290,7 +3290,7 @@ svg.flip {
 /* ---------------------------------------------------------------- locker */
 .locker-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 340px) 1fr;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
   gap: 14px;
   align-items: start;
 }
@@ -5088,4 +5088,13 @@ html.festive .fairy-lights {
 .setting > .lang-seg {
   flex-direction: row;
   flex: none;
+}
+
+/* the Locker's tab row wraps instead of pushing the cards off the right edge (longer names in other languages) */
+.locker-shop {
+  min-width: 0;
+}
+.locker-shop .toolbar .seg {
+  flex-wrap: wrap;
+  max-width: 100%;
 }
