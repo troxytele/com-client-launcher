@@ -102,6 +102,14 @@ async fn import_scan(state: State<'_, AppState>) -> Res<Vec<import::Source>> {
     tokio::task::spawn_blocking(move || import::scan(&root)).await.map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn import_folder(path: String) -> Res<import::Source> {
+    tokio::task::spawn_blocking(move || import::source_from_folder(std::path::Path::new(&path)))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(err)
+}
+
 #[derive(Clone, serde::Serialize)]
 struct ImportProgress {
     done: u64,
@@ -1077,6 +1085,7 @@ pub fn run() {
             crash_list,
             crash_read,
             import_scan,
+            import_folder,
             import_apply,
             import_instance,
             icon_names,

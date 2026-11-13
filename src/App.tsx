@@ -232,7 +232,10 @@ export default function App() {
             />
           )}
           {page === "profiles" && <Profiles info={info} reload={reload} running={phase !== "idle"} onPlay={(srv) => { setPage("home"); play(srv); }}
-            onMods={() => setPage("mods")} />}
+            onMods={async (id?: string) => {
+              if (id && id !== profile.id) await selectProfile(id);
+              setPage("mods");
+            }} />}
           {page === "skins" && (
             <Skins
               signedIn={!!active}
@@ -249,6 +252,9 @@ export default function App() {
                 await selectProfile(id);
                 setPage("profiles");
               }}
+              profiles={info.profiles}
+              activeId={profile.id}
+              onSelectProfile={selectProfile}
             />
           )}
           {page === "locker" && <Locker signedIn={!!active} onAccounts={() => setAccountsOpen(true)} skinKey={skinKey} />}

@@ -241,6 +241,8 @@ export const api = {
   crashes: () => invoke<CrashFile[]>("crash_list"),
   crashRead: (path: string) => invoke<string>("crash_read", { path }),
   importScan: () => invoke<ImportSource[]>("import_scan"),
+  /** a folder someone picked or typed in (an instance, a .minecraft folder, or options.txt) as an import source */
+  importFolder: (path: string) => invoke<ImportSource>("import_folder", { path }),
   importInstance: (source: string, name: string, parts: ImportParts) => invoke<string>("import_instance", { source, name, parts }),
   importApply: (source: string, profile: string, settings: boolean, keybinds: boolean, servers: boolean, packs: boolean) =>
     invoke<string>("import_apply", { source, profile, settings, keybinds, servers, packs }),

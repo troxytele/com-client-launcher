@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { api, fmtBytes, fmtNum, Hit, Installed, Kind, msg, on, Update } from "../api";
+import { api, fmtBytes, fmtNum, Hit, Installed, Kind, msg, on, Profile, Update } from "../api";
+import ProfileIcon from "../components/ProfileIcon";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import ImportDialog from "../components/ImportDialog";
@@ -22,7 +23,17 @@ const SORTS = [
   { id: "updated", label: "Updated" },
 ];
 
-export default function Mods({ profileName, version, running, onModpack }: { profileName: string; version: string; running: boolean; onModpack: (id: string) => void }) {
+export default function Mods({ profileName, version, running, onModpack, profiles, activeId, onSelectProfile }: {
+  profileName: string;
+  version: string;
+  running: boolean;
+  onModpack: (id: string) => void;
+  /** every profile, to switch whose mods you see (each profile has its own mods for its own Minecraft version) */
+  profiles?: Profile[];
+  activeId?: string;
+  onSelectProfile?: (id: string) => Promise<void>;
+}) {
+  const [switching, setSwitching] = useState("");
   const legacy = version === "1.8.9";
   const [importing, setImporting] = useState(false);
   const [kind, setKind] = useState<Kind>("mod");
@@ -47,6 +58,37 @@ export default function Mods({ profileName, version, running, onModpack }: { pro
           </button>
         )}
       </div>
+      {profiles && profiles.length > 1 && onSelectProfile && (
+        <div className="mods-profiles" role="tablist" aria-label="Profile">
+          {profiles.map((p) => (
+            <button
+              key={p.id}
+              role="tab"
+              aria-selected={p.id === activeId}
+              className={"mods-profile" + (p.id === activeId ? " on" : "")}
+              disabled={running || !!switching}
+              title={running ? "Close the game to switch profiles" : `Show the mods of ${p.name}`}
+              onClick={async () => {
+                if (p.id === activeId) return;
+                setSwitching(p.id);
+                try {
+                  await onSelectProfile(p.id);
+                } catch (e) {
+                  toast(msg(e), "error");
+                } finally {
+                  setSwitching("");
+                }
+              }}
+            >
+              {switching === p.id ? <Spinner size={14} /> : <ProfileIcon icon={p.icon} size={22} />}
+              <span className="mods-profile-text">
+                <b>{p.name}</b>
+                <small>{p.version || "1.21.11"}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="toolbar">
         <div className="seg">
           {KINDS.map((x) => (
@@ -90,11 +132,11 @@ export default function Mods({ profileName, version, running, onModpack }: { pro
         />
       )}
       {kind === "modpack" ? (
-        <Browse kind={kind} onModpack={onModpack} />
+        <Browse key={activeId} kind={kind} onModpack={onModpack} />
       ) : tab === "installed" ? (
-        <InstalledList kind={kind} running={running} onBrowse={() => setTab("browse")} />
+        <InstalledList key={activeId} kind={kind} running={running} onBrowse={() => setTab("browse")} />
       ) : (
-        <Browse kind={kind} />
+        <Browse key={activeId} kind={kind} />
       )}
     </div>
   );

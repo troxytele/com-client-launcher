@@ -20,6 +20,7 @@ export default function ImportDialog({ onClose, onDone, onBrowse }: { onClose: (
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState<{ stage: string; done: number; total: number } | null>(null);
+  const [folder, setFolder] = useState<ImportSource | null>(null); // a folder pasted or dropped: an instance to import
   const busyRef = useRef(false);
   busyRef.current = busy;
 
@@ -31,7 +32,12 @@ export default function ImportDialog({ onClose, onDone, onBrowse }: { onClose: (
     try {
       // a link or a name goes to Modrinth, anything that looks like a file is read from disk
       const isFile = /[\\/]/.test(v) && !/^https?:\/\//i.test(v);
-      if (isFile || /\.(mrpack|ccprofile|zip)$/i.test(v)) setFound({ file: v, info: await api.packInspect(v) });
+      const packFile = /\.(mrpack|ccprofile|zip)$/i.test(v);
+      if (isFile && !packFile) {
+        // a folder (or options.txt): a Minecraft instance from another launcher, not a pack file
+        setFolder(await api.importFolder(v));
+        setTab("launchers");
+      } else if (isFile || packFile) setFound({ file: v, info: await api.packInspect(v) });
       else setFound({ pack: await api.modpackLookup(v) });
     } catch (e) {
       setError(msg(e));
@@ -106,7 +112,7 @@ export default function ImportDialog({ onClose, onDone, onBrowse }: { onClose: (
         </div>
       )}
       {tab === "launchers" && !found ? (
-        <Launchers onDone={onDone} />
+        <Launchers onDone={onDone} preset={folder} onClearPreset={() => setFolder(null)} />
       ) : !found ? (
         <>
           <div className={"imp-drop" + (over ? " over" : "")} onClick={choose} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && choose()}>
@@ -117,7 +123,7 @@ export default function ImportDialog({ onClose, onDone, onBrowse }: { onClose: (
             <span className="muted small">A Modrinth modpack (.mrpack) or a Com Client profile someone exported (.ccprofile)</span>
           </div>
           <div className="imp-or">
-            <span>or paste a Modrinth link or a file path</span>
+            <span>or paste a Modrinth link, a file path or a Minecraft folder</span>
           </div>
           <form
             className="imp-paste"
@@ -216,9 +222,11 @@ const TITLES: [keyof ImportParts, string][] = [
   ["mods", "Mods and their settings"],
 ];
 
-function Launchers({ onDone }: { onDone: (profileId: string) => void }) {
+function Launchers({ onDone, preset, onClearPreset }: { onDone: (profileId: string) => void; preset?: ImportSource | null; onClearPreset?: () => void }) {
   const [list, setList] = useState<ImportSource[] | null>(null);
   const [pick, setPick] = useState<ImportSource | null>(null);
+  const [path, setPath] = useState("");
+  const [looking, setLooking] = useState(false);
   const [name, setName] = useState("");
   const [parts, setParts] = useState<ImportParts>({ settings: true, keybinds: true, servers: true, packs: true, shaders: true, worlds: false, mods: true });
   const [busy, setBusy] = useState(false);
@@ -226,7 +234,54 @@ function Launchers({ onDone }: { onDone: (profileId: string) => void }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api.importScan().then(setList).catch((e) => setError(msg(e)));
+    if (preset) choose(preset);
+  }, [preset]);
+
+  // a folder the scan didn't find: picked in a folder window or typed in
+  async function useFolder(p: string) {
+    const v = p.trim().replace(/^"(.*)"$/, "$1");
+    if (!v) return;
+    setLooking(true);
+    setError("");
+    try {
+      choose(await api.importFolder(v));
+    } catch (e) {
+      setError(msg(e));
+    } finally {
+      setLooking(false);
+    }
+  }
+  async function browseFolder() {
+    const f = await open({ title: "Choose the Minecraft folder or instance to import", directory: true });
+    if (typeof f === "string") useFolder(f);
+  }
+  const other = (
+    <div className="imp-other">
+      <span className="muted small">Not in the list? Choose the instance folder (or its .minecraft folder) yourself:</span>
+      <form
+        className="imp-paste"
+        onSubmit={(e) => {
+          e.preventDefault();
+          useFolder(path);
+        }}
+      >
+        <input value={path} onChange={(e) => setPath(e.target.value)} placeholder="C:\Users\…\AppData\Roaming\PrismLauncher\instances\My Pack" spellCheck={false} />
+        <button type="button" className="btn" onClick={browseFolder} disabled={looking}>
+          <Icon name="folder" size={14} /> Choose…
+        </button>
+        <button className="btn primary" disabled={!path.trim() || looking}>
+          {looking ? <Spinner size={13} /> : "Use"}
+        </button>
+      </form>
+      {error && <p className="imp-error">{error}</p>}
+    </div>
+  );
+
+  useEffect(() => {
+    api.importScan().then(setList).catch((e) => {
+      setError(msg(e));
+      setList([]);
+    });
     const off = listen<ImportProgress>("import-progress", (e) => setProg(e.payload));
     return () => {
       off.then((f) => f());
@@ -258,17 +313,27 @@ function Launchers({ onDone }: { onDone: (profileId: string) => void }) {
     }
   }
 
-  if (!list) {
+  if (!list && !pick) {
     return (
-      <div className="imp-scan">
-        {error ? <p className="imp-error">{error}</p> : <><Spinner size={18} /> <span className="muted">Looking for Minecraft launchers on this PC…</span></>}
-      </div>
+      <>
+        <div className="imp-scan">
+          <Spinner size={18} /> <span className="muted">Looking for Minecraft launchers on this PC…</span>
+        </div>
+        {other}
+      </>
     );
   }
-  if (!list.length) return <p className="muted imp-scan">No other launchers found on this PC (Minecraft Launcher, Modrinth App, Prism, CurseForge, Lunar, NoRisk, Feather …).</p>;
-
-  if (!pick) {
+  if (!pick && list && !list.length)
     return (
+      <>
+        <p className="muted imp-scan">No other launchers found on this PC (Minecraft Launcher, Modrinth App, Prism, CurseForge, Lunar, NoRisk, Feather …).</p>
+        {other}
+      </>
+    );
+
+  if (!pick && list) {
+    return (
+      <>
       <div className="imp-list">
         {list.map((s) => (
           <button key={s.dir} className="imp-inst" onClick={() => choose(s)} title={s.dir}>
@@ -283,8 +348,11 @@ function Launchers({ onDone }: { onDone: (profileId: string) => void }) {
           </button>
         ))}
       </div>
+      {other}
+      </>
     );
   }
+  if (!pick) return null;
 
   const count = (k: keyof ImportParts) =>
     k === "packs" ? (pick.packs ? `${pick.packs} · ${fmtBytes(pick.packs_bytes)}` : "none")
@@ -342,7 +410,7 @@ function Launchers({ onDone }: { onDone: (profileId: string) => void }) {
       )}
       {error && <p className="imp-error">{error}</p>}
       <div className="modal-actions">
-        <button className="btn" disabled={busy} onClick={() => setPick(null)}>
+        <button className="btn" disabled={busy} onClick={() => { setPick(null); setError(""); onClearPreset?.(); }}>
           Back
         </button>
         <button className="btn primary" disabled={busy || !name.trim()} onClick={run}>

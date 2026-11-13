@@ -156,6 +156,10 @@ pub struct Inspect {
 }
 
 pub fn inspect(file: &Path) -> Result<Inspect> {
+    if file.is_dir() {
+        // a folder can't be opened as a file (Windows says "os error 5"): it's an instance, imported another way
+        anyhow::bail!("That's a folder, not a file. To bring in a whole Minecraft folder or instance, use \"From another launcher\" and choose the folder there.");
+    }
     let size = std::fs::metadata(file).context("Can't find that file")?.len();
     let mut zip = zip::ZipArchive::new(std::fs::File::open(file)?).map_err(|_| anyhow!("That isn't a modpack or a Com Client profile"))?;
     let read = |zip: &mut zip::ZipArchive<std::fs::File>, name: &str| -> Option<String> {

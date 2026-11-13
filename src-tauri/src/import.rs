@@ -143,13 +143,29 @@ fn modified(p: &Path) -> i64 {
         .unwrap_or(0)
 }
 
-/// Every folder below `root` (up to `depth` levels) that has an options.txt.
-fn find(root: &Path, depth: usize, out: &mut Vec<PathBuf>) {
-    if !root.is_dir() || out.len() > 80 {
+/// A folder that is a game folder even before Minecraft wrote its options.txt (an instance that was never started
+/// yet, or a launcher that keeps its settings elsewhere): it has mods, worlds or packs, or its launcher's instance file.
+fn looks_like_game_dir(d: &Path) -> bool {
+    d.join("options.txt").is_file()
+        || d.join("mods").is_dir()
+        || d.join("saves").is_dir()
+        || d.join("resourcepacks").is_dir()
+        || d.join("minecraftinstance.json").is_file()
+        || d.join("profile.json").is_file()
+        || d.parent().is_some_and(|p| p.join("mmc-pack.json").is_file())
+}
+
+/// Every folder below `root` (up to `depth` levels) that has an options.txt (or, with `loose`, that looks like an
+/// instance: launchers that keep one folder per instance, where a new one has no options.txt yet).
+fn find(root: &Path, depth: usize, loose: bool, out: &mut Vec<PathBuf>) {
+    if !root.is_dir() || out.len() > 120 {
         return;
     }
-    if root.join("options.txt").is_file() {
+    if root.join("options.txt").is_file() || (loose && looks_like_game_dir(root)) {
         out.push(root.to_path_buf());
+        if loose {
+            return; // an instance's own subfolders are not instances
+        }
     }
     if depth == 0 {
         return;
@@ -162,68 +178,182 @@ fn find(root: &Path, depth: usize, out: &mut Vec<PathBuf>) {
             if p.is_dir() && !matches!(n.as_str(), "mods" | "saves" | "assets" | "libraries" | "versions" | "logs" | "crash-reports"
                 | "resourcepacks" | "shaderpacks" | "screenshots" | "cache" | "natives" | "jre" | "java" | "runtime")
             {
-                find(&p, depth - 1, out);
+                find(&p, depth - 1, loose, out);
             }
         }
     }
 }
 
+/// The game folder inside a folder someone picked: the folder itself, or its ".minecraft" / "minecraft" folder
+/// (Prism, MultiMC and the Minecraft Launcher's installs keep it one level down).
+pub fn game_dir_of(dir: &Path) -> Option<PathBuf> {
+    for d in [dir.join(".minecraft"), dir.join("minecraft"), dir.to_path_buf()] {
+        if d.is_dir() && looks_like_game_dir(&d) {
+            return Some(d);
+        }
+    }
+    None
+}
+
+/// Which launcher a folder belongs to, from where it is (for a folder someone picked).
+fn launcher_of(dir: &Path) -> &'static str {
+    let s = dir.to_string_lossy().to_lowercase().replace('\\', "/");
+    if dir.parent().is_some_and(|p| p.join("mmc-pack.json").is_file()) || s.contains("prismlauncher") {
+        "Prism Launcher"
+    } else if dir.join("minecraftinstance.json").is_file() || s.contains("curseforge") {
+        "CurseForge"
+    } else if s.contains("modrinth") {
+        "Modrinth App"
+    } else if s.contains("lunarclient") {
+        "Lunar Client"
+    } else if s.contains("multimc") {
+        "MultiMC"
+    } else if s.contains("atlauncher") {
+        "ATLauncher"
+    } else if s.contains("gdlauncher") {
+        "GDLauncher"
+    } else if s.contains("technic") {
+        "Technic"
+    } else if s.contains("feather") {
+        "Feather"
+    } else if s.contains("norisk") {
+        "NoRisk Client"
+    } else if dir.join("launcher_profiles.json").is_file() {
+        "Minecraft Launcher"
+    } else {
+        "Folder"
+    }
+}
+
+/// What's in one game folder.
+fn source_for(launcher: &str, d: &Path) -> Source {
+    let opts = d.join("options.txt");
+    let text = std::fs::read_to_string(&opts).unwrap_or_default();
+    // instance name: the folder above ".minecraft"/"minecraft", else the folder itself
+    let named = if matches!(d.file_name().and_then(|n| n.to_str()), Some(".minecraft") | Some("minecraft")) && launcher != "Minecraft Launcher" {
+        d.parent().unwrap_or(d)
+    } else {
+        d
+    };
+    let packs = packs_in(d);
+    let (version, loader) = detect(d);
+    let mods = jars(d).len();
+    let saves = d.join("saves");
+    let worlds = count_dir(&saves, |p| p.join("level.dat").is_file());
+    Source {
+        mods_ok: mods > 0 && loader == "Fabric" && version == crate::config::MC_VERSION,
+        version,
+        loader,
+        mods,
+        shaders: count_dir(&d.join("shaderpacks"), |p| p.is_dir() || p.extension().is_some_and(|x| x.eq_ignore_ascii_case("zip"))),
+        worlds,
+        worlds_bytes: if worlds > 0 { size_of(&saves) } else { 0 },
+        packs: packs.len(),
+        packs_bytes: packs.iter().map(|p| size_of(p)).sum(),
+        launcher: launcher.to_string(),
+        name: named.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| launcher.to_string()),
+        dir: d.to_string_lossy().to_string(),
+        modified: if opts.is_file() { modified(&opts) } else { modified(d) },
+        servers: d.join("servers.dat").is_file(),
+        keybinds: text.lines().filter(|l| l.starts_with("key_")).count(),
+    }
+}
+
+/// A folder someone picked or typed in: its game folder, as an import source.
+pub fn source_from_folder(dir: &Path) -> anyhow::Result<Source> {
+    let dir = PathBuf::from(dir.to_string_lossy().trim().trim_matches('"'));
+    if dir.is_file() {
+        // options.txt (or any file in the game folder) picked instead of the folder
+        if let Some(p) = dir.parent() {
+            return source_from_folder(p);
+        }
+    }
+    if !dir.is_dir() {
+        anyhow::bail!("Can't find the folder {}", dir.display());
+    }
+    if std::fs::read_dir(&dir).is_err() {
+        anyhow::bail!("Windows doesn't let the launcher read {} (it may be open in another program, or need admin rights). Close that launcher and try again.", dir.display());
+    }
+    let d = game_dir_of(&dir).ok_or_else(|| anyhow::anyhow!("No Minecraft game folder in {} (no options.txt, mods, saves or resource packs).", dir.display()))?;
+    Ok(source_for(launcher_of(&d), &d))
+}
+
+/// Game folders the Minecraft Launcher's installations use when they're set to their own folder.
+fn launcher_install_dirs(mc: &Path) -> Vec<PathBuf> {
+    let Ok(t) = std::fs::read_to_string(mc.join("launcher_profiles.json")) else { return vec![] };
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&t) else { return vec![] };
+    v["profiles"]
+        .as_object()
+        .map(|o| o.values().filter_map(|p| p["gameDir"].as_str()).map(PathBuf::from).filter(|p| p.is_dir()).collect())
+        .unwrap_or_default()
+}
+
+/// Prism / PolyMC keep instances where their settings say (InstanceDir), relative to their data folder.
+fn instance_dir_from_cfg(data: &Path, cfg: &str) -> Option<PathBuf> {
+    let t = std::fs::read_to_string(data.join(cfg)).ok()?;
+    let v = t.lines().find_map(|l| l.strip_prefix("InstanceDir="))?.trim();
+    if v.is_empty() {
+        return None;
+    }
+    let p = PathBuf::from(v);
+    Some(if p.is_absolute() { p } else { data.join(p) })
+}
+
 pub fn scan(own_root: &Path) -> Vec<Source> {
     let ad = appdata();
     let h = home();
-    let roots: Vec<(&str, PathBuf, usize)> = vec![
-        ("Minecraft Launcher", ad.join(".minecraft"), 0),
-        ("Modrinth App", ad.join("ModrinthApp").join("profiles"), 1),
-        ("Modrinth App", ad.join("com.modrinth.theseus").join("profiles"), 1),
-        ("Prism Launcher", ad.join("PrismLauncher").join("instances"), 2),
-        ("MultiMC", h.join("MultiMC").join("instances"), 2),
-        ("CurseForge", h.join("curseforge").join("minecraft").join("Instances"), 1),
-        ("Lunar Client", h.join(".lunarclient"), 4),
-        ("NoRisk Client", ad.join("norisk"), 5),
-        ("Feather", ad.join(".feather"), 4),
-        ("Badlion", ad.join("Badlion Client"), 3),
-        ("ATLauncher", ad.join("ATLauncher").join("instances"), 1),
-        ("GDLauncher", ad.join("gdlauncher_carbon").join("data").join("instances"), 3),
+    let local = std::env::var_os("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(|| h.join("AppData").join("Local"));
+    let docs = h.join("Documents");
+    let onedrive_docs = std::env::var_os("OneDrive").map(|o| PathBuf::from(o).join("Documents"));
+    // (launcher, folder, how deep to look, loose = one folder per instance, which may not have an options.txt yet)
+    let mut roots: Vec<(&str, PathBuf, usize, bool)> = vec![
+        ("Minecraft Launcher", ad.join(".minecraft"), 0, false),
+        ("Minecraft Launcher", local.join("Packages").join("Microsoft.4297127D64EC6_8wekyb3d8bbwe").join("LocalCache").join("Roaming").join(".minecraft"), 0, false),
+        ("Modrinth App", ad.join("ModrinthApp").join("profiles"), 1, true),
+        ("Modrinth App", ad.join("com.modrinth.theseus").join("profiles"), 1, true),
+        ("Prism Launcher", ad.join("PrismLauncher").join("instances"), 2, true),
+        ("PolyMC", ad.join("PolyMC").join("instances"), 2, true),
+        ("MultiMC", h.join("MultiMC").join("instances"), 2, true),
+        ("CurseForge", h.join("curseforge").join("minecraft").join("Instances"), 1, true),
+        ("CurseForge", docs.join("Curseforge").join("Minecraft").join("Instances"), 1, true),
+        ("CurseForge", docs.join("Twitch").join("Minecraft").join("Instances"), 1, true),
+        ("Lunar Client", h.join(".lunarclient"), 4, false),
+        ("NoRisk Client", ad.join("norisk"), 5, false),
+        ("Feather", ad.join(".feather"), 4, false),
+        ("Badlion", ad.join("Badlion Client"), 3, false),
+        ("ATLauncher", ad.join("ATLauncher").join("instances"), 1, true),
+        ("GDLauncher", ad.join("gdlauncher_carbon").join("data").join("instances"), 3, true),
+        ("GDLauncher", ad.join("gdlauncher_next").join("instances"), 1, true),
+        ("Technic", ad.join(".technic").join("modpacks"), 1, true),
+        ("LabyMod", ad.join(".minecraft").join("labymod-neo"), 3, false),
     ];
+    if let Some(od) = onedrive_docs {
+        roots.push(("CurseForge", od.join("Curseforge").join("Minecraft").join("Instances"), 1, true));
+    }
+    // Prism / PolyMC with their instances moved somewhere else
+    for (name, data, cfg) in [("Prism Launcher", ad.join("PrismLauncher"), "prismlauncher.cfg"), ("PolyMC", ad.join("PolyMC"), "polymc.cfg")] {
+        if let Some(dir) = instance_dir_from_cfg(&data, cfg) {
+            roots.push((name, dir, 2, true));
+        }
+    }
+    // Minecraft Launcher installations with their own game folder
+    for d in launcher_install_dirs(&ad.join(".minecraft")) {
+        roots.push(("Minecraft Launcher", d, 0, true));
+    }
     let mut seen = HashSet::new();
     let mut out = Vec::new();
-    for (launcher, root, depth) in roots {
+    for (launcher, root, depth, loose) in roots {
         let mut dirs = Vec::new();
-        find(&root, depth, &mut dirs);
+        find(&root, depth, loose, &mut dirs);
         for d in dirs {
-            if d.starts_with(own_root) || !seen.insert(d.clone()) {
+            // the same folder spelled differently (case, a link) only once
+            let key = std::fs::canonicalize(&d).unwrap_or_else(|_| d.clone()).to_string_lossy().to_lowercase();
+            if d.starts_with(own_root) || !seen.insert(key) {
                 continue;
             }
-            let opts = d.join("options.txt");
-            let text = std::fs::read_to_string(&opts).unwrap_or_default();
-            // instance name: the folder above ".minecraft"/"minecraft", else the folder itself
-            let named = if matches!(d.file_name().and_then(|n| n.to_str()), Some(".minecraft") | Some("minecraft")) && launcher != "Minecraft Launcher" {
-                d.parent().unwrap_or(&d)
-            } else {
-                &d
-            };
-            let packs = packs_in(&d);
-            let (version, loader) = detect(&d);
-            let mods = jars(&d).len();
-            let saves = d.join("saves");
-            let worlds = count_dir(&saves, |p| p.join("level.dat").is_file());
-            out.push(Source {
-                mods_ok: mods > 0 && loader == "Fabric" && version == crate::config::MC_VERSION,
-                version,
-                loader,
-                mods,
-                shaders: count_dir(&d.join("shaderpacks"), |p| p.is_dir() || p.extension().is_some_and(|x| x.eq_ignore_ascii_case("zip"))),
-                worlds,
-                worlds_bytes: if worlds > 0 { size_of(&saves) } else { 0 },
-                packs: packs.len(),
-                packs_bytes: packs.iter().map(|p| size_of(p)).sum(),
-                launcher: launcher.to_string(),
-                name: named.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| launcher.to_string()),
-                dir: d.to_string_lossy().to_string(),
-                modified: modified(&opts),
-                servers: d.join("servers.dat").is_file(),
-                keybinds: text.lines().filter(|l| l.starts_with("key_")).count(),
-            });
+            // Prism / MultiMC: the instance folder itself holds ".minecraft"; use that
+            let d = if loose { game_dir_of(&d).unwrap_or(d) } else { d };
+            out.push(source_for(launcher, &d));
         }
     }
     out.sort_by(|a, b| b.modified.cmp(&a.modified));
@@ -289,7 +419,8 @@ pub fn apply(source: &str, target: &Path, settings: bool, keybinds: bool, server
     if !settings && !keybinds && !servers {
         return Ok(String::new());
     }
-    let src_opts = std::fs::read_to_string(src.join("options.txt")).map_err(|_| anyhow::anyhow!("No options.txt in {}", src.display()))?;
+    // an instance that was never started has no options.txt yet: then there are no settings or keybinds to bring
+    let src_opts = std::fs::read_to_string(src.join("options.txt")).unwrap_or_default();
     std::fs::create_dir_all(target)?;
     let target_opts = target.join("options.txt");
     let mut lines: Vec<(String, String)> = std::fs::read_to_string(&target_opts)
@@ -355,7 +486,7 @@ const SPEED_MODS: &[&str] = &["sodium", "lithium", "ferritecore", "entityculling
 pub fn instance_to_profile(paths: &crate::paths::Paths, source: &Path, name: &str, parts: Parts, progress: &dyn Fn(u64, u64, &str))
     -> anyhow::Result<String> {
     use crate::store::{self, Profile, Profiles};
-    if !source.join("options.txt").is_file() && !source.join("mods").is_dir() {
+    if !looks_like_game_dir(source) {
         anyhow::bail!("That folder isn't a Minecraft instance");
     }
     let mut p = Profile::default();
@@ -478,8 +609,39 @@ mod tests {
         std::fs::create_dir_all(inst.join("mods")).unwrap();
         std::fs::write(inst.join("options.txt"), "key_key.attack:key.mouse.left\n").unwrap();
         let mut out = Vec::new();
-        find(&base.join("instances"), 2, &mut out);
-        assert_eq!(out, vec![inst]);
+        find(&base.join("instances"), 2, false, &mut out);
+        assert_eq!(out, vec![inst.clone()]);
+        // an instance that was never started (no options.txt yet) is found too, in a launcher with instance folders
+        let fresh = base.join("instances").join("New").join(".minecraft");
+        std::fs::create_dir_all(fresh.join("mods")).unwrap();
+        let mut out = Vec::new();
+        find(&base.join("instances"), 2, true, &mut out);
+        let found: Vec<PathBuf> = out.iter().map(|d| game_dir_of(d).unwrap_or(d.clone())).collect();
+        assert!(found.contains(&inst) && found.contains(&fresh), "{found:?}");
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn a_picked_folder_becomes_a_source() {
+        let base = std::env::temp_dir().join(format!("cc-pick-{}", std::process::id()));
+        let mc = base.join("My Instance").join(".minecraft");
+        std::fs::create_dir_all(mc.join("resourcepacks")).unwrap();
+        std::fs::write(mc.join("options.txt"), "key_key.jump:key.keyboard.v\nfov:0.5\n").unwrap();
+        // the instance folder, its .minecraft folder or options.txt itself: all lead to the game folder
+        for pick in [base.join("My Instance"), mc.clone(), mc.join("options.txt")] {
+            let src = source_from_folder(&pick).unwrap();
+            assert_eq!(PathBuf::from(&src.dir), mc);
+            assert_eq!(src.name, "My Instance");
+            assert_eq!(src.keybinds, 1);
+        }
+        assert!(source_from_folder(&base.join("nope")).is_err());
+        // a folder given to the modpack reader is a clear message, not "os error 5"
+        let e = crate::modpacks::inspect(&base).err().expect("a folder isn't a pack").to_string();
+        assert!(e.contains("folder"), "{e}");
+        // settings from an instance without options.txt: nothing to copy, but no error for the server list part
+        let empty = base.join("Empty").join(".minecraft");
+        std::fs::create_dir_all(empty.join("mods")).unwrap();
+        assert!(apply(&empty.to_string_lossy(), &base.join("target"), true, true, false).is_err()); // "Nothing to import"
         let _ = std::fs::remove_dir_all(&base);
     }
 

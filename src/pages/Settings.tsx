@@ -298,6 +298,19 @@ export function ImportBlock({ profileId, profileName, running }: { profileId: st
     }
   }
 
+  // a folder the scan didn't find: chosen in a folder window
+  async function chooseFolder() {
+    const f = await open({ title: "Choose the Minecraft folder or instance to copy from", directory: true });
+    if (typeof f !== "string") return;
+    try {
+      const s = await api.importFolder(f);
+      setSources((old) => [s, ...(old ?? []).filter((x) => x.dir !== s.dir)]);
+      setPick(s.dir);
+    } catch (e) {
+      toast(msg(e), "error");
+    }
+  }
+
   async function run() {
     setBusy(true);
     setProg(null);
@@ -320,15 +333,20 @@ export function ImportBlock({ profileId, profileName, running }: { profileId: st
         <h2>
           <Icon name="download" size={17} /> Import from another launcher
         </h2>
-        <button className="btn small" onClick={scan} disabled={scanning}>
-          {scanning ? <Spinner size={13} /> : <Icon name="search" size={14} />} {sources ? "Scan again" : "Find my launchers"}
-        </button>
+        <div className="row-gap">
+          <button className="btn small" onClick={chooseFolder} title="For a launcher or folder the scan doesn't find">
+            <Icon name="folder" size={14} /> Choose a folder…
+          </button>
+          <button className="btn small" onClick={scan} disabled={scanning}>
+            {scanning ? <Spinner size={13} /> : <Icon name="search" size={14} />} {sources ? "Scan again" : "Find my launchers"}
+          </button>
+        </div>
       </div>
       <p className="muted small" style={{ marginTop: -4 }}>
         Copies your settings (render distance, mouse sensitivity, FOV, sounds …), keybinds, server list and resource packs from Minecraft Launcher, Lunar,
         Modrinth, NoRisk, Prism, CurseForge and others into <b>{profileName}</b>. Mods are never copied.
       </p>
-      {sources && sources.length === 0 && <p className="muted small">No other Minecraft installs found on this PC.</p>}
+      {sources && sources.length === 0 && <p className="muted small">No other Minecraft installs found on this PC. Use “Choose a folder…” to pick one yourself.</p>}
       {sources && sources.length > 0 && (
         <>
           <div className="import-list">

@@ -38,7 +38,7 @@ export default function Profiles({
   running: boolean;
   onPlay: (server?: string) => void;
   /** Open Mods & Packs for this profile (it becomes the selected one): the search only shows its version's mods. */
-  onMods?: () => void;
+  onMods?: (profileId?: string) => void;
 }) {
   const [editId, setEditId] = useState(info.settings.active_profile);
   const profile = info.profiles.find((p) => p.id === editId) ?? info.profiles[0];
@@ -248,6 +248,19 @@ export default function Profiles({
                   {x.version || info.mc_version} · {fmtTime(x.playtime_secs || 0)} · {x.last_played ? ago(x.last_played) : "never played"}
                 </span>
               </div>
+              {onMods && (
+                <button
+                  className="pcard-mods"
+                  title={running ? "Close the game first" : `Mods for ${x.name} (Minecraft ${x.version || info.mc_version})`}
+                  disabled={running}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMods(x.id);
+                  }}
+                >
+                  <Icon name="cube" size={13} /> Mods
+                </button>
+              )}
               <Icon name="chevron" size={14} />
             </div>
           ))}
@@ -320,10 +333,7 @@ export default function Profiles({
                   : " · Fabric with Com Client. Only mods made for this version show up in this profile's mod search."}
               </span>
               {onMods && (
-                <button className="btn small" onClick={async () => {
-                  if (!selected) await select(p.id);
-                  onMods();
-                }}>
+                <button className="btn small" disabled={running} onClick={() => onMods(p.id)}>
                   <Icon name="search" size={13} /> Mods for {p.version || VERSIONS[0].id}
                 </button>
               )}
