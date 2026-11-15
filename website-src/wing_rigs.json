@@ -1152,6 +1152,196 @@
           ]
         }
       ]
+    },
+    "flame_grand": {
+      "label": "Grand Flame",
+      "scale": 1.2,
+      "period": 44,
+      "panels": [
+        {
+          "id": "inner",
+          "uv": [
+            0,
+            0,
+            80,
+            128
+          ],
+          "size": [
+            10,
+            16
+          ],
+          "at": [
+            1.0,
+            1.2,
+            2.7
+          ],
+          "rot": [
+            20,
+            10,
+            32
+          ],
+          "flap": [
+            12,
+            5,
+            0
+          ]
+        },
+        {
+          "id": "outer",
+          "uv": [
+            96,
+            0,
+            112,
+            176
+          ],
+          "size": [
+            14,
+            22
+          ],
+          "at": [
+            9.6,
+            0.2,
+            0
+          ],
+          "rot": [
+            16,
+            -4,
+            14
+          ],
+          "flap": [
+            10,
+            6,
+            -0.8
+          ],
+          "parent": "inner"
+        }
+      ]
+    },
+    "fairy_small": {
+      "label": "Tiny Fairy",
+      "scale": 0.4,
+      "period": 7,
+      "panels": [
+        {
+          "id": "fore",
+          "uv": [
+            0,
+            0,
+            112,
+            128
+          ],
+          "size": [
+            14,
+            16
+          ],
+          "at": [
+            0.5,
+            1.0,
+            2.6
+          ],
+          "rot": [
+            4,
+            10,
+            30
+          ],
+          "flap": [
+            0,
+            22,
+            0
+          ]
+        },
+        {
+          "id": "hind",
+          "uv": [
+            128,
+            0,
+            88,
+            96
+          ],
+          "size": [
+            11,
+            12
+          ],
+          "at": [
+            0.5,
+            4.8,
+            2.62
+          ],
+          "rot": [
+            6,
+            6,
+            -20
+          ],
+          "flap": [
+            0,
+            20,
+            -0.4
+          ]
+        }
+      ]
+    },
+    "fairy_grand": {
+      "label": "Grand Fairy",
+      "scale": 0.95,
+      "period": 12,
+      "panels": [
+        {
+          "id": "fore",
+          "uv": [
+            0,
+            0,
+            112,
+            128
+          ],
+          "size": [
+            14,
+            16
+          ],
+          "at": [
+            0.5,
+            1.0,
+            2.6
+          ],
+          "rot": [
+            4,
+            10,
+            30
+          ],
+          "flap": [
+            0,
+            22,
+            0
+          ]
+        },
+        {
+          "id": "hind",
+          "uv": [
+            128,
+            0,
+            88,
+            96
+          ],
+          "size": [
+            11,
+            12
+          ],
+          "at": [
+            0.5,
+            4.8,
+            2.62
+          ],
+          "rot": [
+            6,
+            6,
+            -20
+          ],
+          "flap": [
+            0,
+            20,
+            -0.4
+          ]
+        }
+      ]
     }
   },
   "designs": {
@@ -1211,6 +1401,18 @@
     "ocean_wings": "butterfly",
     "thunderbird": "feather_grand",
     "abyss": "membrane_grand",
-    "aurora_butterfly": "butterfly_grand"
+    "aurora_butterfly": "butterfly_grand",
+    "amethyst_shards": "shards",
+    "ruby_shards": "shards",
+    "soul_flame": "flame",
+    "void_flame": "flame",
+    "inferno": "flame_grand",
+    "cherry_leaf": "leaves",
+    "maple_leaf": "leaves",
+    "golden_peacock": "fan",
+    "frost_ribbon": "ribbons",
+    "sun_fairy": "fairy_small",
+    "ocean_fairy": "fairy",
+    "royal_fairy": "fairy_grand"
   }
 }

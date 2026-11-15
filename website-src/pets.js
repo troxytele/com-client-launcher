@@ -79,6 +79,14 @@ const PETS = {
   ghost_lilac: [true, 0.55],
   dragon_pink: [true, 0.55],
   bunny_gray: [false, 0.6],
+  robot: [false, 0.55],
+  cloud: [true, 0.55],
+  rocket: [true, 0.5],
+  ufo: [true, 0.5],
+  octopus: [false, 0.55],
+  mushroom: [false, 0.55],
+  dino: [false, 0.55],
+  pufferfish: [true, 0.5],
 };
 // every pet is Com Client's own chibi voxel model now
 const OWN = new Set(Object.keys(PETS));
@@ -262,7 +270,11 @@ export async function loadPet(id, base, left) {
         for (const [n, g] of Object.entries(parts)) {
           const r = g.userData.rest;
           if (!r) continue;
-          if (n === "waddle") g.rotation.z = r.roll + Math.sin(age * 0.22) * 0.08;
+          if (n.startsWith("anim")) {
+            // frame-by-frame parts (rain, rocket flames, blinking lights), 10 frames a second like the game
+            const [f, c] = n.slice(4).split("_").map(Number);
+            g.visible = Math.floor(age / 2) % c === f;
+          } else if (n === "waddle") g.rotation.z = r.roll + Math.sin(age * 0.22) * 0.08;
           else if (n === "sway") g.rotation.z = r.roll + Math.sin(age * 0.05) * 0.06;
           else if (n === "sniff") g.rotation.x = r.pitch + Math.max(0, Math.sin(age * 0.9)) * Math.max(0, Math.sin(age * 0.08)) * 0.25;
           else if (n.startsWith("tentacle")) g.rotation.x = r.pitch + Math.sin(age * 0.15 + n.length) * 0.18;

@@ -119,6 +119,12 @@ window.CC = (() => {
     neon: { name: "Neon", stops: [0x39ff14, 0xff2bd6, 0x00f0ff], moving: true },
     copper: { name: "Copper", stops: [0xb87333, 0xf0b27a, 0x8c4a1e], moving: false },
     shadow: { name: "Shadow", stops: [0x5a5a6e, 0xc8c8d8, 0x5a5a6e], moving: true },
+    bubblegum: { name: "Bubblegum", stops: [0xff77c8, 0xffc6e8, 0xff77c8], moving: true },
+    ruby: { name: "Ruby", stops: [0x8e0f2b, 0xff4a6e, 0x8e0f2b], moving: true },
+    sapphire: { name: "Sapphire", stops: [0x0f2e8e, 0x4a8bff, 0x0f2e8e], moving: true },
+    amethyst: { name: "Amethyst", stops: [0x5a1e8e, 0xc77bff, 0x5a1e8e], moving: true },
+    sunrise: { name: "Sunrise", stops: [0xff6a3d, 0xffb347, 0xffe07a], moving: false },
+    lime: { name: "Lime", stops: [0xb6ff3a, 0x5fd33a], moving: false },
   };
   const mixRgb = (a, b, t) => {
     const ch = (sh) => Math.round(((a >> sh) & 255) + (((b >> sh) & 255) - ((a >> sh) & 255)) * t);
