@@ -69,6 +69,16 @@ const PETS = {
   choco_bunny: [false, 0.6],
   golden_duck: [false, 0.6],
   owl_snowy: [false, 0.55],
+  lamb_pink: [false, 0.6],
+  lamb_blue: [false, 0.6],
+  hamster_white: [false, 0.55],
+  ghast_soul: [true, 0.42],
+  blaze_soul: [true, 0.55],
+  warden_crimson: [false, 0.5],
+  turtle_gold: [false, 0.55],
+  ghost_lilac: [true, 0.55],
+  dragon_pink: [true, 0.55],
+  bunny_gray: [false, 0.6],
 };
 // every pet is Com Client's own chibi voxel model now
 const OWN = new Set(Object.keys(PETS));

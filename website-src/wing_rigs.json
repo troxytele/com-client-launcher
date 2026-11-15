@@ -1199,6 +1199,18 @@
     "storm": "feather_grand",
     "elder_dragon": "membrane_grand",
     "sunfire": "membrane_grand",
-    "emperor": "butterfly_grand"
+    "emperor": "butterfly_grand",
+    "sparrow": "feather_small",
+    "baby_bat": "membrane_small",
+    "honeybee": "butterfly_small",
+    "sky_fairy": "butterfly_small",
+    "flamingo": "feather",
+    "autumn": "feather",
+    "galaxy_drake": "membrane",
+    "jade": "butterfly",
+    "ocean_wings": "butterfly",
+    "thunderbird": "feather_grand",
+    "abyss": "membrane_grand",
+    "aurora_butterfly": "butterfly_grand"
   }
 }

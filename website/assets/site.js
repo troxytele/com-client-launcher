@@ -111,6 +111,14 @@ window.CC = (() => {
     blood: { name: "Blood Moon", stops: [0x7a0010, 0xe8202a, 0x7a0010], moving: true },
     midnight: { name: "Midnight", stops: [0xb57bff, 0x5b6bff, 0x1d2a8f], moving: false },
     mono: { name: "Mono", stops: [0xffffff, 0x8a8a8a, 0xffffff], moving: true },
+    peach: { name: "Peach", stops: [0xffb199, 0xffe0c2, 0xff8a80], moving: true },
+    forest: { name: "Forest", stops: [0x2e7d32, 0x8bc34a, 0x2e7d32], moving: true },
+    royal: { name: "Royal", stops: [0x3b2a8f, 0xc9a227, 0x3b2a8f], moving: true },
+    fire_ice: { name: "Fire & Ice", stops: [0xff4a1a, 0xffb347, 0x8fd3ff, 0x2e7bff], moving: true },
+    cotton_candy: { name: "Cotton Candy", stops: [0xffb3e6, 0xb3e5ff], moving: true },
+    neon: { name: "Neon", stops: [0x39ff14, 0xff2bd6, 0x00f0ff], moving: true },
+    copper: { name: "Copper", stops: [0xb87333, 0xf0b27a, 0x8c4a1e], moving: false },
+    shadow: { name: "Shadow", stops: [0x5a5a6e, 0xc8c8d8, 0x5a5a6e], moving: true },
   };
   const mixRgb = (a, b, t) => {
     const ch = (sh) => Math.round(((a >> sh) & 255) + (((b >> sh) & 255) - ((a >> sh) & 255)) * t);
