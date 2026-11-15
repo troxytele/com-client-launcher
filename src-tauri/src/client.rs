@@ -255,7 +255,8 @@ async fn latest_release_news() -> Option<NewsItem> {
         body: notes.join(" · "),
         date: format!("{d} {} {y}", months.get(m.wrapping_sub(1)).unwrap_or(&"")),
         tag: "Launcher update".into(),
-        url: rel["html_url"].as_str().unwrap_or_default().to_string(),
+        // "Read more" opens the update on the website, not on GitHub
+        url: format!("https://comclient.xyz/changelog#v{version}"),
     })
 }
 

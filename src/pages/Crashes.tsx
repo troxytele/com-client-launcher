@@ -1,3 +1,4 @@
+import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { ago, api, CrashFile, msg } from "../api";
 import { analyze, important } from "../crash";
@@ -7,7 +8,7 @@ import { Empty, Spinner } from "../components/Ui";
 
 // Crash Log Viewer + Analyzer: every crash report / Java crash / latest log of every profile, with an explanation of
 // what most likely went wrong and the lines that matter highlighted.
-export default function Crashes({ initial }: { initial?: string | null }) {
+export default function Crashes({ initial, tabs }: { initial?: string | null; tabs?: React.ReactNode }) {
   const [files, setFiles] = useState<CrashFile[] | null>(null);
   const [sel, setSel] = useState<string | null>(initial ?? null);
   const [text, setText] = useState<string | null>(null);
@@ -67,11 +68,14 @@ export default function Crashes({ initial }: { initial?: string | null }) {
           <h1>Crashes</h1>
           <p className="muted">Crash reports from all your profiles, with what most likely went wrong.</p>
         </div>
-        {current && (
-          <button className="btn" onClick={() => api.openFile(current.path)}>
-            <Icon name="file" size={14} /> Open file
-          </button>
-        )}
+        <div className="row-gap">
+          {tabs}
+          {current && (
+            <button className="btn" onClick={() => api.openFile(current.path)}>
+              <Icon name="file" size={14} /> Open file
+            </button>
+          )}
+        </div>
       </div>
       {!files ? (
         <div className="center pad">

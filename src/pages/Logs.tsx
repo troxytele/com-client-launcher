@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type React from "react";
 import { api } from "../api";
 import { clearLog, toast, useLog } from "../stores";
 import Icon from "../components/Icon";
 
 // Live game console: filter, follow, copy, open logs / crash reports.
-export default function Logs() {
+export default function Logs({ tabs }: { tabs?: React.ReactNode }) {
   const lines = useLog();
   const [filter, setFilter] = useState("");
   const [level, setLevel] = useState<"all" | "warn" | "error">("all");
@@ -33,6 +34,7 @@ export default function Logs() {
           <p className="muted">What the game prints while it starts and runs.</p>
         </div>
         <div className="row-gap">
+          {tabs}
           <button className="btn primary" onClick={() => api.openLogsWindow()}>
             <Icon name="external" size={14} /> Open in a window
           </button>

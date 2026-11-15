@@ -15,11 +15,11 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/assets/style.css?v=4e23a23d">
+  <link rel="stylesheet" href="/assets/style.css?v=8de0ba10">
   <link rel="stylesheet" href="/assets/pages.css?v=81df2222">
   <script src="/assets/i18n.js?v=dc1ce70f"></script>
   <script src="/assets/main.js?v=dc322aba" defer></script>
-  <script src="/assets/changelog.js?v=2948a8ad" defer></script>
+  <script src="/assets/changelog.js?v=9041b712" defer></script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
@@ -44,22 +44,139 @@
       <p>Every launcher update, newest first. Installed launchers update themselves.</p>
     </section>
     <section class="releases">
-      <article class="release glass">
-        <header><h3>Launcher 0.6.22</h3><span class="tag">LATEST</span><time datetime="2026-11-09">November 9, 2026</time></header>
+      <article class="release glass" id="v0.6.50">
+        <header><h3>Launcher 0.6.50</h3><span class="tag">LATEST</span><time datetime="2026-11-15">November 15, 2026</time></header>
+        <ul>
+          <li><b>Launcher folder</b> · the launcher&#x27;s folder got a new, clearer name and moves there by itself</li>
+          <li><b>Profile folders</b> · named after the profile instead of a random code, and renamed with it when you rename a profile</li>
+          <li>Desktop shortcuts keep their pictures after the move</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.49">
+        <header><h3>Launcher 0.6.49</h3><time datetime="2026-11-15">November 15, 2026</time></header>
+        <ul>
+          <li><b>Profiles</b> · a profile you made or renamed while a game was downloading is no longer lost when the game starts</li>
+          <li><b>Several games at once</b> · a second game no longer fails with &quot;insufficient memory&quot; (the launcher reserves at most 4 GB up front)</li>
+          <li><b>Importing</b> · a 1.8.9 instance from another launcher becomes a 1.8.9 profile, with its Fabric mods</li>
+          <li><b>Mod check</b> · mods that need Fabric Language Kotlin are now caught before the game starts</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.48">
+        <header><h3>Launcher 0.6.48</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.47">
+        <header><h3>Launcher 0.6.47</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.46">
+        <header><h3>Launcher 0.6.46</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.45">
+        <header><h3>Launcher 0.6.45</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.44">
+        <header><h3>Launcher 0.6.44</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li><b>run more than one Minecraft at a time</b> · every running game in the launch bar with its own stop; PLAY ANOTHER</li>
+          <li>before starting, the profile&#x27;s mods are checked (missing mods, doubles, wrong Minecraft version, Forge mods), with</li>
+          <li><b>Profiles</b> · Desktop shortcut (a .lnk with the profile&#x27;s icon that starts it via --play)</li>
+          <li><b>new Storage page</b> · space per profile, world, part and shared game files; clean old logs, crash reports, unused</li>
+          <li><b>Mods &gt; Discover</b> · install in several profiles at once</li>
+          <li><b>When the game starts</b> · new &#x27;Minimize, come back after&#x27; option; the launcher comes back when the last game closes</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.43">
+        <header><h3>Launcher 0.6.43</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li>folder packs show their name, description, icon and real size from pack.mcmeta / pack.png, with a Folder tag</li>
+          <li>a pack unzipped one folder too deep is pointed out, with a Fix it button that moves it up</li>
+          <li>folders that aren&#x27;t packs say so</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.42">
+        <header><h3>Launcher 0.6.42</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li>picking or pasting a folder (instance, .minecraft or options.txt) imports it instead of failing with os error 5</li>
+          <li>the scan finds never-started instances, Prism/PolyMC custom instance folders, Minecraft Launcher installs with their</li>
+          <li>settings import doesn&#x27;t fail when an instance has no options.txt yet</li>
+          <li><b>Mods &amp; Packs</b> · a row of profiles to switch whose mods you see; Profiles: a Mods button on every profile</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.41">
+        <header><h3>Launcher 0.6.41</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li>1.8.9 PvP on the home, download, cosmetics and other pages; new &#x27;Two versions&#x27; section</li>
+          <li>count-up numbers, coloured section light, hover tilt, fade-in on scroll</li>
+          <li>skeleton loading for the leaderboard, news and 3D preview, retries while the server wakes, still picture without WebGL</li>
+          <li><b>cosmetics</b> · synced all new pets, hats, fairy wings, capes and shields; NEW tags, New-only filter, What&#x27;s new strip</li>
+          <li>FAQ in two columns, bigger footer on every page, phone fixes (help page overflow, cosmetics strip)</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.40">
+        <header><h3>Launcher 0.6.40</h3><time datetime="2026-11-13">November 13, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.39">
+        <header><h3>Launcher 0.6.39</h3><time datetime="2026-11-12">November 12, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.38">
+        <header><h3>Launcher 0.6.38</h3><time datetime="2026-11-12">November 12, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.37">
+        <header><h3>Launcher 0.6.37</h3><time datetime="2026-11-12">November 12, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.36">
+        <header><h3>Launcher 0.6.36</h3><time datetime="2026-11-12">November 12, 2026</time></header>
+        <ul>
+          <li>Fixes and improvements</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.35">
+        <header><h3>Launcher 0.6.35</h3><time datetime="2026-11-12">November 12, 2026</time></header>
+        <ul>
+          <li><b>Screenshot links</b> · Get link in the Gallery uploads a screenshot and copies a comclient.xyz link anyone can open for 30 days</li>
+          <li><b>What&#x27;s new</b> · the Play tab and the update dialog now show the notes of each new launcher version</li>
+          <li><b>Changelog</b> · comclient.xyz/changelog lists new launcher versions by itself</li>
+        </ul>
+      </article>
+      <article class="release glass" id="v0.6.22">
+        <header><h3>Launcher 0.6.22</h3><time datetime="2026-11-09">November 9, 2026</time></header>
         <ul>
           <li><b>You, as others see you</b> · The Play tab shows your skin with your cosmetics on and your name in its name tag style.</li>
           <li><b>Picks save themselves</b> · Anything you own is worn as soon as you pick it in the Locker, and a running game picks it up too.</li>
           <li><b>Today's deal, pictured</b> · The daily deal shows the item itself.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.21">
         <header><h3>Launcher 0.6.21</h3><time datetime="2026-11-09">November 9, 2026</time></header>
         <ul>
           <li><b>Christmas look</b> · Falling snow, fairy lights and a Santa hat on the logo, on until January 6 (can be turned off in Settings).</li>
           <li><b>Pets in 3D</b> · On the website and in the launcher's Locker, pets sit on or fly beside your shoulder with the game's own models and textures.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.20">
         <header><h3>Launcher 0.6.20</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Gifts</b> · Buy a cosmetic for a friend with your points, in the launcher's Locker or in game. They own it right away and see who it's from.</li>
@@ -68,19 +185,19 @@
           <li><b>Profile songs loop</b> · A page's song plays on repeat, on the website and in game.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.19">
         <header><h3>Launcher 0.6.19</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Play time graphs</b> · See how long you played each day (last 14 days) and each week (last 12 weeks) on the Profiles page, for all profiles or just one.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.18">
         <header><h3>Launcher 0.6.18</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Points coin</b> · Points now have their own gold coin in the Locker, on prices and in the daily deal.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.17">
         <header><h3>Launcher 0.6.17</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Daily deal</b> · One cosmetic is 30% off every day, at the top of the Locker and on the cosmetics page.</li>
@@ -88,109 +205,109 @@
           <li><b>Leaderboards</b> · New Points tabs and Top inviters of the month on the players page, and profiles show points and unlocked items (you can hide them in the client's settings).</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.16">
         <header><h3>Launcher 0.6.16</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Invite button</b> · Copy your invite link straight from the Friends page or the Locker.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.15">
         <header><h3>Launcher 0.6.15</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Points and unlocks</b> · Earn points by playing, with a daily streak bonus and by inviting friends, then unlock wings, halos, hats, auras and capes in the Locker. A few capes stay free, and anything you already wore stays yours.</li>
           <li><b>Invite friends</b> · Share comclient.xyz/r/your-name: once your friend has played an hour, you both get points.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.14">
         <header><h3>Launcher 0.6.14</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Crashes explained</b> · When Minecraft crashes, the popup says what most likely went wrong and what to do, in plain words.</li>
           <li><b>Quick tour</b> · New players get three short steps on the first start: sign in, pick a profile, open the Locker.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.13">
         <header><h3>Launcher 0.6.13</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Bring your old setup</b> · Import an instance from Modrinth App, NoRisk, Lunar, Feather, Prism, CurseForge, ATLauncher, GDLauncher or the Minecraft Launcher. Pick what comes along (settings, servers, worlds, packs, shaders, mods) and it becomes a new profile.</li>
           <li><b>Ears</b> · Cat and dog ears come in real fur colours, and the cat ears' pink inside faces forward.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.12">
         <header><h3>Launcher 0.6.12</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Import anything</b> · Drop a Modrinth modpack (.mrpack) or an exported Com Client profile (.ccprofile) on the launcher, pick it, or paste a Modrinth link. It shows what it is before installing.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.11">
         <header><h3>Launcher 0.6.11</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Locker</b> · Wings sit right on your back, and new floppy dog ears with pink inside.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.10">
         <header><h3>Launcher 0.6.10</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Steve when signed out</b> · Without an account, Home and the Locker show Steve instead of an empty spot.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.9">
         <header><h3>Launcher 0.6.9</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Wings fixed</b> · In the Locker (and on the website) the wings now sit right on your back, like in game.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.8">
         <header><h3>Launcher 0.6.8</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Faster</b> · Pages load when you open them, and the game files are checked while the splash shows, so Play starts sooner.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.7">
         <header><h3>Launcher 0.6.7</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Report and block</b> · Report a chat message to the Com Client staff, or block someone. Blocks work in the launcher, in game and on the website.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.6">
         <header><h3>Launcher 0.6.6</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>New update screen</b> · A progress ring, download speed, time left and what's new while the launcher updates, and Try again if something goes wrong.</li>
           <li><b>Discord</b> · Your status has a Download Com Client button.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.5">
         <header><h3>Launcher 0.6.5</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Wings fixed</b> · In the Locker the wings now sit on your back and spread out like in the game.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.4">
         <header><h3>Launcher 0.6.4</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Starts faster</b> · The game files are checked and downloaded in the background, and files that were already checked aren't read again, so Play starts right away.</li>
           <li><b>Mod updates</b> · When your mods, resource packs or shaders have updates, the Mods tab shows how many and the launch bar has an Update all button.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.3">
         <header><h3>Launcher 0.6.3</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Locker looks like the game</b> · Wings are held out to the sides and beat like in Com Client, and every wing, halo, hat and aura card shows the same picture as in the game.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.2">
         <header><h3>Launcher 0.6.2</h3><time datetime="2026-11-08">November 8, 2026</time></header>
         <ul>
           <li><b>Locker fixed</b> · Cape names and pictures show properly again, and picking one of the official capes works.</li>
           <li><b>Friends fixed</b> · Signing in to Com Client no longer fails when the page loads or while the game is running.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.1">
         <header><h3>Launcher 0.6.1</h3><time datetime="2026-11-07">November 7, 2026</time></header>
         <ul>
           <li><b>Logs window</b> · A separate window with the game&#x27;s log (colours, filters, search), its memory and CPU, and one-click upload to mclo.gs. Turn it on in Settings, or open it from the Logs page.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.6.0">
         <header><h3>Launcher 0.6.0</h3><time datetime="2026-11-07">November 7, 2026</time></header>
         <ul>
           <li><b>Gallery</b> · Every screenshot from all your profiles in one grid: open, copy, share or delete them.</li>
@@ -201,13 +318,13 @@
           <li><b>Auto-optimise</b> · On the Profiles page: checks your PC and picks the memory, performance mods and video settings.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.5.1">
         <header><h3>Launcher 0.5.1</h3><time datetime="2026-11-07">November 7, 2026</time></header>
         <ul>
           <li><b>Rename profiles</b> · Click a profile&#x27;s name (or Rename) on the Profiles page, or double-click it in the list, then type the new name.</li>
         </ul>
       </article>
-      <article class="release glass">
+      <article class="release glass" id="v0.5.0">
         <header><h3>Launcher 0.5.0</h3><time datetime="2026-11-07">November 7, 2026</time></header>
         <ul>
           <li><b>Profiles</b> · A new Profiles page: names, Minecraft block or item icons (or your own picture), duplicate, export and import.</li>

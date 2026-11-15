@@ -206,7 +206,6 @@ export default function App() {
     { id: "mods", icon: "cube", label: "Mods" },
     { id: "friends", icon: "users", label: "Friends" },
     { id: "gallery", icon: "image", label: "Gallery" },
-    { id: "crashes", icon: "bug", label: "Crashes" },
     { id: "logs", icon: "terminal", label: "Logs" },
     { id: "storage", icon: "folder", label: "Storage" },
   ];
@@ -220,7 +219,7 @@ export default function App() {
       <Backdrop />
       <SideRail
         tabs={tabs}
-        page={page}
+        page={page === "crashes" ? "logs" : page}
         onPage={(p) => setPage(p as Page)}
         account={active}
         accounts={info.accounts}
@@ -316,8 +315,20 @@ export default function App() {
             />
           )}
           {page === "settings" && <Settings info={info} reload={reload} running={phase !== "idle"} />}
-          {page === "logs" && <Logs />}
-          {page === "crashes" && <Crashes initial={crashFile} />}
+          {(page === "logs" || page === "crashes") && (() => {
+            // Logs and crash reports share one place in the side bar
+            const tabs = (
+              <div className="seg">
+                <button className={page === "logs" ? "on" : ""} onClick={() => setPage("logs")}>
+                  <Icon name="terminal" size={14} /> Logs
+                </button>
+                <button className={page === "crashes" ? "on" : ""} onClick={() => setPage("crashes")}>
+                  <Icon name="bug" size={14} /> Crashes
+                </button>
+              </div>
+            );
+            return page === "logs" ? <Logs tabs={tabs} /> : <Crashes initial={crashFile} tabs={tabs} />;
+          })()}
           {page === "storage" && <Storage running={phase !== "idle"} />}
           </Suspense>
         </main>

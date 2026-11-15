@@ -17,6 +17,14 @@
     if (text != null) e.textContent = text;
     return e;
   };
+  // "Read more" in the launcher opens /changelog#v<version>: show that update (also once GitHub's newer ones are in)
+  const show = () => {
+    const t = location.hash && document.getElementById(location.hash.slice(1));
+    if (!t) return;
+    t.scrollIntoView({ block: "start" });
+    t.classList.add("picked");
+  };
+  show();
   fetch("https://api.github.com/repos/troxytele/com-client-launcher/releases?per_page=30", { headers: { Accept: "application/vnd.github+json" } })
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((rels) => {
@@ -28,6 +36,7 @@
       list.querySelectorAll(".tag").forEach((t) => t.textContent === "LATEST" && t.remove());
       fresh.forEach((r, i) => {
         const a = el("article", "release glass");
+        a.id = "v" + r.v;
         const h = el("header");
         h.append(el("h3", null, "Launcher " + r.v));
         if (i === 0) h.append(el("span", "tag", "LATEST"));
@@ -45,6 +54,7 @@
         a.append(h, ul);
         list.insertBefore(a, list.children[i]);
       });
+      show();
     })
     .catch(() => {});
 })();
