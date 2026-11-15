@@ -304,7 +304,7 @@ const CUSTOM_CAPES = {
   cc_honeycomb: [1, 1000], cc_mint: [1, 1000],
   cc_synthwave: [16, 110], cc_event_horizon: [16, 110], cc_koi: [16, 140], cc_dragon_scale: [16, 110],
   cc_lanterns: [16, 150], cc_petal_storm: [16, 120],
-  cc_matrix: [16, 110], cc_starfield: [16, 110], cc_ember: [16, 100], cc_midnight: [16, 160], cc_cherry: [16, 130], cc_carbon: [16, 110], cc_vaporwave: [16, 110], cc_toxic: [16, 120], cc_deep_sea: [16, 130], cc_purple_storm: [16, 100],
+  cc_starfield: [16, 110], cc_ember: [16, 100], cc_midnight: [16, 160], cc_cherry: [16, 130], cc_carbon: [16, 110], cc_vaporwave: [16, 110], cc_deep_sea: [16, 130], cc_purple_storm: [16, 100],
 };
 
 /** Cuts a cape strip into one canvas per frame. */

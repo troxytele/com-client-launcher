@@ -65,7 +65,7 @@ const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_honeycomb", "Honeycomb"), ("cc_mint", "Mint"),
     ("cc_synthwave", "Synthwave"), ("cc_event_horizon", "Event Horizon"), ("cc_koi", "Koi Pond"), ("cc_dragon_scale", "Dragon Scale"),
     ("cc_lanterns", "Lantern Festival"), ("cc_petal_storm", "Petal Storm"),
-    ("cc_matrix", "Matrix"), ("cc_starfield", "Starfield"), ("cc_ember", "Ember"), ("cc_midnight", "Midnight"), ("cc_cherry", "Cherry Blossom"), ("cc_carbon", "Carbon Fiber"), ("cc_vaporwave", "Vaporwave"), ("cc_toxic", "Toxic Waste"), ("cc_deep_sea", "Deep Sea"), ("cc_purple_storm", "Purple Storm"),
+    ("cc_starfield", "Starfield"), ("cc_ember", "Ember"), ("cc_midnight", "Midnight"), ("cc_cherry", "Cherry Blossom"), ("cc_carbon", "Carbon Fiber"), ("cc_vaporwave", "Vaporwave"), ("cc_deep_sea", "Deep Sea"), ("cc_purple_storm", "Purple Storm"),
 ];
 
 #[derive(Serialize, Clone, Debug)]
