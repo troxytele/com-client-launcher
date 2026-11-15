@@ -2143,9 +2143,17 @@ html[data-theme="black"] .news-tag {
   box-shadow: 0 10px 34px rgba(var(--accent-rgb), 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
 }
-.play-btn span {
+/* only the label: the progress fill is a span too and must stay absolute, or it pushes the label aside */
+.play-btn .play-label {
   margin-right: -0.3em;
   position: relative;
+  white-space: nowrap;
+}
+.play-btn.busy {
+  letter-spacing: 0.18em;
+}
+.play-btn.busy .play-label {
+  margin-right: -0.18em;
 }
 .play-btn svg {
   position: relative;
@@ -4986,7 +4994,7 @@ html.festive .fairy-lights {
 }
 .lb-game-stop:hover { background: rgba(255, 106, 125, 0.28); }
 .play-btn.again { min-width: 190px; font-size: 13.5px; letter-spacing: 0.16em; }
-.play-btn.again span { margin-right: -0.16em; }
+.play-btn.again .play-label { margin-right: -0.16em; }
 
 /* ---- the check before playing */
 .mcheck-list { display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow-y: auto; margin: 4px 0 6px; }

@@ -334,7 +334,7 @@ export default function Home({ info, phase, progress, error, onPlay, onProfiles,
         >
           {phase === "preparing" && <span className="play-fill" style={{ width: (pct ?? 0) + "%" }} />}
           {phase === "preparing" ? <Spinner size={16} /> : <Icon name={games.length ? "plus" : "play"} size={18} fill={!games.length} />}
-          <span>{phase === "preparing" ? "STARTING" : !active ? "SIGN IN" : games.length ? "PLAY ANOTHER" : "PLAY"}</span>
+          <span className="play-label">{phase === "preparing" ? "STARTING" : !active ? "SIGN IN" : games.length ? "PLAY ANOTHER" : "PLAY"}</span>
         </button>
       </footer>
     </div>
