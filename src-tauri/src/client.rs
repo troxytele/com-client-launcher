@@ -26,7 +26,7 @@ pub struct Installed {
 
 /// What we installed, one file per Minecraft version (installed.json for the main one).
 fn installed_path(paths: &Paths, mc: &str) -> PathBuf {
-    if config::is_legacy(mc) { paths.client().join(format!("installed-{mc}.json")) } else { paths.client().join("installed.json") }
+    if mc != config::MC_VERSION { paths.client().join(format!("installed-{mc}.json")) } else { paths.client().join("installed.json") }
 }
 
 pub fn installed(paths: &Paths) -> Installed {
@@ -50,7 +50,7 @@ pub async fn ensure(paths: &Paths, mc: &str, custom: Option<&str>, replay: bool,
 
     // Com Client
     // the test jar from the settings is a build for the main version
-    if let Some(c) = custom.filter(|c| !c.trim().is_empty() && !config::is_legacy(mc)) {
+    if let Some(c) = custom.filter(|c| !c.trim().is_empty() && mc == config::MC_VERSION) {
         let p = PathBuf::from(c.trim());
         if !p.is_file() {
             bail!("The test jar from the settings doesn't exist: {}", p.display());
@@ -177,8 +177,8 @@ async fn latest_client(mc: &str) -> Result<(String, String, String, Hash, u64)> 
         .and_then(|a| {
             a.iter().find(|x| {
                 let n = x["name"].as_str().unwrap_or_default();
-                // the main version's jar has no old version in its name; an old version's jar has it (com-client-1.8.9.jar)
-                let for_this = if config::is_legacy(mc) { n.contains(mc) } else { !config::LEGACY_VERSIONS.iter().any(|v| n.contains(v)) };
+                // the main version's jar has no other version in its name; another version's jar has it (com-client-1.8.9.jar)
+                let for_this = config::jar_for(n, mc);
                 n.ends_with(".jar") && !n.contains("-sources") && !n.contains("-dev") && for_this
             })
         })

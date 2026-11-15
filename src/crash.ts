@@ -33,13 +33,13 @@ const RULES: Rule[] = [
     title: "A mod doesn't work with this Minecraft version",
     text: (m) => {
       const mod = m[1] || m[2] || m[3];
-      return `${mod ? `“${mod}”` : "A mod"} tried to change part of the game that is different in Minecraft 1.21.11. Update it, or turn it off in Mods.`;
+      return `${mod ? `“${mod}”` : "A mod"} tried to change part of the game that is different in this Minecraft version. Update it, or turn it off in Mods.`;
     },
   },
   {
     test: /UnsupportedClassVersionError|class file version (\d+)/,
     title: "A mod needs a newer Java",
-    text: () => "Something was built for a newer Java than the game runs on. It's usually a mod made for a newer Minecraft version: check that every mod is for 1.21.11.",
+    text: () => "Something was built for a newer Java than the game runs on. It's usually a mod made for a newer Minecraft version: check that every mod is for the profile's Minecraft version.",
   },
   {
     test: /Pixel format not accelerated|WGL: The driver does not appear to support OpenGL|GLFW error 65542|OpenGL 3\.2 is not supported|No OpenGL context/i,

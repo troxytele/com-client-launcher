@@ -12,10 +12,10 @@ import logoUrl from "../assets/logo.png";
 import { Modal, Spinner, Switch } from "../components/Ui";
 import { ImportBlock } from "./Settings";
 
-// Versions a profile can use. 1.21.11 runs Com Client on Fabric; 1.8.9 runs Legacy Fabric (Com Client for 1.8.9 is
-// on its way: until its release is out, a 1.8.9 profile starts with just Legacy Fabric and the mods you add).
+// Versions a profile can use. 1.21.11 and 1.21.4 run Com Client on Fabric; 1.8.9 runs Com Client on Legacy Fabric.
 const VERSIONS = [
   { id: "1.21.11", ready: true, note: "Com Client", icon: "item:mace", blurb: "The full client: modules, cosmetics, emotes, knives. Newest Minecraft with Fabric." },
+  { id: "1.21.4", ready: true, note: "Com Client", icon: "item:netherite_sword", blurb: "The full client on 1.21.4, for servers and mods that stay on this version." },
   { id: "1.8.9", ready: true, note: "Legacy Fabric · PvP", icon: "item:diamond_sword", blurb: "Classic 1.8 PvP: old combat, no attack cooldown. Com Client on Legacy Fabric." },
 ];
 

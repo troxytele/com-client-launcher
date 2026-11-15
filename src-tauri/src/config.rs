@@ -8,9 +8,23 @@ pub const MC_VERSION: &str = "1.21.11";
 /// until there is one, the profile starts without it.
 pub const LEGACY_VERSIONS: &[&str] = &["1.8.9"];
 
+/// Other modern versions a profile can use. They run on Fabric like the main version; Com Client for them comes
+/// from a release asset with the version in its name (com-client-1.21.4-0.1.0.jar).
+pub const OTHER_VERSIONS: &[&str] = &["1.21.4"];
+
 /// Every version a profile can pick.
 pub fn supported(mc: &str) -> bool {
-    mc == MC_VERSION || LEGACY_VERSIONS.contains(&mc)
+    mc == MC_VERSION || OTHER_VERSIONS.contains(&mc) || LEGACY_VERSIONS.contains(&mc)
+}
+
+/// Is this release file the Com Client jar for this Minecraft version? The main version's jar has no other
+/// version in its name; every other version's jar has its own (com-client-1.8.9.jar, com-client-1.21.4-0.1.0.jar).
+pub fn jar_for(name: &str, mc: &str) -> bool {
+    if mc == MC_VERSION {
+        !LEGACY_VERSIONS.iter().chain(OTHER_VERSIONS.iter()).any(|v| name.contains(v))
+    } else {
+        name.contains(mc)
+    }
 }
 
 pub fn is_legacy(mc: &str) -> bool {
@@ -55,4 +69,20 @@ pub const LAUNCHER_NAME: &str = "ComClientLauncher";
 
 pub fn user_agent() -> String {
     format!("{}/{}", LAUNCHER_NAME, env!("CARGO_PKG_VERSION"))
+}
+
+#[cfg(test)]
+mod version_tests {
+    use super::*;
+
+    #[test]
+    fn jars_go_to_their_version() {
+        assert!(jar_for("com-client-0.1.0.jar", MC_VERSION));
+        assert!(!jar_for("com-client-1.21.4-0.1.0.jar", MC_VERSION));
+        assert!(!jar_for("com-client-1.8.9.jar", MC_VERSION));
+        assert!(jar_for("com-client-1.21.4-0.1.0.jar", "1.21.4"));
+        assert!(!jar_for("com-client-0.1.0.jar", "1.21.4"));
+        assert!(jar_for("com-client-1.8.9.jar", "1.8.9"));
+        assert!(supported("1.21.4") && !is_legacy("1.21.4"));
+    }
 }

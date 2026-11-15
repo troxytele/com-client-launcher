@@ -102,7 +102,9 @@ fn detect(dir: &Path) -> (String, String) {
     }
     // the Minecraft version (one the launcher runs) that most of the mods are made for
     let mut best = (0, String::new());
-    for mc in std::iter::once(crate::config::MC_VERSION).chain(crate::config::LEGACY_VERSIONS.iter().copied()) {
+    for mc in std::iter::once(crate::config::MC_VERSION)
+        .chain(crate::config::OTHER_VERSIONS.iter().copied())
+        .chain(crate::config::LEGACY_VERSIONS.iter().copied()) {
         let fits = deps.iter().filter(|d| !d.is_null() && crate::modcheck::version_fits(d, mc)).count();
         if fits > best.0 {
             best = (fits, mc.to_string());
