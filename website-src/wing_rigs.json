@@ -1413,6 +1413,16 @@
     "frost_ribbon": "ribbons",
     "sun_fairy": "fairy_small",
     "ocean_fairy": "fairy",
-    "royal_fairy": "fairy_grand"
+    "royal_fairy": "fairy_grand",
+    "xmas_angel": "feather_grand",
+    "gingerbread_wings": "feather",
+    "cardinal": "feather_small",
+    "northern_lights": "butterfly_grand",
+    "holly_moth": "butterfly_small",
+    "snow_drake": "membrane",
+    "ice_crystal": "shards",
+    "holly_leaf": "leaves",
+    "frosted_fairy": "fairy",
+    "tinsel_ribbon": "ribbons"
   }
 }

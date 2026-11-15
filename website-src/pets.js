@@ -87,6 +87,12 @@ const PETS = {
   mushroom: [false, 0.55],
   dino: [false, 0.55],
   pufferfish: [true, 0.5],
+  baby_reindeer: [false, 0.55],
+  gingerbread_man: [false, 0.55],
+  polar_bear: [false, 0.5],
+  xmas_tree: [false, 0.55],
+  present_pal: [false, 0.55],
+  snow_fox: [false, 0.55],
 };
 // every pet is Com Client's own chibi voxel model now
 const OWN = new Set(Object.keys(PETS));

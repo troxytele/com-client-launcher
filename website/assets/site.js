@@ -125,6 +125,12 @@ window.CC = (() => {
     amethyst: { name: "Amethyst", stops: [0x5a1e8e, 0xc77bff, 0x5a1e8e], moving: true },
     sunrise: { name: "Sunrise", stops: [0xff6a3d, 0xffb347, 0xffe07a], moving: false },
     lime: { name: "Lime", stops: [0xb6ff3a, 0x5fd33a], moving: false },
+    christmas: { name: "Christmas", stops: [0xe8262b, 0xffffff, 0x2f8f3a, 0xffffff, 0xe8262b], moving: true },
+    candy_cane: { name: "Candy Cane", stops: [0xff3a3a, 0xffffff, 0xff3a3a, 0xffffff], moving: true },
+    frost: { name: "Frost", stops: [0xffffff, 0x9fd6ff, 0x4a8bff, 0x9fd6ff], moving: true },
+    gingerbread: { name: "Gingerbread", stops: [0x9a5a28, 0xd08a4a, 0xfff4e0], moving: false },
+    evergreen: { name: "Evergreen", stops: [0x1f6a2a, 0x5fd36b, 0x1f6a2a], moving: true },
+    golden_star: { name: "Golden Star", stops: [0xfff3a0, 0xf2c230, 0xb8860b, 0xf2c230], moving: true },
   };
   const mixRgb = (a, b, t) => {
     const ch = (sh) => Math.round(((a >> sh) & 255) + (((b >> sh) & 255) - ((a >> sh) & 255)) * t);
