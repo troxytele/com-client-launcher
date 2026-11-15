@@ -396,7 +396,7 @@ function Launchers({ onDone, preset, onClearPreset }: { onDone: (profileId: stri
       {pick.mods > 0 && !pick.mods_ok && (
         <p className="muted small">
           <Icon name="info" size={13} /> Its mods stay behind: they're{" "}
-          {pick.loader && pick.loader !== "Fabric" ? `for ${pick.loader}` : pick.version ? `for Minecraft ${pick.version}` : "not Fabric mods for Minecraft 1.21.11"}, and Com Client runs Fabric 1.21.11.
+          {pick.loader && pick.loader !== "Fabric" ? `for ${pick.loader}` : pick.version ? `for Minecraft ${pick.version}` : "not Fabric mods for Minecraft 1.21.11 or 1.8.9"}, and Com Client runs Fabric 1.21.11 and 1.8.9.
           {pick.launcher.match(/Lunar|NoRisk|Feather|Badlion/) ? " Its own client features don't carry over either." : ""}
         </p>
       )}

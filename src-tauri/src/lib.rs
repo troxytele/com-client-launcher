@@ -495,7 +495,7 @@ async fn prewarm(state: State<'_, AppState>) -> Res<bool> {
 async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<String>, profile_id: Option<String>, replay: Option<String>) -> anyhow::Result<()> {
     let paths = state.paths.clone();
     let settings = Settings::load(&paths);
-    let mut profiles = Profiles::load(&paths);
+    let profiles = Profiles::load(&paths);
     let mut profile = profiles.get(profile_id.as_deref().unwrap_or(&settings.active_profile));
     if replay.is_some() {
         profile.replay_mod = true; // watching a replay needs ReplayMod
@@ -566,10 +566,12 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
     set_tray_tip(app, &if count > 1 { format!("Com Client: {count} games running") } else { format!("Com Client: playing {}", profile.name) });
     discord::clear(); // the mod shows its own Rich Presence in game
 
-    if let Some(p) = profiles.list.iter_mut().find(|p| p.id == profile.id) {
+    // load again: the profiles may have changed while the game was downloading (a new or renamed profile)
+    let mut fresh = Profiles::load(&paths);
+    if let Some(p) = fresh.list.iter_mut().find(|p| p.id == profile.id) {
         p.last_played = started;
+        let _ = fresh.save(&paths);
     }
-    let _ = profiles.save(&paths);
 
     if let Some(w) = app.get_webview_window("main") {
         match settings.after_launch.as_str() {
@@ -606,16 +608,17 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
         let st = app2.state::<AppState>();
         let secs = (auth::now() - started).max(0) as u64;
         Profiles::record(&st.paths, &profile.id, started, secs, server.as_deref().unwrap_or_default());
-        let left = {
+        let (left, tip) = {
             let mut games = st.games.lock().unwrap();
             games.retain(|g| g.info.id != game_id);
-            games.len()
+            let tip = match games.len() {
+                0 => "Com Client Launcher".to_string(),
+                1 => format!("Com Client: playing {}", games[0].info.profile),
+                n => format!("Com Client: {n} games running"),
+            };
+            (games.len(), tip)
         };
-        set_tray_tip(&app2, &match left {
-            0 => "Com Client Launcher".to_string(),
-            1 => format!("Com Client: playing {}", st.games.lock().unwrap()[0].info.profile),
-            n => format!("Com Client: {n} games running"),
-        });
+        set_tray_tip(&app2, &tip);
         // the launcher comes back when the last game closes (or when one crashes, to show why)
         if left == 0 || crashed {
             if let Some(w) = app2.get_webview_window("main") {

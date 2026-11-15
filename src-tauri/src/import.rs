@@ -23,7 +23,7 @@ pub struct Source {
     pub version: String,
     pub loader: String,
     pub mods: usize,
-    /// its mods would run in Com Client (Fabric, the launcher's Minecraft version)
+    /// its mods would run in Com Client (Fabric, a Minecraft version the launcher runs)
     pub mods_ok: bool,
     pub shaders: usize,
     pub worlds: usize,
@@ -90,20 +90,25 @@ fn detect(dir: &Path) -> (String, String) {
         return (String::new(), String::new());
     }
     let mut fabric = 0;
-    let mut fits = 0;
+    let mut deps: Vec<serde_json::Value> = Vec::new();
     for j in list.iter().take(120) {
         if let Some(meta) = fabric_meta(j) {
             fabric += 1;
-            let mc = meta["depends"]["minecraft"].to_string();
-            if mc.contains(crate::config::MC_VERSION) {
-                fits += 1;
-            }
+            deps.push(meta["depends"]["minecraft"].clone());
         }
     }
     if fabric == 0 {
         return (String::new(), "Not Fabric".into());
     }
-    (if fits * 2 >= fabric.min(10) && fits > 0 { crate::config::MC_VERSION.into() } else { String::new() }, "Fabric".into())
+    // the Minecraft version (one the launcher runs) that most of the mods are made for
+    let mut best = (0, String::new());
+    for mc in std::iter::once(crate::config::MC_VERSION).chain(crate::config::LEGACY_VERSIONS.iter().copied()) {
+        let fits = deps.iter().filter(|d| !d.is_null() && crate::modcheck::version_fits(d, mc)).count();
+        if fits > best.0 {
+            best = (fits, mc.to_string());
+        }
+    }
+    (if best.0 * 2 >= fabric.min(10) && best.0 > 0 { best.1 } else { String::new() }, "Fabric".into())
 }
 
 /// Size of a file or a whole folder.
@@ -241,7 +246,7 @@ fn source_for(launcher: &str, d: &Path) -> Source {
     let saves = d.join("saves");
     let worlds = count_dir(&saves, |p| p.join("level.dat").is_file());
     Source {
-        mods_ok: mods > 0 && loader == "Fabric" && version == crate::config::MC_VERSION,
+        mods_ok: mods > 0 && loader == "Fabric" && crate::config::supported(&version),
         version,
         loader,
         mods,
@@ -496,6 +501,11 @@ pub fn instance_to_profile(paths: &crate::paths::Paths, source: &Path, name: &st
         p.name = "Imported".into();
     }
     p.created = crate::auth::now();
+    // keep the instance's Minecraft version when Com Client runs it (a 1.8.9 instance stays 1.8.9)
+    let (version, _) = detect(source);
+    if crate::config::supported(version.trim()) {
+        p.version = version.trim().to_string();
+    }
     let dir = store::game_dir(paths, &p);
     std::fs::create_dir_all(&dir)?;
 

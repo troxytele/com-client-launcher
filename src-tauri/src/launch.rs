@@ -104,8 +104,9 @@ pub fn arguments(paths: &Paths, plan: &Plan) -> Vec<String> {
     let mut args = Vec::new();
     // memory first, then the player's own arguments (they may override the defaults)
     args.push(format!("-Xmx{}M", p.ram_mb.max(512)));
-    // the whole heap up front: no stutters while Java grows it
-    args.push(format!("-Xms{}M", p.ram_mb.max(512)));
+    // a good part of the heap up front (fewer stutters while Java grows it), but not all of it: with the whole
+    // heap reserved at once a second game (or a big setting on a smaller PC) can't start ("insufficient memory")
+    args.push(format!("-Xms{}M", p.ram_mb.max(512).min(4096)));
     args.extend(
         ["-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20",
          "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M", "-XX:+ParallelRefProcEnabled", "-XX:+DisableExplicitGC"]

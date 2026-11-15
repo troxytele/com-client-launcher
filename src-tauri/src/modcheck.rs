@@ -197,7 +197,8 @@ pub fn version_fits(dep: &Value, version: &str) -> bool {
 /// What the launcher puts in by itself (Com Client, Fabric API and its parts, the speed mods, ReplayMod).
 fn builtin(id: &str, perf: bool, replay: bool) -> bool {
     matches!(id, "minecraft" | "java" | "fabricloader" | "fabric" | "fabric-api" | "fabric-api-base" | "comclient" | "legacy-fabric-api" | "mixinextras")
-        || id.starts_with("fabric-")
+        // Fabric API's parts (but not the language mods like fabric-language-kotlin, which are separate downloads)
+        || (id.starts_with("fabric-") && !id.starts_with("fabric-language-"))
         || id.starts_with("legacy-fabric-")
         || (perf && matches!(id, "sodium" | "lithium" | "ferritecore" | "entityculling"))
         || (replay && id == "replaymod")
