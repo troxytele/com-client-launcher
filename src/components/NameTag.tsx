@@ -9,6 +9,16 @@ export const NAME_STYLES: Record<string, { stops: number[]; moving: boolean }> =
   candy: { stops: [0xff5fa2, 0xffb3d9, 0x8fd8ff], moving: false },
   galaxy: { stops: [0xb57bff, 0x5b6bff, 0xff6bd5, 0xb57bff], moving: true },
   rainbow: { stops: [], moving: true },
+  sunset: { stops: [0xff5f6d, 0xffc371], moving: true },
+  lava: { stops: [0xff3d00, 0xffb300, 0xff3d00], moving: true },
+  mint: { stops: [0xb8ffe0, 0x3fe0a0], moving: false },
+  ice: { stops: [0xe0f7ff, 0x8fd3ff, 0xffffff, 0x8fd3ff], moving: true },
+  sakura: { stops: [0xffb7d5, 0xfff0f6, 0xff8fbf], moving: true },
+  vaporwave: { stops: [0xff71ce, 0x01cdfe, 0xb967ff], moving: true },
+  emerald: { stops: [0x0e9f6e, 0x6dffb0, 0x0e9f6e], moving: true },
+  blood: { stops: [0x7a0010, 0xe8202a, 0x7a0010], moving: true },
+  midnight: { stops: [0xb57bff, 0x5b6bff, 0x1d2a8f], moving: false },
+  mono: { stops: [0xffffff, 0x8a8a8a, 0xffffff], moving: true },
 };
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
 const mixRgb = (a: number, b: number, t: number) => {

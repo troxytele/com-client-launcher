@@ -101,6 +101,16 @@ window.CC = (() => {
     candy: { name: "Candy", stops: [0xff5fa2, 0xffb3d9, 0x8fd8ff], moving: false },
     galaxy: { name: "Galaxy", stops: [0xb57bff, 0x5b6bff, 0xff6bd5, 0xb57bff], moving: true },
     rainbow: { name: "Rainbow", stops: [], moving: true },
+    sunset: { name: "Sunset", stops: [0xff5f6d, 0xffc371], moving: true },
+    lava: { name: "Lava", stops: [0xff3d00, 0xffb300, 0xff3d00], moving: true },
+    mint: { name: "Mint", stops: [0xb8ffe0, 0x3fe0a0], moving: false },
+    ice: { name: "Ice", stops: [0xe0f7ff, 0x8fd3ff, 0xffffff, 0x8fd3ff], moving: true },
+    sakura: { name: "Sakura", stops: [0xffb7d5, 0xfff0f6, 0xff8fbf], moving: true },
+    vaporwave: { name: "Vaporwave", stops: [0xff71ce, 0x01cdfe, 0xb967ff], moving: true },
+    emerald: { name: "Emerald", stops: [0x0e9f6e, 0x6dffb0, 0x0e9f6e], moving: true },
+    blood: { name: "Blood Moon", stops: [0x7a0010, 0xe8202a, 0x7a0010], moving: true },
+    midnight: { name: "Midnight", stops: [0xb57bff, 0x5b6bff, 0x1d2a8f], moving: false },
+    mono: { name: "Mono", stops: [0xffffff, 0x8a8a8a, 0xffffff], moving: true },
   };
   const mixRgb = (a, b, t) => {
     const ch = (sh) => Math.round(((a >> sh) & 255) + (((b >> sh) & 255) - ((a >> sh) & 255)) * t);

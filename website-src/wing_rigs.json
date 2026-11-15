@@ -770,6 +770,388 @@
           ]
         }
       ]
+    },
+    "feather_small": {
+      "label": "Small Feathered",
+      "scale": 0.5,
+      "period": 40,
+      "panels": [
+        {
+          "id": "inner",
+          "uv": [
+            0,
+            0,
+            80,
+            128
+          ],
+          "size": [
+            10,
+            16
+          ],
+          "at": [
+            1.0,
+            1.2,
+            2.7
+          ],
+          "rot": [
+            20,
+            10,
+            32
+          ],
+          "flap": [
+            10,
+            4,
+            0
+          ]
+        },
+        {
+          "id": "outer",
+          "uv": [
+            96,
+            0,
+            112,
+            176
+          ],
+          "size": [
+            14,
+            22
+          ],
+          "parent": "inner",
+          "at": [
+            9.6,
+            0.2,
+            0
+          ],
+          "rot": [
+            16,
+            -4,
+            14
+          ],
+          "flap": [
+            9,
+            5,
+            -0.8
+          ]
+        }
+      ]
+    },
+    "feather_grand": {
+      "label": "Grand Feathered",
+      "scale": 1.18,
+      "period": 96,
+      "panels": [
+        {
+          "id": "inner",
+          "uv": [
+            0,
+            0,
+            80,
+            128
+          ],
+          "size": [
+            10,
+            16
+          ],
+          "at": [
+            1.0,
+            1.2,
+            2.7
+          ],
+          "rot": [
+            20,
+            10,
+            32
+          ],
+          "flap": [
+            10,
+            4,
+            0
+          ]
+        },
+        {
+          "id": "outer",
+          "uv": [
+            96,
+            0,
+            112,
+            176
+          ],
+          "size": [
+            14,
+            22
+          ],
+          "parent": "inner",
+          "at": [
+            9.6,
+            0.2,
+            0
+          ],
+          "rot": [
+            16,
+            -4,
+            14
+          ],
+          "flap": [
+            9,
+            5,
+            -0.8
+          ]
+        }
+      ]
+    },
+    "membrane_small": {
+      "label": "Small Dragon",
+      "scale": 0.52,
+      "period": 34,
+      "panels": [
+        {
+          "id": "inner",
+          "uv": [
+            0,
+            0,
+            80,
+            112
+          ],
+          "size": [
+            10,
+            14
+          ],
+          "at": [
+            1.0,
+            1.2,
+            2.7
+          ],
+          "rot": [
+            20,
+            14,
+            28
+          ],
+          "flap": [
+            14,
+            5,
+            0
+          ]
+        },
+        {
+          "id": "outer",
+          "uv": [
+            96,
+            0,
+            112,
+            144
+          ],
+          "size": [
+            14,
+            18
+          ],
+          "parent": "inner",
+          "at": [
+            9.6,
+            0.1,
+            0
+          ],
+          "rot": [
+            18,
+            -4,
+            10
+          ],
+          "flap": [
+            11,
+            7,
+            -0.9
+          ]
+        }
+      ]
+    },
+    "membrane_grand": {
+      "label": "Grand Dragon",
+      "scale": 1.2,
+      "period": 76,
+      "panels": [
+        {
+          "id": "inner",
+          "uv": [
+            0,
+            0,
+            80,
+            112
+          ],
+          "size": [
+            10,
+            14
+          ],
+          "at": [
+            1.0,
+            1.2,
+            2.7
+          ],
+          "rot": [
+            20,
+            14,
+            28
+          ],
+          "flap": [
+            14,
+            5,
+            0
+          ]
+        },
+        {
+          "id": "outer",
+          "uv": [
+            96,
+            0,
+            112,
+            144
+          ],
+          "size": [
+            14,
+            18
+          ],
+          "parent": "inner",
+          "at": [
+            9.6,
+            0.1,
+            0
+          ],
+          "rot": [
+            18,
+            -4,
+            10
+          ],
+          "flap": [
+            11,
+            7,
+            -0.9
+          ]
+        }
+      ]
+    },
+    "butterfly_small": {
+      "label": "Small Butterfly",
+      "scale": 0.5,
+      "period": 12,
+      "panels": [
+        {
+          "id": "fore",
+          "uv": [
+            0,
+            0,
+            112,
+            128
+          ],
+          "size": [
+            14,
+            16
+          ],
+          "at": [
+            0.5,
+            0.8,
+            2.6
+          ],
+          "rot": [
+            6,
+            12,
+            26
+          ],
+          "flap": [
+            0,
+            28,
+            0
+          ]
+        },
+        {
+          "id": "hind",
+          "uv": [
+            128,
+            0,
+            88,
+            96
+          ],
+          "size": [
+            11,
+            12
+          ],
+          "at": [
+            0.5,
+            4.6,
+            2.62
+          ],
+          "rot": [
+            8,
+            6,
+            -22
+          ],
+          "flap": [
+            0,
+            24,
+            -0.35
+          ]
+        }
+      ]
+    },
+    "butterfly_grand": {
+      "label": "Grand Butterfly",
+      "scale": 1.15,
+      "period": 22,
+      "panels": [
+        {
+          "id": "fore",
+          "uv": [
+            0,
+            0,
+            112,
+            128
+          ],
+          "size": [
+            14,
+            16
+          ],
+          "at": [
+            0.5,
+            0.8,
+            2.6
+          ],
+          "rot": [
+            6,
+            12,
+            26
+          ],
+          "flap": [
+            0,
+            28,
+            0
+          ]
+        },
+        {
+          "id": "hind",
+          "uv": [
+            128,
+            0,
+            88,
+            96
+          ],
+          "size": [
+            11,
+            12
+          ],
+          "at": [
+            0.5,
+            4.6,
+            2.62
+          ],
+          "rot": [
+            8,
+            6,
+            -22
+          ],
+          "flap": [
+            0,
+            24,
+            -0.35
+          ]
+        }
+      ]
     }
   },
   "designs": {
@@ -799,6 +1181,24 @@
     "leaf": "leaves",
     "bone": "membrane",
     "peacock": "fan",
-    "ribbon": "ribbons"
+    "ribbon": "ribbons",
+    "angel_mini": "feather_small",
+    "cherub": "feather_small",
+    "dragonling": "membrane_small",
+    "imp": "membrane_small",
+    "ladybug": "butterfly_small",
+    "luna_moth": "butterfly_small",
+    "raven": "feather",
+    "snowy_owl": "feather",
+    "neon": "membrane",
+    "venom": "membrane",
+    "sakura_wings": "butterfly",
+    "glasswing": "butterfly",
+    "archangel": "feather_grand",
+    "nebula_wings": "feather_grand",
+    "storm": "feather_grand",
+    "elder_dragon": "membrane_grand",
+    "sunfire": "membrane_grand",
+    "emperor": "butterfly_grand"
   }
 }
