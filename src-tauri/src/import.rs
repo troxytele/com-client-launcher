@@ -506,6 +506,7 @@ pub fn instance_to_profile(paths: &crate::paths::Paths, source: &Path, name: &st
     if crate::config::supported(version.trim()) {
         p.version = version.trim().to_string();
     }
+    store::claim_folder(paths, &Profiles::load(paths).list, &mut p);
     let dir = store::game_dir(paths, &p);
     std::fs::create_dir_all(&dir)?;
 

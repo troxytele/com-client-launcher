@@ -74,7 +74,7 @@ instead of the GitHub release. Clear it to go back.
 
 ## Where things are
 
-* Launcher data: `%APPDATA%\net.comclient.launcher` (game files, Java, accounts, profiles). Settings → Launcher folder.
+* Launcher data: `%APPDATA%\comclient` (game files, Java, accounts, and one folder per profile named after it). Settings → Launcher folder.
 * Each profile's game folder (worlds, mods, options): `...\profiles\<profile>` unless you pick your own.
 * Skin library: `...\skins` (the PNGs + `skins.json`). Wearing a skin uploads it to your Minecraft account.
 * Com Client + Fabric API: `...\client` (added with `-Dfabric.addMods`, so they never show in the mods folder).

@@ -91,6 +91,7 @@ pub async fn install_file(paths: &Paths, pack: &Path, title: &str, icon_url: &st
     if let Some(icon) = icon(icon_url).await {
         p.icon = icon;
     }
+    store::claim_folder(paths, &crate::store::Profiles::load(paths).list, &mut p);
     let dir = store::game_dir(paths, &p);
     std::fs::create_dir_all(&dir)?;
 

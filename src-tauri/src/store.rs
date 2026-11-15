@@ -144,6 +144,9 @@ pub struct Profile {
     pub name: String,
     /// Empty = the launcher's own folder for this profile.
     pub game_dir: String,
+    /// The name of that own folder in profiles/ (named after the profile, e.g. "PvP 1.8.9"). Empty = the id
+    /// (older launchers); the launcher renames those to the profile's name by itself.
+    pub folder: String,
     pub ram_mb: u32,
     pub java_args: String,
     pub width: u32,
@@ -187,6 +190,7 @@ impl Default for Profile {
             id: "default".into(),
             name: "Com Client".into(),
             game_dir: String::new(),
+            folder: String::new(),
             ram_mb: default_ram(),
             java_args: String::new(),
             width: 1280,
@@ -304,8 +308,167 @@ impl PlayLog {
 
 pub fn game_dir(paths: &Paths, p: &Profile) -> std::path::PathBuf {
     if p.game_dir.trim().is_empty() {
-        paths.profiles().join(&p.id)
+        paths.profiles().join(if p.folder.trim().is_empty() { p.id.as_str() } else { p.folder.trim() })
     } else {
         std::path::PathBuf::from(p.game_dir.trim())
+    }
+}
+
+/// A folder name Windows accepts, from a profile's name ("PvP: 1.8.9?" -> "PvP 1.8.9").
+pub fn folder_name(profile_name: &str) -> String {
+    let clean: String = profile_name
+        .chars()
+        .map(|c| if matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*') || c.is_control() { ' ' } else { c })
+        .collect();
+    let mut clean = clean.split_whitespace().collect::<Vec<_>>().join(" ");
+    clean = clean.chars().take(40).collect::<String>().trim_matches(|c: char| c == '.' || c == ' ').to_string();
+    let reserved = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"];
+    if clean.is_empty() {
+        return "Profile".into();
+    }
+    if reserved.iter().any(|r| r.eq_ignore_ascii_case(clean.split('.').next().unwrap_or(""))) {
+        clean.push_str(" profile");
+    }
+    clean
+}
+
+/// The folder a profile's own files should be in: its name, or "name (2)", "name (3)" ... when another profile
+/// (or a folder nobody owns) already has that name. Keeps the folder it has when that one still fits.
+fn wanted_folder(paths: &Paths, list: &[Profile], p: &Profile) -> String {
+    let base = folder_name(&p.name);
+    let taken = |name: &str| -> bool {
+        let low = name.to_lowercase();
+        list.iter().any(|o| o.id != p.id && o.game_dir.trim().is_empty() && current_folder(o).to_lowercase() == low)
+            || (current_folder(p).to_lowercase() != low && paths.profiles().join(name).exists())
+    };
+    let cur = current_folder(p);
+    let fits = |name: &str| name == base || (name.starts_with(&format!("{base} (")) && name.ends_with(')'));
+    if fits(&cur) && !taken(&cur) {
+        return cur;
+    }
+    let mut n = 1;
+    loop {
+        let name = if n == 1 { base.clone() } else { format!("{base} ({n})") };
+        if !taken(&name) {
+            return name;
+        }
+        n += 1;
+    }
+}
+
+fn current_folder(p: &Profile) -> String {
+    if p.folder.trim().is_empty() { p.id.clone() } else { p.folder.trim().to_string() }
+}
+
+/// Gives a new profile (not saved yet) its folder name. `list` = the profiles already there.
+pub fn claim_folder(paths: &Paths, list: &[Profile], p: &mut Profile) {
+    if p.game_dir.trim().is_empty() {
+        p.folder = String::new();
+        let name = wanted_folder(paths, list, p);
+        p.folder = name;
+    }
+}
+
+/// Renames profile folders to their profiles' names (old id folders like "pdb2db8a7", and after a profile was
+/// renamed). Profiles in `skip` (running games) are left alone; a folder Windows won't rename (a file still open)
+/// is tried again next time. Returns true when something changed.
+pub fn sync_folders(paths: &Paths, skip: &[String]) -> bool {
+    let mut ps = Profiles::load(paths);
+    let mut changed = false;
+    for i in 0..ps.list.len() {
+        let p = ps.list[i].clone();
+        if !p.game_dir.trim().is_empty() || skip.contains(&p.id) {
+            continue;
+        }
+        let want = wanted_folder(paths, &ps.list, &p);
+        let cur = current_folder(&p);
+        if want == cur {
+            if p.folder.trim().is_empty() && cur != p.id {
+                ps.list[i].folder = cur;
+                changed = true;
+            }
+            continue;
+        }
+        let from = paths.profiles().join(&cur);
+        let to = paths.profiles().join(&want);
+        let moved = if from.exists() {
+            // a name that only differs in capitals: Windows needs a detour through another name
+            if cur.to_lowercase() == want.to_lowercase() {
+                let tmp = paths.profiles().join(format!("{want}.renaming"));
+                std::fs::rename(&from, &tmp).and_then(|_| std::fs::rename(&tmp, &to)).is_ok()
+            } else {
+                !to.exists() && std::fs::rename(&from, &to).is_ok()
+            }
+        } else {
+            true // nothing on disk yet: the folder is made with the new name when the profile first starts
+        };
+        if moved {
+            ps.list[i].folder = want;
+            changed = true;
+        }
+    }
+    if changed {
+        let _ = ps.save(paths);
+    }
+    changed
+}
+
+#[cfg(test)]
+mod folder_tests {
+    use super::*;
+
+    #[test]
+    fn readable_folder_names() {
+        assert_eq!(folder_name("PvP: 1.8.9?"), "PvP 1.8.9");
+        assert_eq!(folder_name("  ..  "), "Profile");
+        assert_eq!(folder_name("con"), "con profile");
+        assert_eq!(folder_name("a/b\\c"), "a b c");
+    }
+
+    #[test]
+    fn renames_id_folders_to_names() {
+        let root = std::env::temp_dir().join(format!("cc-folders-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let paths = Paths::new(root.clone());
+        let mut a = Profile::default();
+        a.id = "pdb2db8a7".into();
+        a.name = "PvP".into();
+        let mut b = Profile::default();
+        b.id = "p6042f588".into();
+        b.name = "PvP".into();
+        let mut c = Profile::default();
+        c.id = "pcustom".into();
+        c.name = "Mine".into();
+        c.game_dir = root.join("elsewhere").to_string_lossy().to_string();
+        Profiles { list: vec![a.clone(), b.clone(), c.clone()] }.save(&paths).unwrap();
+        std::fs::create_dir_all(paths.profiles().join("pdb2db8a7").join("saves")).unwrap();
+        std::fs::create_dir_all(paths.profiles().join("p6042f588")).unwrap();
+
+        assert!(sync_folders(&paths, &[]));
+        let ps = Profiles::load(&paths);
+        assert_eq!(game_dir(&paths, &ps.list[0]), paths.profiles().join("PvP"));
+        assert!(paths.profiles().join("PvP").join("saves").is_dir(), "the files moved along");
+        assert_eq!(game_dir(&paths, &ps.list[1]), paths.profiles().join("PvP (2)"));
+        assert_eq!(ps.list[2].folder, "", "a profile with its own game folder is left alone");
+        assert!(!sync_folders(&paths, &[]), "nothing to do the second time");
+
+        // renaming a profile renames its folder; a running one waits
+        let mut ps = Profiles::load(&paths);
+        ps.list[0].name = "Bedwars".into();
+        ps.list[1].name = "Skywars".into();
+        ps.save(&paths).unwrap();
+        assert!(sync_folders(&paths, &["p6042f588".to_string()]));
+        let ps = Profiles::load(&paths);
+        assert_eq!(game_dir(&paths, &ps.list[0]), paths.profiles().join("Bedwars"));
+        assert_eq!(game_dir(&paths, &ps.list[1]), paths.profiles().join("PvP (2)"));
+
+        // a new profile claims a free name
+        let mut d = Profile::default();
+        d.id = "pnew".into();
+        d.name = "Bedwars".into();
+        claim_folder(&paths, &ps.list, &mut d);
+        assert_eq!(d.folder, "Bedwars (2)");
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

@@ -17,6 +17,7 @@ pub mod mods;
 pub mod optimise;
 pub mod net;
 pub mod paths;
+pub mod relocate;
 pub mod profiles;
 pub mod progress;
 pub mod skins;
@@ -334,11 +335,21 @@ fn save_profile(state: State<'_, AppState>, mut profile: Profile) -> Res<Vec<Pro
             profile.playtime_secs = p.playtime_secs;
             profile.sessions = std::mem::take(&mut p.sessions);
             profile.last_played = p.last_played;
+            // so is the folder's name (the window doesn't know it)
+            profile.folder = std::mem::take(&mut p.folder);
             *p = profile
         }
-        None => ps.list.push(profile),
+        None => {
+            store::claim_folder(&state.paths, &ps.list, &mut profile);
+            ps.list.push(profile)
+        }
     }
     ps.save(&state.paths).map_err(err)?;
+    // a renamed profile gets its folder renamed too (not while that game is running)
+    let running: Vec<String> = state.games.lock().unwrap().iter().map(|g| g.info.profile_id.clone()).collect();
+    if store::sync_folders(&state.paths, &running) {
+        return Ok(Profiles::load(&state.paths).list);
+    }
     Ok(ps.list)
 }
 
@@ -1237,8 +1248,12 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .register_uri_scheme_protocol("ccimg", |ctx, req| image_protocol(ctx.app_handle(), req.uri().path()))
         .setup(|app| {
-            let root = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("ComClientLauncher"));
+            let old_root = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("ComClientLauncher"));
+            // %APPDATA%\comclient (older launchers used %APPDATA%\net.comclient.launcher: moved over here)
+            let root = relocate::migrate(&old_root, &relocate::new_root(&old_root));
             let paths = Paths::new(root);
+            // profile folders named after their profiles ("PvP 1.8.9" instead of "pdb2db8a7")
+            store::sync_folders(&paths, &[]);
             net::init_checked(paths.root.join("cache").join("checked.json"));
             if Settings::load(&paths).discord_rpc {
                 start_discord(&paths);

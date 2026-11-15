@@ -103,6 +103,7 @@ fn fresh(mut p: Profile, name: String) -> Profile {
     p.id = new_id();
     p.name = name;
     p.game_dir = String::new();
+    p.folder = String::new();
     p.created = crate::auth::now();
     p.last_played = 0;
     p.playtime_secs = 0;
@@ -114,7 +115,8 @@ pub fn duplicate(paths: &Paths, id: &str) -> Result<Vec<Profile>> {
     let mut ps = Profiles::load(paths);
     let src = ps.list.iter().find(|p| p.id == id).cloned().ok_or_else(|| anyhow!("That profile doesn't exist"))?;
     let from = store::game_dir(paths, &src);
-    let copy = fresh(src.clone(), format!("{} copy", src.name));
+    let mut copy = fresh(src.clone(), format!("{} copy", src.name));
+    store::claim_folder(paths, &ps.list, &mut copy);
     let to = store::game_dir(paths, &copy);
     for k in KEEP {
         let f = from.join(k);
@@ -150,6 +152,7 @@ pub fn export(paths: &Paths, id: &str, dest: &Path) -> Result<()> {
     let opts = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
     let mut meta = p.clone();
     meta.game_dir = String::new();
+    meta.folder = String::new();
     meta.sessions.clear();
     zip.start_file("profile.json", opts)?;
     zip.write_all(serde_json::to_string_pretty(&meta)?.as_bytes())?;
@@ -174,6 +177,7 @@ pub fn import(paths: &Paths, file: &Path) -> Result<Vec<Profile>> {
     let name = meta.name.clone();
     let mut p = fresh(meta, name);
     p.ram_mb = p.ram_mb.clamp(1024, store::total_ram_mb().max(2048));
+    store::claim_folder(paths, &Profiles::load(paths).list, &mut p);
     let dir = store::game_dir(paths, &p);
     for i in 0..zip.len() {
         let mut f = zip.by_index(i)?;
