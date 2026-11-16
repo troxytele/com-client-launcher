@@ -7,6 +7,9 @@ on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/keep-awake.yml"]
 
 permissions: {}
 
@@ -24,3 +27,18 @@ jobs:
             sleep 10
           done
           echo "The API didn't answer with 200" && exit 0
+      - name: Show which shop items the live API has
+        run: |
+          curl -s --max-time 90 https://com-client.onrender.com/public/shop -o shop.json || true
+          python3 - <<'PY'
+          import json
+          try:
+              items = json.load(open("shop.json"))["items"]
+          except Exception as e:
+              print("no shop:", e); raise SystemExit
+          ids = {(i["kind"], i["id"]) for i in items}
+          print("items:", len(items))
+          for k, i in [("wings", "archangel"), ("wings", "xmas_angel"), ("pet", "robot"), ("hat", "top_hat"), ("cape", "cc_fireworks")]:
+              print(k, i, (k, i) in ids)
+          PY
+
