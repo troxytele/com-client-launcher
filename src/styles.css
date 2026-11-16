@@ -4759,6 +4759,11 @@ html.festive .fairy-lights {
 .voxel-art { width: 58px; height: 58px; object-fit: contain; }
 .locker-nametag { display: inline-flex; align-items: center; }
 .shop-card .wing-type { font-size: 10.5px; margin-top: -2px; }
+/* items that come in colours: one dot per colour, click one to try it */
+.shop-card .color-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 1px 0 2px; }
+.shop-card .color-dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.18); transition: transform 0.12s, box-shadow 0.12s; }
+.shop-card .color-dot:hover { transform: scale(1.18); }
+.shop-card .color-dot.on { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 0 2px #fff; }
 .shop-card .price.advent { color: #ff8a8a; display: inline-flex; align-items: center; gap: 4px; }
 .shop-card .price.limited { color: #8fd8ff; }
 .limited-bar { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }

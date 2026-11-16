@@ -297,6 +297,10 @@ button.btn.ghost { color: var(--text); font: inherit; font-weight: 700; }
 .art.nameicon, .advent-web-door .nameicon { width: 40px; height: 40px; image-rendering: pixelated; }
 .g-nameicon { width: 16px; height: 16px; margin-right: 6px; vertical-align: -2px; image-rendering: pixelated; }
 .g-type { font-size: 10px !important; color: var(--dim); margin-top: -6px; }
+.g-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; margin-top: 2px; }
+.g-dot { width: 10px; height: 10px; border-radius: 50%; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.18); }
+.g-dot:hover { transform: scale(1.2); }
+.g-dot.on { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 0 2px #fff; }
 .g-price.advent { color: #ff8a8a; opacity: 1; }
 .advent-web { margin-top: 26px; padding: 22px; border-radius: 20px; }
 .advent-head h3 { margin: 0 0 6px; }

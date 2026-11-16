@@ -1,0 +1,700 @@
+{
+ "wings": [
+  {
+   "id": "heaven",
+   "name": "Angel Wings",
+   "colors": [
+    {
+     "id": "heaven",
+     "label": "White",
+     "hex": "#f2f2f2"
+    },
+    {
+     "id": "seraph",
+     "label": "Cream",
+     "hex": "#ccb77e"
+    },
+    {
+     "id": "purple",
+     "label": "Purple",
+     "hex": "#8a62cc"
+    },
+    {
+     "id": "void",
+     "label": "Void",
+     "hex": "#462d72"
+    },
+    {
+     "id": "phoenix",
+     "label": "Phoenix",
+     "hex": "#cc721f"
+    }
+   ]
+  },
+  {
+   "id": "dragon",
+   "name": "Dragon Wings",
+   "colors": [
+    {
+     "id": "dragon",
+     "label": "Black",
+     "hex": "#2e2e36"
+    },
+    {
+     "id": "devil",
+     "label": "Red",
+     "hex": "#cc040e"
+    },
+    {
+     "id": "blue_dragon",
+     "label": "Blue",
+     "hex": "#1159cc"
+    },
+    {
+     "id": "emerald",
+     "label": "Emerald",
+     "hex": "#09cc66"
+    }
+   ]
+  },
+  {
+   "id": "rose_fairy",
+   "name": "Fairy Wings",
+   "colors": [
+    {
+     "id": "rose_fairy",
+     "label": "Rose",
+     "hex": "#e67c98"
+    },
+    {
+     "id": "lilac_fairy",
+     "label": "Lilac",
+     "hex": "#a07be0"
+    },
+    {
+     "id": "mint_fairy",
+     "label": "Mint",
+     "hex": "#6ecfac"
+    },
+    {
+     "id": "sun_fairy",
+     "label": "Sun",
+     "hex": "#f0e176"
+    },
+    {
+     "id": "ocean_fairy",
+     "label": "Ocean",
+     "hex": "#7aace5"
+    },
+    {
+     "id": "royal_fairy",
+     "label": "Royal",
+     "hex": "#7581e4"
+    }
+   ]
+  },
+  {
+   "id": "angel_mini",
+   "name": "Little Angel",
+   "colors": [
+    {
+     "id": "angel_mini",
+     "label": "White",
+     "hex": "#f2f2f2"
+    },
+    {
+     "id": "cherub",
+     "label": "Pink",
+     "hex": "#f4a6c4"
+    }
+   ]
+  },
+  {
+   "id": "flamingo",
+   "name": "Plume Wings",
+   "colors": [
+    {
+     "id": "flamingo",
+     "label": "Pink",
+     "hex": "#f291af"
+    },
+    {
+     "id": "autumn",
+     "label": "Autumn",
+     "hex": "#e89236"
+    },
+    {
+     "id": "archangel",
+     "label": "Cream",
+     "hex": "#d9b867"
+    }
+   ]
+  },
+  {
+   "id": "crystal",
+   "name": "Crystal Shards",
+   "colors": [
+    {
+     "id": "crystal",
+     "label": "Emerald",
+     "hex": "#3fcf8e"
+    },
+    {
+     "id": "amethyst_shards",
+     "label": "Amethyst",
+     "hex": "#8751cc"
+    },
+    {
+     "id": "ruby_shards",
+     "label": "Ruby",
+     "hex": "#cc376d"
+    }
+   ]
+  },
+  {
+   "id": "flame",
+   "name": "Flame Wings",
+   "colors": [
+    {
+     "id": "flame",
+     "label": "Flame",
+     "hex": "#f08a1c"
+    },
+    {
+     "id": "inferno",
+     "label": "Inferno",
+     "hex": "#e0401c"
+    },
+    {
+     "id": "soul_flame",
+     "label": "Soul",
+     "hex": "#498acc"
+    },
+    {
+     "id": "void_flame",
+     "label": "Void",
+     "hex": "#ad429a"
+    }
+   ]
+  },
+  {
+   "id": "leaf",
+   "name": "Leafwing",
+   "colors": [
+    {
+     "id": "leaf",
+     "label": "Green",
+     "hex": "#59cc3b"
+    },
+    {
+     "id": "cherry_leaf",
+     "label": "Cherry",
+     "hex": "#cc5869"
+    },
+    {
+     "id": "maple_leaf",
+     "label": "Maple",
+     "hex": "#cc7c1e"
+    }
+   ]
+  },
+  {
+   "id": "peacock",
+   "name": "Peacock",
+   "colors": [
+    {
+     "id": "peacock",
+     "label": "Emerald",
+     "hex": "#3bcc94"
+    },
+    {
+     "id": "golden_peacock",
+     "label": "Gold",
+     "hex": "#cc9f17"
+    }
+   ]
+  },
+  {
+   "id": "monarch",
+   "name": "Butterfly Wings",
+   "colors": [
+    {
+     "id": "monarch",
+     "label": "Monarch",
+     "hex": "#cc6100"
+    },
+    {
+     "id": "morpho",
+     "label": "Morpho",
+     "hex": "#2c73cc"
+    }
+   ]
+  },
+  {
+   "id": "dragonling",
+   "name": "Mini Dragon",
+   "colors": [
+    {
+     "id": "dragonling",
+     "label": "Orange",
+     "hex": "#cc4219"
+    },
+    {
+     "id": "imp",
+     "label": "Purple",
+     "hex": "#8032cc"
+    }
+   ]
+  },
+  {
+   "id": "galaxy_drake",
+   "name": "Drake Wings",
+   "colors": [
+    {
+     "id": "galaxy_drake",
+     "label": "Galaxy",
+     "hex": "#a347cc"
+    },
+    {
+     "id": "abyss",
+     "label": "Abyss",
+     "hex": "#0bccc2"
+    }
+   ]
+  },
+  {
+   "id": "elder_dragon",
+   "name": "Elder Dragon",
+   "colors": [
+    {
+     "id": "elder_dragon",
+     "label": "Crimson",
+     "hex": "#cc1913"
+    },
+    {
+     "id": "sunfire",
+     "label": "Sunfire",
+     "hex": "#ff9224"
+    }
+   ]
+  },
+  {
+   "id": "luna_moth",
+   "name": "Moth Wings",
+   "colors": [
+    {
+     "id": "luna_moth",
+     "label": "Luna",
+     "hex": "#a3e29d"
+    },
+    {
+     "id": "jade",
+     "label": "Jade",
+     "hex": "#4ccc8b"
+    }
+   ]
+  },
+  {
+   "id": "glasswing",
+   "name": "Glasswing",
+   "colors": [
+    {
+     "id": "glasswing",
+     "label": "Ice",
+     "hex": "#dff3ff"
+    },
+    {
+     "id": "sky_fairy",
+     "label": "Sky",
+     "hex": "#a3d6fe"
+    },
+    {
+     "id": "honeybee",
+     "label": "Honey",
+     "hex": "#fde28f"
+    }
+   ]
+  },
+  {
+   "id": "raven",
+   "name": "Raven Wings",
+   "colors": [
+    {
+     "id": "raven",
+     "label": "Black",
+     "hex": "#2e3040"
+    },
+    {
+     "id": "storm",
+     "label": "Storm",
+     "hex": "#7a8496"
+    },
+    {
+     "id": "thunderbird",
+     "label": "Blue",
+     "hex": "#1d4fcc"
+    }
+   ]
+  },
+  {
+   "id": "snowy_owl",
+   "name": "Owl Wings",
+   "colors": [
+    {
+     "id": "snowy_owl",
+     "label": "Snowy",
+     "hex": "#f0f0f0"
+    },
+    {
+     "id": "nebula_wings",
+     "label": "Nebula",
+     "hex": "#341e72"
+    }
+   ]
+  },
+  {
+   "id": "baby_bat",
+   "name": "Little Bat",
+   "colors": [
+    {
+     "id": "baby_bat",
+     "label": "Dusk",
+     "hex": "#6b5472"
+    },
+    {
+     "id": "lava_bat",
+     "label": "Lava",
+     "hex": "#cc3000"
+    }
+   ]
+  },
+  {
+   "id": "glow_pixie",
+   "name": "Pixie Wings",
+   "colors": [
+    {
+     "id": "glow_pixie",
+     "label": "Glow",
+     "hex": "#67b1e4"
+    },
+    {
+     "id": "bumblebee",
+     "label": "Bee",
+     "hex": "#ffd1a6"
+    },
+    {
+     "id": "dewdrop",
+     "label": "Dew",
+     "hex": "#bfe9ff"
+    }
+   ]
+  }
+ ],
+ "pet": [
+  {
+   "id": "dragon_green",
+   "name": "Baby Dragon",
+   "colors": [
+    {
+     "id": "dragon_green",
+     "label": "Green",
+     "hex": "#4acc42"
+    },
+    {
+     "id": "dragon_gold",
+     "label": "Gold",
+     "hex": "#cc9717"
+    },
+    {
+     "id": "dragon_ice",
+     "label": "Ice",
+     "hex": "#75b1cc"
+    },
+    {
+     "id": "dragon_red",
+     "label": "Red",
+     "hex": "#cc3b33"
+    },
+    {
+     "id": "dragon_purple",
+     "label": "Purple",
+     "hex": "#a642cc"
+    },
+    {
+     "id": "dragon_shadow",
+     "label": "Shadow",
+     "hex": "#3a3450"
+    },
+    {
+     "id": "dragon_pink",
+     "label": "Pink",
+     "hex": "#cc427b"
+    }
+   ]
+  },
+  {
+   "id": "phoenix",
+   "name": "Phoenix",
+   "colors": [
+    {
+     "id": "phoenix",
+     "label": "Fire",
+     "hex": "#cc1900"
+    },
+    {
+     "id": "phoenix_ice",
+     "label": "Ice",
+     "hex": "#1254cc"
+    },
+    {
+     "id": "phoenix_void",
+     "label": "Void",
+     "hex": "#400d72"
+    }
+   ]
+  },
+  {
+   "id": "jellyfish",
+   "name": "Jellyfish",
+   "colors": [
+    {
+     "id": "jellyfish",
+     "label": "Pink",
+     "hex": "#cc80b7"
+    },
+    {
+     "id": "jellyfish_blue",
+     "label": "Blue",
+     "hex": "#71b0cc"
+    }
+   ]
+  },
+  {
+   "id": "ghost",
+   "name": "Ghost",
+   "colors": [
+    {
+     "id": "ghost",
+     "label": "White",
+     "hex": "#f0f0f0"
+    },
+    {
+     "id": "ghost_pink",
+     "label": "Pink",
+     "hex": "#cc8fa6"
+    },
+    {
+     "id": "ghost_mint",
+     "label": "Mint",
+     "hex": "#8accaa"
+    },
+    {
+     "id": "ghost_lilac",
+     "label": "Lilac",
+     "hex": "#a68fcc"
+    }
+   ]
+  },
+  {
+   "id": "cat",
+   "name": "Cat",
+   "colors": [
+    {
+     "id": "cat",
+     "label": "Tabby",
+     "hex": "#c98a45"
+    },
+    {
+     "id": "black_cat",
+     "label": "Black",
+     "hex": "#2a2a30"
+    },
+    {
+     "id": "white_cat",
+     "label": "White",
+     "hex": "#f0f0f0"
+    },
+    {
+     "id": "ginger_cat",
+     "label": "Ginger",
+     "hex": "#cc7321"
+    }
+   ]
+  },
+  {
+   "id": "bunny",
+   "name": "Bunny",
+   "colors": [
+    {
+     "id": "bunny",
+     "label": "White",
+     "hex": "#f0f0f0"
+    },
+    {
+     "id": "choco_bunny",
+     "label": "Chocolate",
+     "hex": "#cc753e"
+    },
+    {
+     "id": "bunny_gray",
+     "label": "Grey",
+     "hex": "#cccccc"
+    }
+   ]
+  },
+  {
+   "id": "duck",
+   "name": "Duck",
+   "colors": [
+    {
+     "id": "duck",
+     "label": "Yellow",
+     "hex": "#ffd84a"
+    },
+    {
+     "id": "golden_duck",
+     "label": "Gold",
+     "hex": "#cca120"
+    }
+   ]
+  },
+  {
+   "id": "owl",
+   "name": "Owl",
+   "colors": [
+    {
+     "id": "owl",
+     "label": "Brown",
+     "hex": "#cc864a"
+    },
+    {
+     "id": "owl_snowy",
+     "label": "Snowy",
+     "hex": "#f0f0f0"
+    }
+   ]
+  },
+  {
+   "id": "lamb",
+   "name": "Lamb",
+   "colors": [
+    {
+     "id": "lamb",
+     "label": "White",
+     "hex": "#f0f0f0"
+    },
+    {
+     "id": "lamb_pink",
+     "label": "Pink",
+     "hex": "#cc819d"
+    },
+    {
+     "id": "lamb_blue",
+     "label": "Blue",
+     "hex": "#739dcc"
+    }
+   ]
+  },
+  {
+   "id": "hamster",
+   "name": "Hamster",
+   "colors": [
+    {
+     "id": "hamster",
+     "label": "Golden",
+     "hex": "#cc863b"
+    },
+    {
+     "id": "hamster_white",
+     "label": "White",
+     "hex": "#f0f0f0"
+    }
+   ]
+  },
+  {
+   "id": "ghast",
+   "name": "Ghast",
+   "colors": [
+    {
+     "id": "ghast",
+     "label": "White",
+     "hex": "#f0f0f0"
+    },
+    {
+     "id": "ghast_soul",
+     "label": "Soul",
+     "hex": "#6ab8cc"
+    }
+   ]
+  },
+  {
+   "id": "blaze",
+   "name": "Blaze",
+   "colors": [
+    {
+     "id": "blaze",
+     "label": "Fire",
+     "hex": "#cc9817"
+    },
+    {
+     "id": "blaze_soul",
+     "label": "Soul",
+     "hex": "#15a9cc"
+    }
+   ]
+  },
+  {
+   "id": "warden",
+   "name": "Warden",
+   "colors": [
+    {
+     "id": "warden",
+     "label": "Dark",
+     "hex": "#1d6f80"
+    },
+    {
+     "id": "warden_crimson",
+     "label": "Crimson",
+     "hex": "#cc0012"
+    }
+   ]
+  },
+  {
+   "id": "turtle",
+   "name": "Turtle",
+   "colors": [
+    {
+     "id": "turtle",
+     "label": "Green",
+     "hex": "#8ecc48"
+    },
+    {
+     "id": "turtle_gold",
+     "label": "Gold",
+     "hex": "#e8b33c"
+    }
+   ]
+  },
+  {
+   "id": "coin_btc",
+   "name": "Crypto Coin",
+   "colors": [
+    {
+     "id": "coin_btc",
+     "label": "Bitcoin",
+     "hex": "#cc7e00"
+    },
+    {
+     "id": "coin_eth",
+     "label": "Ethereum",
+     "hex": "#7180cc"
+    },
+    {
+     "id": "coin_ltc",
+     "label": "Litecoin",
+     "hex": "#c8c8d0"
+    }
+   ]
+  }
+ ]
+}

@@ -18,13 +18,11 @@ const WINGS: &[(&str, &str)] = &[
     ("frost", "Frost"), ("candy_cane", "Candy Cane"), ("snowflake", "Snowflake"), ("golden", "Golden"), ("celestial", "Celestial"),
     ("seraph", "Seraph"), ("void", "Void"), ("phoenix", "Phoenix"), ("monarch", "Monarch"), ("morpho", "Morpho"),
     ("pixie", "Pixie"), ("bat", "Bat"), ("emerald", "Emerald Drake"),
-    ("crystal", "Crystal Shards"), ("flame", "Flame Wings"), ("leaf", "Leafwing"), ("bone", "Bone Wings"), ("peacock", "Peacock"), ("ribbon", "Ethereal Ribbons"),
-    ("rose_fairy", "Rose Fairy"), ("lilac_fairy", "Lilac Fairy"), ("mint_fairy", "Mint Fairy"),
+    ("crystal", "Crystal Shards"), ("flame", "Flame Wings"), ("leaf", "Leafwing"), ("bone", "Bone Wings"), ("peacock", "Peacock"),     ("rose_fairy", "Rose Fairy"), ("lilac_fairy", "Lilac Fairy"), ("mint_fairy", "Mint Fairy"),
     ("angel_mini", "Little Angel"), ("cherub", "Cherub"), ("dragonling", "Dragonling"), ("imp", "Imp Wings"), ("ladybug", "Ladybug"), ("luna_moth", "Luna Moth"), ("raven", "Raven"), ("snowy_owl", "Snowy Owl"), ("neon", "Neon Circuit"), ("venom", "Venom Drake"), ("sakura_wings", "Sakura Butterfly"), ("glasswing", "Glasswing"), ("archangel", "Archangel"), ("nebula_wings", "Nebula"), ("storm", "Storm Wings"), ("elder_dragon", "Elder Dragon"), ("sunfire", "Sunfire Drake"), ("emperor", "Emperor Butterfly"),
     ("sparrow", "Sparrow"), ("baby_bat", "Baby Bat"), ("honeybee", "Honeybee"), ("sky_fairy", "Sky Fairy"), ("flamingo", "Flamingo"), ("autumn", "Autumn"), ("galaxy_drake", "Galaxy Drake"), ("jade", "Jade Butterfly"), ("ocean_wings", "Ocean Butterfly"), ("thunderbird", "Thunderbird"), ("abyss", "Abyss Dragon"), ("aurora_butterfly", "Aurora Butterfly"),
-    ("amethyst_shards", "Amethyst Shards"), ("ruby_shards", "Ruby Shards"), ("soul_flame", "Soul Flame Wings"), ("void_flame", "Void Flame Wings"), ("inferno", "Inferno Wings"), ("cherry_leaf", "Cherry Leafwing"), ("maple_leaf", "Maple Leafwing"), ("golden_peacock", "Golden Peacock"), ("frost_ribbon", "Frost Ribbons"), ("sun_fairy", "Tiny Sun Fairy"), ("ocean_fairy", "Ocean Fairy"), ("royal_fairy", "Grand Royal Fairy"),
-    ("xmas_angel", "Christmas Angel"), ("gingerbread_wings", "Gingerbread Wings"), ("cardinal", "Cardinal"), ("northern_lights", "Northern Lights"), ("holly_moth", "Holly Moth"), ("snow_drake", "Snow Drake"), ("ice_crystal", "Ice Crystal Wings"), ("holly_leaf", "Holly Leafwing"), ("frosted_fairy", "Frosted Fairy"), ("tinsel_ribbon", "Tinsel Ribbons"),
-    ("glow_pixie", "Glow Pixie"), ("ember_moth", "Ember Moth"), ("prism_mini", "Prism Wings"), ("frost_sprite", "Frost Sprite"), ("neon_imp", "Neon Imp"), ("pocket_galaxy", "Pocket Galaxy"), ("goldfinch", "Goldfinch"), ("bumblebee", "Bumblebee"), ("dewdrop", "Dewdrop"), ("lava_bat", "Lava Bat"), ("aurora_glass", "Aurora Glass"), ("phantom", "Phantom"), ("solar_flare", "Solar Flare"), ("starborn", "Starborn Seraph"), ("void_monarch", "Void Monarch"), ("thunder_drake", "Thunder Drake"),
+    ("amethyst_shards", "Amethyst Shards"), ("ruby_shards", "Ruby Shards"), ("soul_flame", "Soul Flame Wings"), ("void_flame", "Void Flame Wings"), ("inferno", "Inferno Wings"), ("cherry_leaf", "Cherry Leafwing"), ("maple_leaf", "Maple Leafwing"), ("golden_peacock", "Golden Peacock"), ("sun_fairy", "Tiny Sun Fairy"), ("ocean_fairy", "Ocean Fairy"), ("royal_fairy", "Grand Royal Fairy"),
+    ("xmas_angel", "Christmas Angel"), ("gingerbread_wings", "Gingerbread Wings"), ("cardinal", "Cardinal"), ("northern_lights", "Northern Lights"), ("holly_moth", "Holly Moth"), ("snow_drake", "Snow Drake"), ("ice_crystal", "Ice Crystal Wings"), ("holly_leaf", "Holly Leafwing"), ("frosted_fairy", "Frosted Fairy"),     ("glow_pixie", "Glow Pixie"), ("ember_moth", "Ember Moth"), ("prism_mini", "Prism Wings"), ("frost_sprite", "Frost Sprite"), ("neon_imp", "Neon Imp"), ("pocket_galaxy", "Pocket Galaxy"), ("goldfinch", "Goldfinch"), ("bumblebee", "Bumblebee"), ("dewdrop", "Dewdrop"), ("lava_bat", "Lava Bat"), ("aurora_glass", "Aurora Glass"), ("phantom", "Phantom"), ("solar_flare", "Solar Flare"), ("starborn", "Starborn Seraph"), ("void_monarch", "Void Monarch"), ("thunder_drake", "Thunder Drake"),
 ];
 const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
 const HATS: &[(&str, &str)] = &[
@@ -47,9 +45,8 @@ const PETS: &[(&str, &str)] = &[
 ];
 /// Shield skins (1.21.11: Com Client's own shield texture instead of wood and banners).
 const SHIELDS: &[(&str, &str)] = &[
-    ("flame", "Flame shield"), ("frost", "Frost shield"), ("galaxy", "Galaxy shield"), ("gold", "Royal Gold shield"), ("sakura", "Sakura shield"), ("dragon", "Dragon Eye shield"), ("heart", "Heart shield"), ("void", "Void portal shield"), ("lava", "Lava shield"), ("ocean", "Ocean shield"), ("aurora", "Aurora shield"), ("lightning", "Thunder shield"), ("matrix", "Code rain shield"), ("toxic", "Toxic shield"),
-    ("starfield", "Starfield shield"), ("vaporwave", "Vaporwave shield"), ("cherry", "Cherry Blossom shield"), ("carbon", "Carbon shield"), ("ember", "Ember shield"), ("deep_sea", "Deep Sea shield"),
-    ("comet", "Comet shield"), ("sunset_sea", "Sunset Sea shield"), ("lava_lamp", "Lava Lamp shield"), ("midnight", "Midnight shield"),
+    ("flame", "Flame shield"), ("frost", "Frost shield"), ("galaxy", "Galaxy shield"), ("gold", "Royal Gold shield"), ("sakura", "Sakura shield"), ("dragon", "Dragon Eye shield"), ("heart", "Heart shield"), ("void", "Void portal shield"), ("lava", "Lava shield"), ("ocean", "Ocean shield"), ("aurora", "Aurora shield"), ("lightning", "Thunder shield"),     ("starfield", "Starfield shield"), ("cherry", "Cherry Blossom shield"), ("ember", "Ember shield"), ("deep_sea", "Deep Sea shield"),
+    ("comet", "Comet shield"), ("lava_lamp", "Lava Lamp shield"), ("midnight", "Midnight shield"),
     ("fireworks", "Fireworks shield"), ("equalizer", "Equalizer shield"), ("spiral", "Spiral Galaxy shield"), ("fish_tank", "Fish Tank shield"),
     ("xmas_tree", "Christmas Tree shield"), ("gingerbread", "Gingerbread shield"), ("ugly_sweater", "Ugly Sweater shield"), ("fireplace", "Fireplace shield"),
     ("plasma", "Plasma shield"), ("portal", "Portal shield"), ("heartbeat", "Heartbeat shield"), ("meteor_shower", "Meteor Shower shield"),
@@ -79,14 +76,12 @@ const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_heart_left", "Heart (left half)"), ("cc_heart_right", "Heart (right half)"), ("cc_yin", "Yin"), ("cc_yang", "Yang"),
     ("cc_mono_black", "Mono Black"), ("cc_mono_white", "Mono White"), ("cc_gg", "GG"), ("cc_crystal_pvp", "Crystal PvP"),
     ("cc_aurora", "Aurora"), ("cc_galaxy", "Galaxy"), ("cc_nebula", "Nebula"), ("cc_lava", "Lava"),
-    ("cc_rainbow", "Rainbow Flow"), ("cc_storm", "Thunderstorm"), ("cc_waves", "Waves"),
+    ("cc_storm", "Thunderstorm"), ("cc_waves", "Waves"),
     ("cc_fireflies", "Fireflies"), ("cc_hearts", "Hearts"),
     ("cc_sunset", "Sunset"), ("cc_sakura", "Sakura"),
-    ("cc_honeycomb", "Honeycomb"), ("cc_mint", "Mint"),
-    ("cc_synthwave", "Synthwave"), ("cc_event_horizon", "Event Horizon"), ("cc_koi", "Koi Pond"), ("cc_dragon_scale", "Dragon Scale"),
-    ("cc_lanterns", "Lantern Festival"), ("cc_petal_storm", "Petal Storm"),
-    ("cc_starfield", "Starfield"), ("cc_ember", "Ember"), ("cc_midnight", "Midnight"), ("cc_cherry", "Cherry Blossom"), ("cc_carbon", "Carbon Fiber"), ("cc_vaporwave", "Vaporwave"), ("cc_deep_sea", "Deep Sea"), ("cc_purple_storm", "Purple Storm"),
-    ("cc_rain", "Rainy Day"), ("cc_comet", "Comet"), ("cc_sunset_sea", "Sunset Sea"), ("cc_checker", "Checkerboard"), ("cc_bubbles", "Bubbles"), ("cc_lava_lamp", "Lava Lamp"),
+    ("cc_honeycomb", "Honeycomb"),     ("cc_synthwave", "Synthwave"), ("cc_event_horizon", "Event Horizon"), ("cc_koi", "Koi Pond"),     ("cc_petal_storm", "Petal Storm"),
+    ("cc_starfield", "Starfield"), ("cc_ember", "Ember"), ("cc_midnight", "Midnight"), ("cc_cherry", "Cherry Blossom"), ("cc_deep_sea", "Deep Sea"), ("cc_purple_storm", "Purple Storm"),
+    ("cc_rain", "Rainy Day"), ("cc_comet", "Comet"), ("cc_bubbles", "Bubbles"), ("cc_lava_lamp", "Lava Lamp"),
     ("cc_fireworks", "Fireworks"), ("cc_equalizer", "Equalizer"), ("cc_clouds", "Sunny Clouds"), ("cc_fish_tank", "Fish Tank"), ("cc_spiral", "Spiral Galaxy"), ("cc_hourglass", "Hourglass"),
     ("cc_xmas_tree", "Christmas Tree"), ("cc_snow_village", "Snowy Village"), ("cc_gingerbread", "Gingerbread"), ("cc_sleigh_ride", "Sleigh Ride"), ("cc_fireplace", "Fireplace"), ("cc_ugly_sweater", "Ugly Sweater"),
     ("cc_neon_rain", "Neon Rain"), ("cc_plasma", "Plasma"), ("cc_portal", "Portal"), ("cc_heartbeat", "Heartbeat"), ("cc_meteor_shower", "Meteor Shower"), ("cc_jellyfish", "Jellyfish"), ("cc_butterflies", "Butterflies"), ("cc_rainbow_road", "Rainbow Road"),

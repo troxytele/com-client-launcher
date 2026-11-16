@@ -109,9 +109,11 @@
     img.crossOrigin = "anonymous";
     img.onload = () => {
       const s = img.width / 64;
+      c.width = 10 * s; // full detail for the sharper capes
+      c.height = 16 * s;
       const g = c.getContext("2d");
       g.imageSmoothingEnabled = false;
-      g.drawImage(img, 1 * s, 1 * s, 10 * s, 16 * s, 0, 0, 10, 16);
+      g.drawImage(img, 1 * s, 1 * s, 10 * s, 16 * s, 0, 0, 10 * s, 16 * s);
     };
     img.src = capeUrl(hash);
     return c;
@@ -200,6 +202,12 @@
     return img;
   }
 
+  // items that come in colours (wings, pets): one card, the colours as dots on it
+  function groupOf(k, id) {
+    for (const g of (catalog.variants && catalog.variants[k]) || []) if (g.colors.some((c) => c.id === id)) return g;
+    return null;
+  }
+
   function render() {
     const box = $("g-items");
     box.textContent = "";
@@ -208,8 +216,12 @@
     none.append(el("span", "art none", "✕"), el("small", null, "None"));
     none.addEventListener("click", () => pick("none"));
     box.append(none);
-    for (const item of catalog[kind]) {
-      if (newOnly && !item.new) continue;
+    for (const main of catalog[kind]) {
+      if (newOnly && !main.new) continue;
+      const group = groupOf(kind, main.id);
+      if (group && group.id !== main.id) continue; // shown as a colour on its item's card
+      const shown = group && group.colors.some((c) => c.id === look[field]) ? look[field] : main.id;
+      const item = { ...main, id: shown, name: group ? group.name : main.name };
       const b = el("button", "g-item" + (look[field] === item.id ? " on" : "") + (item.new ? " is-new" : ""));
       if (item.new) b.append(el("span", "g-new", "New"));
       b.title = item.name;
@@ -218,7 +230,21 @@
         : kind === "nametags" ? nametagArt(item) : kind === "icons" ? iconImg(item.id, "art nameicon") : iconArt(kind, item.id);
       b.append(art, el("small", null, item.name));
       if (kind === "wings") b.append(el("small", "g-type", wingType(item.id)));
-      const tag = priceTag(item.id);
+      if (group) {
+        const dots = el("span", "g-dots");
+        for (const c of group.colors) {
+          const d = el("span", "g-dot" + (c.id === shown ? " on" : ""));
+          d.style.background = c.hex;
+          d.title = c.label;
+          d.addEventListener("click", (e) => {
+            e.stopPropagation();
+            pick(c.id);
+          });
+          dots.append(d);
+        }
+        b.append(dots);
+      }
+      const tag = priceTag(main.id);
       if (tag) b.append(tag);
       b.addEventListener("click", () => pick(item.id));
       box.append(b);

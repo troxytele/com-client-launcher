@@ -10,6 +10,7 @@ import GiftDialog from "../components/GiftDialog";
 import NameTag from "../components/NameTag";
 import { CUSTOM_CAPES } from "../../website-src/helpers.js";
 import { WING_SHAPES, wingShape } from "../../website-src/wings.js";
+import { groupOf, isExtraColor, titleOf, shownColor, idsOf } from "../../website-src/variants.js";
 
 // Com Client's own voxel pets and hats (the card picture is a rendered PNG)
 // the advent calendar's items: hidden until you have them (they're a surprise)
@@ -79,8 +80,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   const priceOf = (kind: ShopKind, id: string) => shop?.items.find((i) => i.kind === kind && i.id === id)?.price ?? (kind === "cape" ? CAPE_DEFAULT_PRICE : 0);
   const ownsIt = (kind: ShopKind, id: string) => {
     if (id === "none" || !shop || shop.wallet.everything) return true;
-    const it = shop.items.find((i) => i.kind === kind && i.id === id);
-    return it ? it.owned : false;
+    return idsOf(kind, id).some((x) => !!shop.items.find((i) => i.kind === kind && i.id === x && i.owned));
   };
   const locked = TABS.filter((x) => !ownsIt(x.field, look[x.field] as string));
   const setWallet = (w: Wallet) => setShop((s) => (s ? { ...s, wallet: w } : s));
@@ -150,9 +150,12 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
   const items: CosmeticItem[] = useMemo(() => {
     // advent calendar items only show once they're yours
     const owned = (id: string) => !!shop?.items.find((x) => x.kind === t.field && x.id === id && x.owned);
-    const list = (catalog?.[tab] ?? []).filter((i) => !ADVENT_ITEMS.has(t.field + ":" + i.id) || owned(i.id));
+    const list = (catalog?.[tab] ?? [])
+      .filter((i) => !ADVENT_ITEMS.has(t.field + ":" + i.id) || owned(i.id))
+      .filter((i) => !isExtraColor(t.field, i.id))
+      .map((i) => ({ ...i, name: titleOf(t.field, i.id, i.name) }));
     const q = query.trim().toLowerCase();
-    return q ? list.filter((i) => i.name.toLowerCase().includes(q)) : list;
+    return q ? list.filter((i) => i.name.toLowerCase().includes(q) || (groupOf(t.field, i.id)?.colors ?? []).some((c) => c.label.toLowerCase().includes(q))) : list;
   }, [catalog, tab, query, shop]);
   const current = look[t.field] as string;
   useEffect(() => {
@@ -461,24 +464,48 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
                   <b>Nothing</b>
                 </button>
               )}
-              {items.map((i) => (
-                <button key={i.id} className={"shop-card" + (current === i.id ? " on" : "") + (ownsIt(t.field, i.id) ? "" : " locked")} onClick={() => pick(i.id)}>
+              {items.map((main) => {
+                // an item with colours: the card shows (and puts on) the colour you have on, else its first one
+                const id = shownColor(t.field, main.id, current);
+                const group = groupOf(t.field, main.id);
+                const i = { ...main, id };
+                return (
+                <button key={main.id} className={"shop-card" + (current === i.id ? " on" : "") + (ownsIt(t.field, i.id) ? "" : " locked")} onClick={() => pick(i.id)}>
                   <div className="shop-art">
                     {art(t.field, i.id)}
                   </div>
                   <b>{i.name}</b>
                   {tab === "wings" && <small className="muted wing-type">{WING_SHAPES[wingShape(i.id)].label}</small>}
+                  {group && (
+                    <span className="color-dots" title={group.colors.find((c) => c.id === id)?.label}>
+                      {group.colors.map((c) => (
+                        <span
+                          key={c.id}
+                          role="button"
+                          aria-label={c.label}
+                          title={c.label}
+                          className={"color-dot" + (c.id === id ? " on" : "")}
+                          style={{ background: c.hex }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            pick(c.id);
+                          }}
+                        />
+                      ))}
+                    </span>
+                  )}
                   <PriceTag
-                    item={shop?.items.find((x) => x.kind === t.field && x.id === i.id)}
-                    giftFrom={shop?.items.find((x) => x.kind === t.field && x.id === i.id)?.gift_from}
+                    item={shop?.items.find((x) => x.kind === t.field && x.id === main.id)}
+                    giftFrom={shop?.items.find((x) => x.kind === t.field && x.id === main.id)?.gift_from}
                     wearing={saved?.[t.field] === i.id}
                     owned={ownsIt(t.field, i.id)}
-                    free={priceOf(t.field, i.id) === 0}
-                    price={priceOf(t.field, i.id)}
-                    deal={shop?.wallet.deal && shop.wallet.deal.kind === t.field && shop.wallet.deal.id === i.id ? shop.wallet.deal : undefined}
+                    free={priceOf(t.field, main.id) === 0}
+                    price={priceOf(t.field, main.id)}
+                    deal={shop?.wallet.deal && shop.wallet.deal.kind === t.field && shop.wallet.deal.id === main.id ? shop.wallet.deal : undefined}
                   />
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
             </>
