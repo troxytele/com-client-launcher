@@ -39,6 +39,12 @@ export const NAME_STYLES: Record<string, { stops: number[]; moving: boolean }> =
   gingerbread: { stops: [0x9a5a28, 0xd08a4a, 0xfff4e0], moving: false },
   evergreen: { stops: [0x1f6a2a, 0x5fd36b, 0x1f6a2a], moving: true },
   golden_star: { stops: [0xfff3a0, 0xf2c230, 0xb8860b, 0xf2c230], moving: true },
+  lagoon: { stops: [0x00c9a7, 0x3fe0ff, 0x0077b6], moving: true },
+  berry: { stops: [0x8e2de2, 0xff4f9a, 0x8e2de2], moving: true },
+  volt: { stops: [0xfff200, 0x00f0ff, 0xfff200], moving: true },
+  ember: { stops: [0x8a1a04, 0xff5a1a, 0xffd36b, 0xff5a1a], moving: true },
+  pastel: { stops: [0xffb3d9, 0xb3e5ff, 0xd9ffb3, 0xfff0b3], moving: true },
+  dusk: { stops: [0x2a1a5a, 0xc04dff, 0xff7a59], moving: false },
 };
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
 const mixRgb = (a: number, b: number, t: number) => {

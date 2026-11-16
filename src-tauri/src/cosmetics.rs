@@ -24,6 +24,7 @@ const WINGS: &[(&str, &str)] = &[
     ("sparrow", "Sparrow"), ("baby_bat", "Baby Bat"), ("honeybee", "Honeybee"), ("sky_fairy", "Sky Fairy"), ("flamingo", "Flamingo"), ("autumn", "Autumn"), ("galaxy_drake", "Galaxy Drake"), ("jade", "Jade Butterfly"), ("ocean_wings", "Ocean Butterfly"), ("thunderbird", "Thunderbird"), ("abyss", "Abyss Dragon"), ("aurora_butterfly", "Aurora Butterfly"),
     ("amethyst_shards", "Amethyst Shards"), ("ruby_shards", "Ruby Shards"), ("soul_flame", "Soul Flame Wings"), ("void_flame", "Void Flame Wings"), ("inferno", "Inferno Wings"), ("cherry_leaf", "Cherry Leafwing"), ("maple_leaf", "Maple Leafwing"), ("golden_peacock", "Golden Peacock"), ("frost_ribbon", "Frost Ribbons"), ("sun_fairy", "Tiny Sun Fairy"), ("ocean_fairy", "Ocean Fairy"), ("royal_fairy", "Grand Royal Fairy"),
     ("xmas_angel", "Christmas Angel"), ("gingerbread_wings", "Gingerbread Wings"), ("cardinal", "Cardinal"), ("northern_lights", "Northern Lights"), ("holly_moth", "Holly Moth"), ("snow_drake", "Snow Drake"), ("ice_crystal", "Ice Crystal Wings"), ("holly_leaf", "Holly Leafwing"), ("frosted_fairy", "Frosted Fairy"), ("tinsel_ribbon", "Tinsel Ribbons"),
+    ("glow_pixie", "Glow Pixie"), ("ember_moth", "Ember Moth"), ("prism_mini", "Prism Wings"), ("frost_sprite", "Frost Sprite"), ("neon_imp", "Neon Imp"), ("pocket_galaxy", "Pocket Galaxy"), ("goldfinch", "Goldfinch"), ("bumblebee", "Bumblebee"), ("dewdrop", "Dewdrop"), ("lava_bat", "Lava Bat"), ("aurora_glass", "Aurora Glass"), ("phantom", "Phantom"), ("solar_flare", "Solar Flare"), ("starborn", "Starborn Seraph"), ("void_monarch", "Void Monarch"), ("thunder_drake", "Thunder Drake"),
 ];
 const HALOS: &[(&str, &str)] = &[("ring", "Glowing ring"), ("double", "Double ring"), ("crown", "Spiked crown"), ("orbit", "Orbit sparks"), ("wreath", "Holly wreath")];
 const HATS: &[(&str, &str)] = &[
@@ -32,6 +33,7 @@ const HATS: &[(&str, &str)] = &[
     ("bandana_checker", "Checkered bandana"), ("bandana_zebra", "Zebra bandana"), ("bandana_aqua", "Aqua wave bandana"), ("bandana_snow", "Snowy night bandana"), ("bow_gold", "Gold bow"), ("double_bow_gold", "Gold double bow"), ("bow_lavender", "Lavender bow"), ("double_bow_lavender", "Lavender double bow"), ("bow_mint", "Mint bow"), ("double_bow_mint", "Mint double bow"), ("bow_brown", "Brown bow"), ("double_bow_brown", "Brown double bow"),
     ("top_hat", "Top hat"), ("witch_hat", "Witch hat"), ("viking_helmet", "Viking helmet"), ("chef_hat", "Chef hat"), ("propeller_cap", "Propeller cap"), ("party_hat", "Party hat"), ("headphones", "Headphones"), ("flower_crown", "Flower crown"), ("cowboy_hat", "Cowboy hat"), ("grad_cap", "Graduation cap"), ("mushroom_cap", "Mushroom cap"), ("antennae", "Alien antennae"), ("star_orbit", "Orbiting stars"),
     ("elf_hat", "Elf hat"), ("tree_hat", "Christmas tree hat"), ("present_hat", "Present hat"), ("winter_beanie", "Winter beanie"), ("earmuffs", "Earmuffs"), ("holly_headband", "Holly headband"), ("candle_crown", "Candle crown"), ("bandana_xmas", "Christmas bandana"), ("bandana_lights", "Fairy lights bandana"),
+    ("wizard_hat", "Wizard hat"), ("pirate_hat", "Pirate hat"), ("neon_visor", "Neon visor"), ("beret", "Beret"),
 ];
 const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix"), ("snow", "Snowfall"),
     ("trail_stars", "Star trail"), ("trail_petals", "Petal trail"), ("trail_snow", "Snow trail"), ("trail_hearts", "Heart trail"), ("trail_cape", "Cape trail")];
@@ -41,6 +43,7 @@ const PETS: &[(&str, &str)] = &[
     ("lamb_pink", "Pink Lamb"), ("lamb_blue", "Blue Lamb"), ("hamster_white", "Winter Hamster"), ("ghast_soul", "Soul Ghast"), ("blaze_soul", "Soul Blaze"), ("warden_crimson", "Crimson Warden"), ("turtle_gold", "Golden Turtle"), ("ghost_lilac", "Lilac Ghost"), ("dragon_pink", "Pink Baby Dragon"), ("bunny_gray", "Gray Bunny"),
     ("robot", "Mini Robot"), ("cloud", "Little Cloud"), ("rocket", "Mini Rocket"), ("ufo", "Mini UFO"), ("octopus", "Octopus"), ("mushroom", "Mushroom Buddy"), ("dino", "Baby Dino"), ("pufferfish", "Pufferfish"),
     ("baby_reindeer", "Baby Reindeer"), ("gingerbread_man", "Gingerbread Man"), ("polar_bear", "Polar Bear Cub"), ("xmas_tree", "Little Christmas Tree"), ("present_pal", "Present Pal"), ("snow_fox", "Snow Fox"),
+    ("fire_spirit", "Fire Spirit"), ("crystal_golem", "Crystal Golem"), ("space_whale", "Space Whale"), ("bonsai", "Bonsai"),
 ];
 /// Shield skins (1.21.11: Com Client's own shield texture instead of wood and banners).
 const SHIELDS: &[(&str, &str)] = &[
@@ -49,6 +52,7 @@ const SHIELDS: &[(&str, &str)] = &[
     ("comet", "Comet shield"), ("sunset_sea", "Sunset Sea shield"), ("lava_lamp", "Lava Lamp shield"), ("midnight", "Midnight shield"),
     ("fireworks", "Fireworks shield"), ("equalizer", "Equalizer shield"), ("spiral", "Spiral Galaxy shield"), ("fish_tank", "Fish Tank shield"),
     ("xmas_tree", "Christmas Tree shield"), ("gingerbread", "Gingerbread shield"), ("ugly_sweater", "Ugly Sweater shield"), ("fireplace", "Fireplace shield"),
+    ("plasma", "Plasma shield"), ("portal", "Portal shield"), ("heartbeat", "Heartbeat shield"), ("meteor_shower", "Meteor Shower shield"),
 ];
 const NAMETAGS: &[(&str, &str)] = &[
     ("fire", "Fire"), ("ocean", "Ocean"), ("gold", "Gold"), ("toxic", "Toxic"), ("candy", "Candy"), ("galaxy", "Galaxy"), ("rainbow", "Rainbow"),
@@ -56,6 +60,7 @@ const NAMETAGS: &[(&str, &str)] = &[
     ("peach", "Peach"), ("forest", "Forest"), ("royal", "Royal"), ("fire_ice", "Fire & Ice"), ("cotton_candy", "Cotton Candy"), ("neon", "Neon"), ("copper", "Copper"), ("shadow", "Shadow"),
     ("bubblegum", "Bubblegum"), ("ruby", "Ruby"), ("sapphire", "Sapphire"), ("amethyst", "Amethyst"), ("sunrise", "Sunrise"), ("lime", "Lime"),
     ("christmas", "Christmas"), ("candy_cane", "Candy Cane"), ("frost", "Frost"), ("gingerbread", "Gingerbread"), ("evergreen", "Evergreen"), ("golden_star", "Golden Star"),
+    ("lagoon", "Lagoon"), ("berry", "Berry"), ("volt", "Volt"), ("ember", "Ember"), ("pastel", "Pastel"), ("dusk", "Dusk"),
 ];
 /// Name icons: a little picture after your name (the Christmas ones come from the advent calendar).
 const ICONS: &[(&str, &str)] = &[
@@ -84,6 +89,7 @@ const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_rain", "Rainy Day"), ("cc_comet", "Comet"), ("cc_sunset_sea", "Sunset Sea"), ("cc_checker", "Checkerboard"), ("cc_bubbles", "Bubbles"), ("cc_lava_lamp", "Lava Lamp"),
     ("cc_fireworks", "Fireworks"), ("cc_equalizer", "Equalizer"), ("cc_clouds", "Sunny Clouds"), ("cc_fish_tank", "Fish Tank"), ("cc_spiral", "Spiral Galaxy"), ("cc_hourglass", "Hourglass"),
     ("cc_xmas_tree", "Christmas Tree"), ("cc_snow_village", "Snowy Village"), ("cc_gingerbread", "Gingerbread"), ("cc_sleigh_ride", "Sleigh Ride"), ("cc_fireplace", "Fireplace"), ("cc_ugly_sweater", "Ugly Sweater"),
+    ("cc_neon_rain", "Neon Rain"), ("cc_plasma", "Plasma"), ("cc_portal", "Portal"), ("cc_heartbeat", "Heartbeat"), ("cc_meteor_shower", "Meteor Shower"), ("cc_jellyfish", "Jellyfish"), ("cc_butterflies", "Butterflies"), ("cc_rainbow_road", "Rainbow Road"),
 ];
 
 #[derive(Serialize, Clone, Debug)]

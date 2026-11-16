@@ -1423,6 +1423,80 @@
     "ice_crystal": "shards",
     "holly_leaf": "leaves",
     "frosted_fairy": "fairy",
-    "tinsel_ribbon": "ribbons"
+    "tinsel_ribbon": "ribbons",
+    "glow_pixie": "fairy_small",
+    "ember_moth": "butterfly_small",
+    "prism_mini": "feather_small",
+    "frost_sprite": "butterfly_small",
+    "neon_imp": "membrane_small",
+    "pocket_galaxy": "butterfly_small",
+    "goldfinch": "feather_small",
+    "bumblebee": "fairy_small",
+    "dewdrop": "fairy_small",
+    "lava_bat": "membrane_small",
+    "aurora_glass": "butterfly",
+    "phantom": "membrane",
+    "solar_flare": "feather",
+    "starborn": "feather_grand",
+    "void_monarch": "butterfly_grand",
+    "thunder_drake": "membrane_grand"
+  },
+  "animated": {
+    "glow_pixie": {
+      "frames": 8,
+      "ms": 110
+    },
+    "ember_moth": {
+      "frames": 8,
+      "ms": 100
+    },
+    "prism_mini": {
+      "frames": 8,
+      "ms": 120
+    },
+    "frost_sprite": {
+      "frames": 8,
+      "ms": 110
+    },
+    "neon_imp": {
+      "frames": 8,
+      "ms": 120
+    },
+    "pocket_galaxy": {
+      "frames": 8,
+      "ms": 120
+    },
+    "dewdrop": {
+      "frames": 8,
+      "ms": 100
+    },
+    "lava_bat": {
+      "frames": 8,
+      "ms": 110
+    },
+    "aurora_glass": {
+      "frames": 8,
+      "ms": 120
+    },
+    "phantom": {
+      "frames": 8,
+      "ms": 130
+    },
+    "solar_flare": {
+      "frames": 8,
+      "ms": 100
+    },
+    "starborn": {
+      "frames": 8,
+      "ms": 110
+    },
+    "void_monarch": {
+      "frames": 8,
+      "ms": 120
+    },
+    "thunder_drake": {
+      "frames": 8,
+      "ms": 110
+    }
   }
 }

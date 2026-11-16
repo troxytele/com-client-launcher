@@ -48,12 +48,21 @@ function panelMesh(p, side, material) {
  * Add `group` to viewer.playerObject and call tick(performance.now()) every frame.
  */
 export async function makeWings(id, url) {
-  const img = await loadImage(url);
+  // animated designs have one picture per frame next to the still one: <id>_<frame>.png
+  const anim = (RIGS.animated || {})[id];
+  let frames = null;
+  if (anim && anim.frames > 1) {
+    frames = await Promise.all([...Array(anim.frames)].map((_, k) => loadImage(url.replace(/\.png(\?.*)?$/, `_${k}.png$1`))));
+    if (frames.some((f) => !f)) frames = null;
+  }
+  const img = frames ? frames[0] : await loadImage(url);
   if (!img) return null;
   const cv = document.createElement("canvas");
   cv.width = img.width;
   cv.height = img.height;
-  cv.getContext("2d").drawImage(img, 0, 0);
+  const ctx = cv.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  let shown = 0;
   const tex = new THREE.CanvasTexture(cv);
   tex.magFilter = THREE.NearestFilter;
   tex.minFilter = THREE.LinearFilter;
@@ -80,6 +89,15 @@ export async function makeWings(id, url) {
     }
   }
   const tick = (now) => {
+    if (frames) {
+      const f = Math.floor(Date.now() / anim.ms) % frames.length;
+      if (f !== shown) {
+        shown = f;
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(frames[f], 0, 0);
+        tex.needsUpdate = true;
+      }
+    }
     const a = ((now / 50) / shape.period) * Math.PI * 2;
     for (const [joint, p, side] of joints) {
       const [yaw, pitch, roll] = p.rot;
