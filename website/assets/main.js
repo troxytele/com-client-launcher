@@ -4,6 +4,28 @@
   const RELEASES = `https://github.com/${REPO}/releases`;
   const API = `https://api.github.com/repos/${REPO}/releases`;
 
+  // ---------------------------------------------------------------- top bar: the news strip (closable) and the current page
+  const BAR_KEY = "cc-topbar";
+  const bar = document.querySelector(".topbar");
+  if (bar) {
+    const text = bar.querySelector("span") ? bar.querySelector("span").textContent : "";
+    try { if (localStorage.getItem(BAR_KEY) === text) document.body.classList.add("topbar-closed"); } catch (e) {}
+    const x = bar.querySelector(".topbar-x");
+    if (x) x.addEventListener("click", () => {
+      document.body.classList.add("topbar-closed");
+      try { localStorage.setItem(BAR_KEY, text); } catch (e) {}
+    });
+  }
+  const here = location.pathname.replace(/\.html$/, "").replace(/\/$/, "") || "/";
+  document.querySelectorAll(".nav nav a").forEach((a) => {
+    const to = (a.getAttribute("href") || "").replace(/\.html$/, "").replace(/\/$/, "");
+    if (to && !to.includes("#") && to === here) {
+      a.classList.add("on");
+      a.setAttribute("aria-current", "page");
+      if (a.scrollIntoView && window.innerWidth <= 860) a.scrollIntoView({ block: "nearest", inline: "center" });
+    }
+  });
+
   // ---------------------------------------------------------------- phone menu
   const toggle = document.querySelector(".nav-toggle");
   if (toggle) {
