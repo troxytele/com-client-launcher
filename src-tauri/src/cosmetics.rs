@@ -39,7 +39,12 @@ const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Ris
 const TRAILS: &[(&str, &str)] = &[("trail_stars", "Star trail"), ("trail_petals", "Petal trail"), ("trail_snow", "Snow trail"),
     ("trail_hearts", "Heart trail"), ("trail_cape", "Cape trail"), ("trail_footprints", "Glowing footprints"), ("trail_frost", "Frost steps"),
     ("trail_embers", "Ember sparks"), ("trail_pixel_hearts", "Pixel hearts"), ("trail_stardust", "Stardust"), ("trail_rainbow", "Rainbow ribbon"),
-    ("trail_fireworks", "New Year fireworks"), ("trail_love", "Love letters")];
+    ("trail_fireworks", "New Year fireworks"), ("trail_love", "Love letters"), ("trail_lightning", "Lightning sparks"),
+    ("trail_bubbles", "Bubbles"), ("trail_notes", "Music notes"), ("trail_leaves", "Autumn leaves"), ("trail_void", "Void rift"),
+    ("trail_coins", "Gold coins"), ("trail_fire", "Fire (duo)"), ("trail_ice", "Ice (duo)")];
+/// Face items (glasses, masks) and back items (swords, guitar, jetpack...): their own slots.
+const FACES: &[(&str, &str)] = &[("sunglasses", "Gold aviators"), ("heart_glasses", "Heart glasses"), ("pixel_shades", "Pixel shades"), ("ninja_mask", "Ninja mask"), ("monocle", "Monocle"), ("ski_goggles", "Ski goggles")];
+const BACKS: &[(&str, &str)] = &[("katana", "Katana"), ("guitar", "Guitar"), ("jetpack", "Jetpack"), ("quiver", "Quiver"), ("backpack", "Backpack"), ("twin_swords", "Twin diamond swords")];
 const PETS: &[(&str, &str)] = &[
     ("bee", "Bee"), ("ender_dragon", "Mini Ender Dragon"), ("allay", "Allay"), ("bat", "Bat"), ("parrot", "Parrot"), ("fox", "Fox"), ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"), ("goat", "Goat"), ("lamb", "Lamb"), ("pumpkin_cat", "Pumpkin Cat"), ("koala", "Koala"), ("duck", "Duck"), ("penguin", "Penguin"), ("coin_btc", "Bitcoin"), ("coin_eth", "Ethereum"), ("coin_ltc", "Litecoin"), ("capybara", "Capybara"), ("red_panda", "Red Panda"), ("bunny", "Bunny"), ("owl", "Owl"), ("corgi", "Corgi"), ("panda", "Panda"), ("warden", "Mini Warden"), ("sniffer", "Sniffer"), ("baby_turtle", "Baby Turtle"), ("turtle", "Sea Turtle"), ("creeper", "Mini Creeper"), ("ghast", "Mini Ghast"), ("mooshroom", "Mooshroom Calf"), ("blaze", "Mini Blaze"), ("camel", "Camel"), ("hamster", "Hamster"), ("hedgehog", "Hedgehog"), ("otter", "Otter"), ("sloth", "Sloth"), ("seal", "Seal"), ("shiba", "Shiba Inu"), ("husky", "Husky"), ("black_cat", "Black Cat"), ("white_cat", "White Cat"), ("pig", "Saddled Pig"), ("snail", "Snail"), ("jellyfish", "Jellyfish"), ("dragon_green", "Green Baby Dragon"), ("dragon_gold", "Golden Baby Dragon"), ("dragon_ice", "Ice Baby Dragon"), ("phoenix", "Phoenix"), ("ghost", "Ghost"), ("snowman", "Snowman"),
     ("dragon_red", "Red Baby Dragon"), ("dragon_purple", "Purple Baby Dragon"), ("dragon_shadow", "Shadow Baby Dragon"), ("phoenix_ice", "Ice Phoenix"), ("phoenix_void", "Void Phoenix"), ("jellyfish_blue", "Blue Jellyfish"), ("ghost_pink", "Pink Ghost"), ("ghost_mint", "Mint Ghost"), ("ginger_cat", "Ginger Cat"), ("choco_bunny", "Chocolate Bunny"), ("golden_duck", "Golden Duck"), ("owl_snowy", "Snowy Owl"),
@@ -106,6 +111,8 @@ pub struct Catalog {
     pub hats: Vec<Item>,
     pub auras: Vec<Item>,
     pub trails: Vec<Item>,
+    pub faces: Vec<Item>,
+    pub backs: Vec<Item>,
     pub pets: Vec<Item>,
     pub nametags: Vec<Item>,
     pub icons: Vec<Item>,
@@ -125,6 +132,8 @@ pub async fn catalog(_paths: &Paths) -> Catalog {
         hats: items(HATS),
         auras: items(AURAS),
         trails: items(TRAILS),
+        faces: items(FACES),
+        backs: items(BACKS),
         pets: items(PETS),
         nametags: items(NAMETAGS),
         icons: items(ICONS),
@@ -197,6 +206,9 @@ pub struct Look {
     pub shield: String,
     /// walk trail, "none" = no trail
     pub trail: String,
+    /// face item and back item, "none" = nothing
+    pub face: String,
+    pub back: String,
 }
 
 impl Default for Look {
@@ -219,6 +231,8 @@ impl Default for Look {
             plain_tag: false,
             shield: "none".into(),
             trail: "none".into(),
+            face: "none".into(),
+            back: "none".into(),
         }
     }
 }
@@ -262,6 +276,8 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
     l.plain_tag = cfg["plainTag"].as_bool().unwrap_or(false);
     l.shield = st("shield", "none");
     l.trail = st("trail", "none");
+    l.face = st("face", "none");
+    l.back = st("back", "none");
     l.halo_color = cfg["haloColor"].as_i64().unwrap_or(l.halo_color);
     l.hat_color = cfg["hatColor"].as_i64().unwrap_or(l.hat_color);
     l.aura_color = if cfg["auraRainbow"].as_bool().unwrap_or(false) { -1 } else { cfg["auraColor"].as_i64().unwrap_or(l.aura_color) };
@@ -274,6 +290,7 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
     if !valid(&look.cape, CUSTOM_CAPES) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
         || !valid(&look.hat, HATS) || !valid(&look.aura, AURAS) || !valid(&look.pet, PETS) || !valid(&look.nametag, NAMETAGS)
         || !valid(&look.icon, ICONS) || !valid(&look.shield, SHIELDS) || !valid(&look.trail, TRAILS)
+        || !valid(&look.face, FACES) || !valid(&look.back, BACKS)
     {
         bail!("Unknown cosmetic");
     }
@@ -304,6 +321,8 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
         o.insert("plainTag".into(), json!(look.plain_tag));
         o.insert("shield".into(), json!(look.shield));
         o.insert("trail".into(), json!(look.trail));
+        o.insert("face".into(), json!(look.face));
+        o.insert("back".into(), json!(look.back));
         o.insert("auraRainbow".into(), json!(look.aura_color == -1));
         if look.aura_color != -1 {
             o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));

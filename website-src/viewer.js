@@ -2,7 +2,7 @@
 // Built into website/assets/viewer.js with:  npm run build:web
 import * as THREE from "three";
 import { IdleAnimation, SkinViewer } from "skinview3d";
-import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape } from "./helpers.js";
+import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, makeVoxel, playCape } from "./helpers.js";
 import { loadPet } from "./pets.js";
 import { makeWings } from "./wings.js";
 
@@ -153,6 +153,14 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
       }
       if (look.halo && look.halo !== "none") head.add((extras.halo = makeHalo(look.halo, look.haloColor & 0xffffff)));
       if (look.hat && look.hat !== "none") head.add((extras.hat = makeHat(look.hat, look.hatColor & 0xffffff)));
+      // face item on the head, back item on the body
+      const bodyPart = v.playerObject.skin.body;
+      if (extras.face) head.remove(extras.face);
+      if (extras.back) bodyPart.remove(extras.back);
+      delete extras.face;
+      delete extras.back;
+      if (look.face && look.face !== "none") head.add((extras.face = makeVoxel(look.face, false)));
+      if (look.back && look.back !== "none") bodyPart.add((extras.back = makeVoxel(look.back, true)));
       // the pet: the game's own mob model on (or beside) the shoulder
       const key = look.pet && look.pet !== "none" ? look.pet + (look.petLeft ? ":left" : "") : "";
       if (pet) pet.setColor(look.petColor ?? -1);

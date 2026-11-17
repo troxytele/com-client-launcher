@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 // the halo, hat and aura shapes are shared with the website's 3D viewer, so both look like the game
-import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, playCape, setHatBase } from "../../website-src/helpers.js";
+import { CUSTOM_CAPES, auraColour, auraPoints, glow, makeHalo, makeHat, makeVoxel, playCape, setHatBase } from "../../website-src/helpers.js";
 import { loadPet } from "../../website-src/pets.js";
 import { makeWings } from "../../website-src/wings.js";
 
@@ -172,6 +172,26 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
       head.add(extras.current.hat);
     }
   }, [look.halo, look.haloColor, look.hat, look.hatColor]);
+
+  // face item on the head, back item on the body
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v) return;
+    const parts = { face: v.playerObject.skin.head, back: v.playerObject.skin.body };
+    for (const k of ["face", "back"] as const) {
+      const old = (extras.current as Record<string, THREE.Group | undefined>)[k];
+      if (old) {
+        parts[k].remove(old);
+        delete (extras.current as Record<string, THREE.Group | undefined>)[k];
+      }
+      const id = look[k] ?? "none";
+      if (id !== "none") {
+        const g = makeVoxel(id, k === "back");
+        (extras.current as Record<string, THREE.Group | undefined>)[k] = g;
+        parts[k].add(g);
+      }
+    }
+  }, [look.face, look.back]);
 
   // the pet: the game's own mob model on (or beside) the shoulder
   useEffect(() => {

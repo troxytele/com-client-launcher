@@ -71,6 +71,14 @@ function trailRgb(style, c, t, now) {
     case "trail_rainbow": return hueRgb(t);
     case "trail_fireworks": return t > 0.98 ? 0xfff4c2 : Math.floor(t * 5) % 3 === 0 ? 0xffd54a : hueRgb(t * 2);
     case "trail_love": return t < 0.5 ? 0xff2e63 : 0xff8fb0;
+    case "trail_lightning": return t < 0.5 ? 0xbff4ff : 0x5fb8ff;
+    case "trail_bubbles": return t < 0.5 ? 0xbff0ff : 0x8fd8ff;
+    case "trail_notes": return hueRgb(t * 0.8 + now / 5000);
+    case "trail_leaves": return t < 0.33 ? 0xe8762b : t < 0.66 ? 0xc0392b : 0xf2b33d;
+    case "trail_void": return trailMix(0xb070ff, 0x2a0a4a, Math.max(0, Math.min(1, t)));
+    case "trail_coins": return t < 0.5 ? 0xf2c230 : 0xfff4b0;
+    case "trail_fire": return trailMix(0xffe27a, 0xff3b1f, Math.max(0, Math.min(1, t)));
+    case "trail_ice": return t < 0.5 ? 0xbfefff : 0x6fb8ff;
     default: return c === -1 ? hueRgb(t * 0.6 + now / 4000) : c & 0xffffff;
   }
 }
@@ -147,6 +155,35 @@ function trailPoints(style, time, out) {
     } else if (style === "trail_love") {
       if (i % 3 !== 0) continue;
       heartPts(out, x + (h - 0.5) * 0.3, y + 0.6 + age, z + (hash01(i + 2) - 0.5) * 0.3, 0.09 * (1 - age * 0.3), fade, h, 12);
+    } else if (style === "trail_lightning") {
+      if (i % 2 !== 0) continue;
+      const flick = Math.sin(time * 30 + i * 3.1) > 0.2 ? 1 : 0.25;
+      const zx = x + (h - 0.5) * 0.3, zz = z + (hash01(i + 31) - 0.5) * 0.3, zy = y + 0.3 + hash01(i + 32) * 0.9;
+      for (let k = 0; k < 4; k++) out(zx + (k % 2 === 0 ? 0.05 : -0.05), zy + k * 0.07, zz, 0.03, fade * flick, k / 4);
+    } else if (style === "trail_bubbles") {
+      const pop = age > 0.85 ? (1 - age) / 0.15 : 1;
+      out(x + (h - 0.5) * 0.4 + Math.sin(time * 4 + i) * 0.05, y + 0.2 + h * 0.4 + age * 1.1, z + (hash01(i + 41) - 0.5) * 0.4, 0.045 + h * 0.03, fade * 0.8 * pop, h);
+    } else if (style === "trail_notes") {
+      if (i % 4 !== 0) continue;
+      const nx = x + (h - 0.5) * 0.4, nz = z + (hash01(i + 51) - 0.5) * 0.4, ny = y + 0.6 + age * 0.9;
+      out(nx, ny, nz, 0.05, fade, h);
+      for (let k = 1; k <= 3; k++) out(nx + 0.045, ny + k * 0.05, nz, 0.02, fade, h);
+      out(nx + 0.075, ny + 0.15, nz, 0.022, fade, h);
+    } else if (style === "trail_leaves") {
+      const sway = Math.sin(time * 2.2 + i * 1.3) * 0.18 * age;
+      out(x + (h - 0.5) * 0.35 + sway, y + 1.1 + h * 0.5 - age, z + (hash01(i + 61) - 0.5) * 0.35 + sway * 0.5, 0.045, fade, h);
+    } else if (style === "trail_void") {
+      const b = time * 3 + i, r = 0.3 * (1 - age);
+      out(x + Math.cos(b) * r, y + 0.2 + age * 0.3, z + Math.sin(b) * r, 0.045, fade, age);
+    } else if (style === "trail_coins") {
+      if (i % 3 !== 0) continue;
+      const hop = Math.abs(Math.sin(age * Math.PI * 1.6)) * 0.45 * (1 - age);
+      const spin = Math.abs(Math.cos(time * 6 + i));
+      out(x + (h - 0.5) * 0.5, y + 0.2 + hop, z + (hash01(i + 71) - 0.5) * 0.5, 0.05 * (0.35 + 0.65 * spin), fade, 0.3);
+    } else if (style === "trail_fire") {
+      out(x + (h - 0.5) * 0.3, y + 0.2 + age * (0.5 + h * 0.5), z + (hash01(i + 81) - 0.5) * 0.3, 0.06 * (1 - age * 0.5), fade, age);
+    } else if (style === "trail_ice") {
+      out(x + (h - 0.5) * 0.35, y + 0.9 + h * 0.6 - age * 0.3, z + (hash01(i + 91) - 0.5) * 0.35, i % 3 === 0 ? 0.055 : 0.035, fade, h);
     } else out(x + (h - 0.5) * 0.3, y + 0.3 + h * 1.1, z + (hash01(i + 11) - 0.5) * 0.3, 0.05, fade, h);
   }
 }
@@ -323,6 +360,15 @@ const SANTA = [
 /** A box given in mod pixels (x0..x1, y0..y1 with -y up, z0..z1 with -z front), placed in three.js head space. */
 const modBox = (x0, y0, z0, x1, y1, z1, color) => box(x1 - x0, y1 - y0, z1 - z0, color, (x0 + x1) / 2, -(y0 + y1) / 2, -(z0 + z1) / 2);
 
+/** A face item (on the head) or back item (on the body): a voxel model from the hats file. onBody: put it in the
+ * body's space (skinview3d's body group sits at the middle of the body; the game's body space starts at the neck). */
+function makeVoxel(id, onBody) {
+  const g = new THREE.Group();
+  voxelHat(id, g);
+  if (onBody) g.position.y = 6;
+  return g;
+}
+
 /** Blocky hats, like the mod's. */
 function makeHat(style, color) {
   const g = new THREE.Group();
@@ -414,4 +460,4 @@ function playCape(viewer, img, id, backEquipment = "cape") {
   return () => clearInterval(t);
 }
 
-export { VOXEL_HATS, setHatBase, CUSTOM_CAPES, EARS, earPalette, SANTA, capeFrames, playCape, auraColour, auraPoints, trailRgb, colourAt, glow, makeHalo, makeHat };
+export { makeVoxel, VOXEL_HATS, setHatBase, CUSTOM_CAPES, EARS, earPalette, SANTA, capeFrames, playCape, auraColour, auraPoints, trailRgb, colourAt, glow, makeHalo, makeHat };

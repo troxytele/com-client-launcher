@@ -17,12 +17,14 @@ import { groupOf, isExtraColor, titleOf, shownColor, idsOf } from "../../website
 const ADVENT_ITEMS = new Set(["cape:cc_northpole", "wings:snowflake", ...["tree", "snowman", "present", "candy_cane", "gingerbread", "bell", "xmas_star", "santa_hat", "snowflake", "reindeer"].map((i) => "icon:" + i)]);
 const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat", "headband_com", "headband_gg", "headband_pvp", "headband_ez", "headband_mvp", "headband_rainbow", "headband_ninja", "bow_white", "bow_pink", "bow_black", "bow_red", "bow_blue", "bow_purple", "double_bow_white", "double_bow_pink", "double_bow_black", "double_bow_red", "double_bow_blue", "double_bow_purple", "koala_hat", "bandana_fire_white", "bandana_fire_black", "bandana_fire_red", "bandana_fire_blue", "bandana_fire_toxic", "bandana_fire_purple", "bandana_galaxy", "bandana_stars", "bandana_aurora", "bandana_lava", "bandana_ocean", "bandana_lightning", "bandana_matrix", "bandana_neon", "bandana_sakura", "bandana_frost", "bandana_gg", "bandana_ez", "bandana_pvp", "bandana_mvp", "bandana_toxic", "bandana_king", "bandana_glitch", "bandana_noob", "bandana_rainbow", "bandana_camo", "bandana_ice", "bandana_sunset", "bandana_ender", "bandana_candy", "bandana_gold", "bandana_hearts", "bow_green", "double_bow_green", "bow_yellow", "double_bow_yellow", "bow_orange", "double_bow_orange", "bow_cyan", "double_bow_cyan", "bandana_checker", "bandana_zebra", "bandana_aqua", "bandana_snow", "bow_gold", "double_bow_gold", "bow_lavender", "double_bow_lavender", "bow_mint", "double_bow_mint", "bow_brown", "double_bow_brown", "top_hat", "witch_hat", "viking_helmet", "chef_hat", "propeller_cap", "party_hat", "headphones", "flower_crown", "cowboy_hat", "grad_cap", "mushroom_cap", "antennae", "star_orbit", "elf_hat", "tree_hat", "present_hat", "winter_beanie", "earmuffs", "holly_headband", "candle_crown", "bandana_xmas", "bandana_lights", "wizard_hat", "pirate_hat", "neon_visor", "beret"]);
 
-type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "trails" | "pets" | "shields" | "nametags" | "icons";
+type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "trails" | "faces" | "backs" | "pets" | "shields" | "nametags" | "icons";
 const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "capes", label: "Capes", field: "cape" },
   { id: "wings", label: "Wings", field: "wings" },
   { id: "halos", label: "Halos", field: "halo" },
   { id: "hats", label: "Hats", field: "hat" },
+  { id: "faces", label: "Face", field: "face" },
+  { id: "backs", label: "Back", field: "back" },
   { id: "auras", label: "Auras", field: "aura" },
   { id: "trails", label: "Trails", field: "trail" },
   { id: "pets", label: "Pets", field: "pet" },
@@ -38,7 +40,7 @@ const PET_COLORS = [-1, 0xffd24a, 0x6fd3ff, 0xff7ab8, 0x8cff9e, 0xb48cff, 0x3a3a
 const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a, 0xffffff, 0x4f7bff];
 
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
-const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none", petName: "", petColor: -1, plainTag: false, shield: "none", trail: "none" };
+const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none", petName: "", petColor: -1, plainTag: false, shield: "none", trail: "none", face: "none", back: "none" };
 
 // what you're trying on, kept while you look at other pages (cleared once it's saved)
 let draft: Look | null = null;
@@ -192,6 +194,10 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
         return <NameTag style={id} name={skin?.name || "Name"} className="nametag-art" still />;
       case "icon":
         return <img className="icon-art" src={`/cosmetics/icons/${id}.png`} alt="" />;
+      case "face":
+        return <img className="voxel-art" src={`/cosmetics/faces/${id}.png`} alt="" />;
+      case "back":
+        return <img className="voxel-art" src={`/cosmetics/backs/${id}.png`} alt="" />;
       case "aura":
       case "trail":
         return <AuraArt id={id} color={look.auraColor} />;
@@ -824,7 +830,7 @@ function OutfitsPanel({ look, catalog, onWear, onWallet, onOwned, art }: {
     }
   }
   const same = (a: Look, b: Look) => (["cape", "wings", "halo", "hat", "aura", "pet", "nametag", "icon"] as const).every((k) => a[k] === b[k])
-    && (a.trail ?? "none") === (b.trail ?? "none");
+    && (a.trail ?? "none") === (b.trail ?? "none") && (a.face ?? "none") === (b.face ?? "none") && (a.back ?? "none") === (b.back ?? "none");
   const nameOf = (kind: ShopKind, id: string) => {
     const tab = TABS.find((x) => x.field === kind);
     return (tab && catalog?.[tab.id].find((i) => i.id === id)?.name) || id.replace(/^cc_/, "").replace(/_/g, " ");
