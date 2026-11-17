@@ -308,7 +308,7 @@ const CUSTOM_CAPES = {
   cc_rain: [24, 80], cc_comet: [32, 90], cc_bubbles: [24, 100], cc_lava_lamp: [16, 130],
   cc_fireworks: [32, 90], cc_equalizer: [16, 90], cc_clouds: [16, 140], cc_fish_tank: [16, 120], cc_spiral: [16, 110], cc_hourglass: [32, 150],
   cc_xmas_tree: [16, 140], cc_snow_village: [16, 140], cc_gingerbread: [24, 120], cc_sleigh_ride: [16, 160], cc_fireplace: [16, 100], cc_ugly_sweater: [16, 120],
-  cc_neon_rain: [16, 90], cc_plasma: [16, 90], cc_portal: [16, 90], cc_heartbeat: [24, 70], cc_meteor_shower: [24, 90], cc_jellyfish: [16, 120], cc_butterflies: [16, 120], cc_rainbow_road: [16, 90],
+  cc_neon_rain: [16, 90], cc_plasma: [16, 90], cc_portal: [16, 90], cc_heartbeat: [24, 70], cc_meteor_shower: [24, 90], cc_jellyfish: [16, 120], cc_butterflies: [24, 100],
 };
 
 /** Cuts a cape strip into one canvas per frame. */

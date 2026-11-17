@@ -84,7 +84,7 @@ const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_rain", "Rainy Day"), ("cc_comet", "Comet"), ("cc_bubbles", "Bubbles"), ("cc_lava_lamp", "Lava Lamp"),
     ("cc_fireworks", "Fireworks"), ("cc_equalizer", "Equalizer"), ("cc_clouds", "Sunny Clouds"), ("cc_fish_tank", "Fish Tank"), ("cc_spiral", "Spiral Galaxy"), ("cc_hourglass", "Hourglass"),
     ("cc_xmas_tree", "Christmas Tree"), ("cc_snow_village", "Snowy Village"), ("cc_gingerbread", "Gingerbread"), ("cc_sleigh_ride", "Sleigh Ride"), ("cc_fireplace", "Fireplace"), ("cc_ugly_sweater", "Ugly Sweater"),
-    ("cc_neon_rain", "Neon Rain"), ("cc_plasma", "Plasma"), ("cc_portal", "Portal"), ("cc_heartbeat", "Heartbeat"), ("cc_meteor_shower", "Meteor Shower"), ("cc_jellyfish", "Jellyfish"), ("cc_butterflies", "Butterflies"), ("cc_rainbow_road", "Rainbow Road"),
+    ("cc_neon_rain", "Neon Rain"), ("cc_plasma", "Plasma"), ("cc_portal", "Portal"), ("cc_heartbeat", "Heartbeat"), ("cc_meteor_shower", "Meteor Shower"), ("cc_jellyfish", "Jellyfish"), ("cc_butterflies", "Butterflies"),
 ];
 
 #[derive(Serialize, Clone, Debug)]
