@@ -137,6 +137,8 @@ window.CC = (() => {
     ember: { name: "Ember", stops: [0x8a1a04, 0xff5a1a, 0xffd36b, 0xff5a1a], moving: true },
     pastel: { name: "Pastel", stops: [0xffb3d9, 0xb3e5ff, 0xd9ffb3, 0xfff0b3], moving: true },
     dusk: { name: "Dusk", stops: [0x2a1a5a, 0xc04dff, 0xff7a59], moving: false },
+    new_year: { name: "Midnight Gold", stops: [0xfff4c2, 0xf2c230, 0xffffff, 0xb8860b, 0xf2c230], moving: true },
+    valentine: { name: "Valentine", stops: [0xff2e63, 0xff8fb0, 0xfff0f5, 0xff8fb0], moving: true },
   };
   const mixRgb = (a, b, t) => {
     const ch = (sh) => Math.round(((a >> sh) & 255) + (((b >> sh) & 255) - ((a >> sh) & 255)) * t);

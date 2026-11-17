@@ -10,6 +10,7 @@ export function capeFrames(img: HTMLImageElement, n: number): HTMLCanvasElement[
 export function playCape(viewer: { loadCape: (src: HTMLCanvasElement, o?: { backEquipment?: "cape" | "elytra" }) => unknown }, img: HTMLImageElement, id: string, backEquipment?: "cape" | "elytra"): () => void;
 export function auraColour(style: string, c: number, t: number, now: number): THREE.Color;
 export function auraPoints(style: string, now: number, out: (x: number, y: number, z: number, size: number, bright: number, t: number) => void): void;
+export function trailRgb(style: string, c: number, t: number, now: number): number;
 export function colourAt(c: number, t: number, now: number): THREE.Color;
 export function glow(color: number, opacity?: number): THREE.MeshBasicMaterial;
 export function makeHalo(style: string, color: number): THREE.Group;

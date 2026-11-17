@@ -113,8 +113,8 @@ export type Replay = Shot & { duration_ms: number; server: string; mc_version: s
 export type PackInfo = { kind: "mrpack" | "ccprofile"; name: string; version: string; minecraft: string; loader: string; mods: number; files: number; size: number; icon: string; problem: string };
 export type ModrinthPack = { id: string; slug: string; title: string; description: string; icon: string; downloads: number; version: string; problem: string };
 export type CosmeticItem = { id: string; name: string };
-export type Catalog = { capes: CosmeticItem[]; wings: CosmeticItem[]; halos: CosmeticItem[]; hats: CosmeticItem[]; auras: CosmeticItem[]; pets: CosmeticItem[]; nametags: CosmeticItem[]; icons: CosmeticItem[]; shields: CosmeticItem[] };
-export type ShopKind = "cape" | "wings" | "halo" | "hat" | "aura" | "pet" | "nametag" | "icon" | "shield";
+export type Catalog = { capes: CosmeticItem[]; wings: CosmeticItem[]; halos: CosmeticItem[]; hats: CosmeticItem[]; auras: CosmeticItem[]; trails: CosmeticItem[]; pets: CosmeticItem[]; nametags: CosmeticItem[]; icons: CosmeticItem[]; shields: CosmeticItem[] };
+export type ShopKind = "cape" | "wings" | "halo" | "hat" | "aura" | "trail" | "pet" | "nametag" | "icon" | "shield";
 /** only: "advent" = only from the advent calendar (can't be bought), "limited" = a limited drop. */
 export type ShopItem = {
   kind: ShopKind; id: string; name: string; price: number; owned: boolean; full_price?: number; deal?: boolean; gift_from?: string;
@@ -158,7 +158,7 @@ export type ShopSet = {
   id: string; name: string; items: { kind: ShopKind; id: string; name: string; owned: boolean }[];
   full_price: number; price: number; off: number; owned: boolean; why: string | null;
 };
-export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number; pet: string; petLeft: boolean; nametag: string; icon: string; petName?: string; petColor?: number; plainTag?: boolean; shield?: string };
+export type Look = { cape: string; wings: string; halo: string; haloColor: number; hat: string; hatColor: number; aura: string; auraColor: number; pet: string; petLeft: boolean; nametag: string; icon: string; petName?: string; petColor?: number; plainTag?: boolean; shield?: string; trail?: string };
 
 export type OptimisePlan = {
   ram_total_mb: number; cpu: string; cores: number; gpu: string; gpu_kind: "dedicated" | "integrated" | "unknown";

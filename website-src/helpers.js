@@ -49,11 +49,36 @@ function colourAt(c, t, now) {
   return new THREE.Color(c & 0xffffff);
 }
 
-/** The colour of an aura point: snow is always snow-white, the rest use the chosen colour. */
+const hueRgb = (h) => {
+  const c = new THREE.Color().setHSL(((h % 1) + 1) % 1, 0.75, 0.62);
+  return (Math.round(c.r * 255) << 16) | (Math.round(c.g * 255) << 8) | Math.round(c.b * 255);
+};
+const trailMix = (a, b, t) => {
+  const ch = (s) => Math.round(((a >> s) & 255) * (1 - t) + ((b >> s) & 255) * t);
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+};
+
+/** Trail colours (Auras.java trailColor), 0xRRGGBB. c = the aura colour (-1 rainbow). */
+function trailRgb(style, c, t, now) {
+  switch (style) {
+    case "trail_snow": return 0xeef6ff;
+    case "trail_hearts": return t < 0.5 ? 0xff4f86 : 0xff8fb0;
+    case "trail_petals": return c === -1 ? hueRgb(t * 0.6 + now / 4000) : t < 0.5 ? c & 0xffffff : 0xffc2d6;
+    case "trail_frost": return t < 0.5 ? 0xbfefff : 0xffffff;
+    case "trail_embers": return trailMix(0xffe27a, 0xff3b1f, Math.max(0, Math.min(1, t)));
+    case "trail_pixel_hearts": return t < 0.33 ? 0xff3b6b : t < 0.66 ? 0xff7fa8 : 0xffb3cf;
+    case "trail_stardust": return hueRgb(t + now / 6000);
+    case "trail_rainbow": return hueRgb(t);
+    case "trail_fireworks": return t > 0.98 ? 0xfff4c2 : Math.floor(t * 5) % 3 === 0 ? 0xffd54a : hueRgb(t * 2);
+    case "trail_love": return t < 0.5 ? 0xff2e63 : 0xff8fb0;
+    default: return c === -1 ? hueRgb(t * 0.6 + now / 4000) : c & 0xffffff;
+  }
+}
+
+/** The colour of an aura point: snow is always snow-white, trails have their own, the rest use the chosen colour. */
 function auraColour(style, c, t, now) {
-  if (style === "snow" || style === "trail_snow") return new THREE.Color(0xeef6ff);
-  if (style === "trail_hearts") return new THREE.Color(t < 0.5 ? 0xff4f86 : 0xff8fb0);
-  if (style === "trail_petals" && c !== -1) return new THREE.Color(t < 0.5 ? c & 0xffffff : 0xffc2d6);
+  if (style === "snow") return new THREE.Color(0xeef6ff);
+  if (style && style.startsWith("trail_")) return new THREE.Color(trailRgb(style, c, t, now));
   return colourAt(c, t, now);
 }
 
@@ -61,6 +86,15 @@ const hash01 = (i) => {
   const x = Math.sin(i * 12.9898) * 43758.5453;
   return x - Math.floor(x);
 };
+
+function heartPts(out, x, y, z, size, bright, t, dots) {
+  for (let k = 0; k < dots; k++) {
+    const a = (k * Math.PI * 2) / dots;
+    const hx = (16 * Math.pow(Math.sin(a), 3)) / 17;
+    const hy = (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) / 17;
+    out(x + hx * size, y + hy * size, z, 0.035, bright, t);
+  }
+}
 
 /** Trails (Auras.java trailPoint): in previews the trail sweeps behind you as if you walked in a slow circle. */
 function trailPoints(style, time, out) {
@@ -72,11 +106,48 @@ function trailPoints(style, time, out) {
     const y = 0.15 + age * 0.1;
     const fade = Math.pow(1 - age, 1.4);
     const h = hash01(i);
+    const px = Math.cos(a), pz = Math.sin(a); // sideways, for footprints
     if (style === "trail_stars") out(x + (h - 0.5) * 0.25, y + 0.2 + h * 0.6, z + (hash01(i + 7) - 0.5) * 0.25, 0.05 + h * 0.04, fade * (0.6 + 0.4 * Math.sin(time * 9 + i * 1.7)), h);
     else if (style === "trail_petals") out(x + (h - 0.5) * 0.3, y + 0.6 + h * 0.8 - age * 0.9, z + (hash01(i + 3) - 0.5) * 0.3, 0.05, fade, h);
     else if (style === "trail_snow") out(x + (h - 0.5) * 0.35, y + 0.3 + h * 1.2 - age * 0.6, z + (hash01(i + 5) - 0.5) * 0.35, i % 4 === 0 ? 0.055 : 0.04, fade, h);
     else if (style === "trail_hearts") out(x + (h - 0.5) * 0.3, y + 0.5 + h * 0.6 + age * 0.8, z + (hash01(i + 9) - 0.5) * 0.3, 0.07 * (1 - age * 0.4), fade, h);
-    else out(x + (h - 0.5) * 0.3, y + 0.3 + h * 1.1, z + (hash01(i + 11) - 0.5) * 0.3, 0.05, fade, h);
+    else if (style === "trail_footprints") {
+      if (i % 4 !== 0) continue;
+      const side = (i / 4) % 2 === 0 ? 0.13 : -0.13;
+      const fx = x + px * side, fz = z + pz * side;
+      out(fx, y + 0.17, fz, 0.07, fade, 0.2);
+      out(fx - pz * 0.11, y + 0.17, fz + px * 0.11, 0.05, fade, 0.6);
+    } else if (style === "trail_frost") {
+      const gx = x + (h - 0.5) * 0.45, gz = z + (hash01(i + 13) - 0.5) * 0.45;
+      const glint = Math.max(0, Math.sin(time * 5 + i * 2.3));
+      out(gx, y + 0.16, gz, i % 3 === 0 ? 0.06 : 0.04, fade * (0.55 + 0.45 * glint), h);
+    } else if (style === "trail_embers") {
+      const drift = Math.sin(time * 2.5 + i) * 0.12 * age;
+      out(x + (h - 0.5) * 0.3 + drift, y + 0.25 + age * (0.6 + h * 0.6), z + (hash01(i + 21) - 0.5) * 0.3 - drift, 0.05 * (1 - age * 0.5), fade * (0.7 + 0.3 * Math.sin(time * 14 + i)), age);
+    } else if (style === "trail_pixel_hearts") {
+      if (i % 5 !== 0) continue;
+      const cx = x + (h - 0.5) * 0.4, cz = z + (hash01(i + 4) - 0.5) * 0.4, cy = y + 0.7 + age * 0.9;
+      const px2 = [[-2, 1], [-1, 2], [1, 2], [2, 1], [-2, 0], [-1, 1], [0, 1], [1, 1], [2, 0], [-1, 0], [0, 0], [1, 0], [-1, -1], [0, -1], [1, -1], [0, -2]];
+      for (const q of px2) out(cx + q[0] * 0.045, cy + q[1] * 0.045, cz, 0.032, fade, h);
+    } else if (style === "trail_stardust") {
+      for (let k = 0; k < 2; k++) {
+        const hk = hash01(i * 3 + k);
+        const tw = Math.max(0.2, Math.sin(time * 10 + i * 1.3 + k * 2));
+        out(x + (hk - 0.5) * 0.5, y + 0.3 + hk * 1.4 + age * 0.15, z + (hash01(i * 3 + k + 1) - 0.5) * 0.5, 0.03, fade * tw, hk);
+      }
+    } else if (style === "trail_rainbow") {
+      for (let k = 0; k < 3; k++) out(x, y + 0.75 + k * 0.07, z, 0.06, fade * 0.85, (age * 0.8 + k * 0.05 + time * 0.15) % 1);
+    } else if (style === "trail_fireworks") {
+      if (i % 7 !== 0) continue;
+      const r = 0.12 + age * 0.55, cy = y + 1.0 + h * 0.6;
+      for (let k = 0; k < 10; k++) {
+        const b = (k * Math.PI * 2) / 10 + h * 3;
+        out(x + Math.cos(b) * r, cy + Math.sin(b) * r - age * age * 0.35, z + Math.sin(b + 1) * r * 0.4, 0.045, fade, (h + k * 0.07) % 1);
+      }
+    } else if (style === "trail_love") {
+      if (i % 3 !== 0) continue;
+      heartPts(out, x + (h - 0.5) * 0.3, y + 0.6 + age, z + (hash01(i + 2) - 0.5) * 0.3, 0.09 * (1 - age * 0.3), fade, h, 12);
+    } else out(x + (h - 0.5) * 0.3, y + 0.3 + h * 1.1, z + (hash01(i + 11) - 0.5) * 0.3, 0.05, fade, h);
   }
 }
 
@@ -308,7 +379,7 @@ const CUSTOM_CAPES = {
   cc_rain: [24, 80], cc_comet: [32, 90], cc_bubbles: [24, 100], cc_lava_lamp: [16, 130],
   cc_fireworks: [32, 90], cc_equalizer: [16, 90], cc_clouds: [16, 140], cc_fish_tank: [16, 120], cc_spiral: [16, 110], cc_hourglass: [32, 150],
   cc_xmas_tree: [16, 140], cc_snow_village: [16, 140], cc_gingerbread: [24, 120], cc_sleigh_ride: [16, 160], cc_fireplace: [16, 100], cc_ugly_sweater: [16, 120],
-  cc_neon_rain: [16, 90], cc_plasma: [16, 90], cc_portal: [16, 90], cc_heartbeat: [24, 70], cc_meteor_shower: [24, 90], cc_jellyfish: [16, 120], cc_butterflies: [24, 100],
+  cc_neon_rain: [16, 90], cc_plasma: [16, 90], cc_portal: [16, 90], cc_heartbeat: [24, 70], cc_meteor_shower: [24, 90], cc_jellyfish: [16, 120], cc_butterflies: [24, 100], cc_new_year: [24, 100], cc_valentine: [24, 100],
 };
 
 /** Cuts a cape strip into one canvas per frame. */
@@ -343,4 +414,4 @@ function playCape(viewer, img, id, backEquipment = "cape") {
   return () => clearInterval(t);
 }
 
-export { VOXEL_HATS, setHatBase, CUSTOM_CAPES, EARS, earPalette, SANTA, capeFrames, playCape, auraColour, auraPoints, colourAt, glow, makeHalo, makeHat };
+export { VOXEL_HATS, setHatBase, CUSTOM_CAPES, EARS, earPalette, SANTA, capeFrames, playCape, auraColour, auraPoints, trailRgb, colourAt, glow, makeHalo, makeHat };

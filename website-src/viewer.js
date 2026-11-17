@@ -46,7 +46,7 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
   let wingCall = 0;
   const aura = new THREE.Group();
   const dots = [];
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < 160; i++) {
     const m = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 8), glow(0xffffff, 0));
     dots.push(m);
     aura.add(m);
@@ -58,14 +58,16 @@ function create(canvas, { width = 320, height = 420, rotate = true, fromBehind =
     frame = requestAnimationFrame(tick);
     const now = performance.now();
     let i = 0;
-    if (look.aura && look.aura !== "none") {
-      auraPoints(look.aura, now, (x, y, z, size, bright, t) => {
+    // the aura, then the walk trail (its own slot)
+    for (const style of [look.aura, look.trail]) {
+      if (!style || style === "none") continue;
+      auraPoints(style, now, (x, y, z, size, bright, t) => {
         const d = dots[i++];
         if (!d) return;
         d.visible = true;
         d.position.set(x * 16, -16 + y * 16, z * 16);
         d.scale.setScalar(Math.max(0.35, size * 16 * 0.8));
-        d.material.color = auraColour(look.aura, look.auraColor, t, now);
+        d.material.color = auraColour(style, look.auraColor, t, now);
         d.material.opacity = Math.max(0, Math.min(1, bright));
       });
     }

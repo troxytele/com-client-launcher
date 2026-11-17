@@ -35,6 +35,11 @@ const HATS: &[(&str, &str)] = &[
 ];
 const AURAS: &[(&str, &str)] = &[("sparkles", "Orbit sparkles"), ("embers", "Rising embers"), ("helix", "Helix"), ("snow", "Snowfall"),
     ("trail_stars", "Star trail"), ("trail_petals", "Petal trail"), ("trail_snow", "Snow trail"), ("trail_hearts", "Heart trail"), ("trail_cape", "Cape trail")];
+/// Walk trails: their own slot (an aura and a trail at the same time).
+const TRAILS: &[(&str, &str)] = &[("trail_stars", "Star trail"), ("trail_petals", "Petal trail"), ("trail_snow", "Snow trail"),
+    ("trail_hearts", "Heart trail"), ("trail_cape", "Cape trail"), ("trail_footprints", "Glowing footprints"), ("trail_frost", "Frost steps"),
+    ("trail_embers", "Ember sparks"), ("trail_pixel_hearts", "Pixel hearts"), ("trail_stardust", "Stardust"), ("trail_rainbow", "Rainbow ribbon"),
+    ("trail_fireworks", "New Year fireworks"), ("trail_love", "Love letters")];
 const PETS: &[(&str, &str)] = &[
     ("bee", "Bee"), ("ender_dragon", "Mini Ender Dragon"), ("allay", "Allay"), ("bat", "Bat"), ("parrot", "Parrot"), ("fox", "Fox"), ("cat", "Cat"), ("frog", "Frog"), ("axolotl", "Axolotl"), ("chicken", "Chicken"), ("slime", "Slime"), ("goat", "Goat"), ("lamb", "Lamb"), ("pumpkin_cat", "Pumpkin Cat"), ("koala", "Koala"), ("duck", "Duck"), ("penguin", "Penguin"), ("coin_btc", "Bitcoin"), ("coin_eth", "Ethereum"), ("coin_ltc", "Litecoin"), ("capybara", "Capybara"), ("red_panda", "Red Panda"), ("bunny", "Bunny"), ("owl", "Owl"), ("corgi", "Corgi"), ("panda", "Panda"), ("warden", "Mini Warden"), ("sniffer", "Sniffer"), ("baby_turtle", "Baby Turtle"), ("turtle", "Sea Turtle"), ("creeper", "Mini Creeper"), ("ghast", "Mini Ghast"), ("mooshroom", "Mooshroom Calf"), ("blaze", "Mini Blaze"), ("camel", "Camel"), ("hamster", "Hamster"), ("hedgehog", "Hedgehog"), ("otter", "Otter"), ("sloth", "Sloth"), ("seal", "Seal"), ("shiba", "Shiba Inu"), ("husky", "Husky"), ("black_cat", "Black Cat"), ("white_cat", "White Cat"), ("pig", "Saddled Pig"), ("snail", "Snail"), ("jellyfish", "Jellyfish"), ("dragon_green", "Green Baby Dragon"), ("dragon_gold", "Golden Baby Dragon"), ("dragon_ice", "Ice Baby Dragon"), ("phoenix", "Phoenix"), ("ghost", "Ghost"), ("snowman", "Snowman"),
     ("dragon_red", "Red Baby Dragon"), ("dragon_purple", "Purple Baby Dragon"), ("dragon_shadow", "Shadow Baby Dragon"), ("phoenix_ice", "Ice Phoenix"), ("phoenix_void", "Void Phoenix"), ("jellyfish_blue", "Blue Jellyfish"), ("ghost_pink", "Pink Ghost"), ("ghost_mint", "Mint Ghost"), ("ginger_cat", "Ginger Cat"), ("choco_bunny", "Chocolate Bunny"), ("golden_duck", "Golden Duck"), ("owl_snowy", "Snowy Owl"),
@@ -57,7 +62,7 @@ const NAMETAGS: &[(&str, &str)] = &[
     ("peach", "Peach"), ("forest", "Forest"), ("royal", "Royal"), ("fire_ice", "Fire & Ice"), ("cotton_candy", "Cotton Candy"), ("neon", "Neon"), ("copper", "Copper"), ("shadow", "Shadow"),
     ("bubblegum", "Bubblegum"), ("ruby", "Ruby"), ("sapphire", "Sapphire"), ("amethyst", "Amethyst"), ("sunrise", "Sunrise"), ("lime", "Lime"),
     ("christmas", "Christmas"), ("candy_cane", "Candy Cane"), ("frost", "Frost"), ("gingerbread", "Gingerbread"), ("evergreen", "Evergreen"), ("golden_star", "Golden Star"),
-    ("lagoon", "Lagoon"), ("berry", "Berry"), ("volt", "Volt"), ("ember", "Ember"), ("pastel", "Pastel"), ("dusk", "Dusk"),
+    ("lagoon", "Lagoon"), ("berry", "Berry"), ("volt", "Volt"), ("ember", "Ember"), ("pastel", "Pastel"), ("dusk", "Dusk"), ("new_year", "Midnight Gold"), ("valentine", "Valentine"),
 ];
 /// Name icons: a little picture after your name (the Christmas ones come from the advent calendar).
 const ICONS: &[(&str, &str)] = &[
@@ -84,7 +89,7 @@ const CUSTOM_CAPES: &[(&str, &str)] = &[
     ("cc_rain", "Rainy Day"), ("cc_comet", "Comet"), ("cc_bubbles", "Bubbles"), ("cc_lava_lamp", "Lava Lamp"),
     ("cc_fireworks", "Fireworks"), ("cc_equalizer", "Equalizer"), ("cc_clouds", "Sunny Clouds"), ("cc_fish_tank", "Fish Tank"), ("cc_spiral", "Spiral Galaxy"), ("cc_hourglass", "Hourglass"),
     ("cc_xmas_tree", "Christmas Tree"), ("cc_snow_village", "Snowy Village"), ("cc_gingerbread", "Gingerbread"), ("cc_sleigh_ride", "Sleigh Ride"), ("cc_fireplace", "Fireplace"), ("cc_ugly_sweater", "Ugly Sweater"),
-    ("cc_neon_rain", "Neon Rain"), ("cc_plasma", "Plasma"), ("cc_portal", "Portal"), ("cc_heartbeat", "Heartbeat"), ("cc_meteor_shower", "Meteor Shower"), ("cc_jellyfish", "Jellyfish"), ("cc_butterflies", "Butterflies"),
+    ("cc_neon_rain", "Neon Rain"), ("cc_plasma", "Plasma"), ("cc_portal", "Portal"), ("cc_heartbeat", "Heartbeat"), ("cc_meteor_shower", "Meteor Shower"), ("cc_jellyfish", "Jellyfish"), ("cc_butterflies", "Butterflies"), ("cc_new_year", "New Year Fireworks"), ("cc_valentine", "Love Letter"),
 ];
 
 #[derive(Serialize, Clone, Debug)]
@@ -100,6 +105,7 @@ pub struct Catalog {
     pub halos: Vec<Item>,
     pub hats: Vec<Item>,
     pub auras: Vec<Item>,
+    pub trails: Vec<Item>,
     pub pets: Vec<Item>,
     pub nametags: Vec<Item>,
     pub icons: Vec<Item>,
@@ -118,6 +124,7 @@ pub async fn catalog(_paths: &Paths) -> Catalog {
         halos: items(HALOS),
         hats: items(HATS),
         auras: items(AURAS),
+        trails: items(TRAILS),
         pets: items(PETS),
         nametags: items(NAMETAGS),
         icons: items(ICONS),
@@ -188,6 +195,8 @@ pub struct Look {
     pub plain_tag: bool,
     /// shield skin (1.21.11), "none" = the normal shield
     pub shield: String,
+    /// walk trail, "none" = no trail
+    pub trail: String,
 }
 
 impl Default for Look {
@@ -209,6 +218,7 @@ impl Default for Look {
             pet_color: -1,
             plain_tag: false,
             shield: "none".into(),
+            trail: "none".into(),
         }
     }
 }
@@ -251,6 +261,7 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
     l.pet_color = cfg["petColor"].as_i64().unwrap_or(-1);
     l.plain_tag = cfg["plainTag"].as_bool().unwrap_or(false);
     l.shield = st("shield", "none");
+    l.trail = st("trail", "none");
     l.halo_color = cfg["haloColor"].as_i64().unwrap_or(l.halo_color);
     l.hat_color = cfg["hatColor"].as_i64().unwrap_or(l.hat_color);
     l.aura_color = if cfg["auraRainbow"].as_bool().unwrap_or(false) { -1 } else { cfg["auraColor"].as_i64().unwrap_or(l.aura_color) };
@@ -262,7 +273,7 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
 pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
     if !valid(&look.cape, CUSTOM_CAPES) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
         || !valid(&look.hat, HATS) || !valid(&look.aura, AURAS) || !valid(&look.pet, PETS) || !valid(&look.nametag, NAMETAGS)
-        || !valid(&look.icon, ICONS) || !valid(&look.shield, SHIELDS)
+        || !valid(&look.icon, ICONS) || !valid(&look.shield, SHIELDS) || !valid(&look.trail, TRAILS)
     {
         bail!("Unknown cosmetic");
     }
@@ -292,6 +303,7 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
         o.insert("petColor".into(), json!(look.pet_color));
         o.insert("plainTag".into(), json!(look.plain_tag));
         o.insert("shield".into(), json!(look.shield));
+        o.insert("trail".into(), json!(look.trail));
         o.insert("auraRainbow".into(), json!(look.aura_color == -1));
         if look.aura_color != -1 {
             o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));

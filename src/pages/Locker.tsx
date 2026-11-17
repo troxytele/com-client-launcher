@@ -17,13 +17,14 @@ import { groupOf, isExtraColor, titleOf, shownColor, idsOf } from "../../website
 const ADVENT_ITEMS = new Set(["cape:cc_northpole", "wings:snowflake", ...["tree", "snowman", "present", "candy_cane", "gingerbread", "bell", "xmas_star", "santa_hat", "snowflake", "reindeer"].map((i) => "icon:" + i)]);
 const VOXEL_HATS = new Set(["bunny_hat", "axolotl_hat", "frog_hat", "fire_horns", "pumpkin_hat", "headband_com", "headband_gg", "headband_pvp", "headband_ez", "headband_mvp", "headband_rainbow", "headband_ninja", "bow_white", "bow_pink", "bow_black", "bow_red", "bow_blue", "bow_purple", "double_bow_white", "double_bow_pink", "double_bow_black", "double_bow_red", "double_bow_blue", "double_bow_purple", "koala_hat", "bandana_fire_white", "bandana_fire_black", "bandana_fire_red", "bandana_fire_blue", "bandana_fire_toxic", "bandana_fire_purple", "bandana_galaxy", "bandana_stars", "bandana_aurora", "bandana_lava", "bandana_ocean", "bandana_lightning", "bandana_matrix", "bandana_neon", "bandana_sakura", "bandana_frost", "bandana_gg", "bandana_ez", "bandana_pvp", "bandana_mvp", "bandana_toxic", "bandana_king", "bandana_glitch", "bandana_noob", "bandana_rainbow", "bandana_camo", "bandana_ice", "bandana_sunset", "bandana_ender", "bandana_candy", "bandana_gold", "bandana_hearts", "bow_green", "double_bow_green", "bow_yellow", "double_bow_yellow", "bow_orange", "double_bow_orange", "bow_cyan", "double_bow_cyan", "bandana_checker", "bandana_zebra", "bandana_aqua", "bandana_snow", "bow_gold", "double_bow_gold", "bow_lavender", "double_bow_lavender", "bow_mint", "double_bow_mint", "bow_brown", "double_bow_brown", "top_hat", "witch_hat", "viking_helmet", "chef_hat", "propeller_cap", "party_hat", "headphones", "flower_crown", "cowboy_hat", "grad_cap", "mushroom_cap", "antennae", "star_orbit", "elf_hat", "tree_hat", "present_hat", "winter_beanie", "earmuffs", "holly_headband", "candle_crown", "bandana_xmas", "bandana_lights", "wizard_hat", "pirate_hat", "neon_visor", "beret"]);
 
-type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "pets" | "shields" | "nametags" | "icons";
+type Tab = "capes" | "wings" | "halos" | "hats" | "auras" | "trails" | "pets" | "shields" | "nametags" | "icons";
 const TABS: { id: Tab; label: string; field: ShopKind }[] = [
   { id: "capes", label: "Capes", field: "cape" },
   { id: "wings", label: "Wings", field: "wings" },
   { id: "halos", label: "Halos", field: "halo" },
   { id: "hats", label: "Hats", field: "hat" },
   { id: "auras", label: "Auras", field: "aura" },
+  { id: "trails", label: "Trails", field: "trail" },
   { id: "pets", label: "Pets", field: "pet" },
   { id: "shields", label: "Shields", field: "shield" },
   { id: "nametags", label: "Name tags", field: "nametag" },
@@ -37,7 +38,7 @@ const PET_COLORS = [-1, 0xffd24a, 0x6fd3ff, 0xff7ab8, 0x8cff9e, 0xb48cff, 0x3a3a
 const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a, 0xffffff, 0x4f7bff];
 
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
-const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none", petName: "", petColor: -1, plainTag: false, shield: "none" };
+const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none", petName: "", petColor: -1, plainTag: false, shield: "none", trail: "none" };
 
 // what you're trying on, kept while you look at other pages (cleared once it's saved)
 let draft: Look | null = null;
@@ -82,7 +83,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
     if (id === "none" || !shop || shop.wallet.everything) return true;
     return idsOf(kind, id).some((x) => !!shop.items.find((i) => i.kind === kind && i.id === x && i.owned));
   };
-  const locked = TABS.filter((x) => !ownsIt(x.field, look[x.field] as string));
+  const locked = TABS.filter((x) => !ownsIt(x.field, (look[x.field] ?? "none") as string));
   const setWallet = (w: Wallet) => setShop((s) => (s ? { ...s, wallet: w } : s));
   async function buy(kind: ShopKind, id: string) {
     setBuying(kind + ":" + id);
@@ -157,7 +158,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
     const q = query.trim().toLowerCase();
     return q ? list.filter((i) => i.name.toLowerCase().includes(q) || (groupOf(t.field, i.id)?.colors ?? []).some((c) => c.label.toLowerCase().includes(q))) : list;
   }, [catalog, tab, query, shop]);
-  const current = look[t.field] as string;
+  const current = (look[t.field] ?? "none") as string;
   useEffect(() => {
     want("cape", [look.cape]);
     want("wings", [look.wings]);
@@ -192,6 +193,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       case "icon":
         return <img className="icon-art" src={`/cosmetics/icons/${id}.png`} alt="" />;
       case "aura":
+      case "trail":
         return <AuraArt id={id} color={look.auraColor} />;
       default:
         return <Icon name="sparkle" size={22} />;
@@ -263,7 +265,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
           )}
           <div className="locker-wearing">
             {TABS.map((x) => {
-              const v = look[x.field] as string;
+              const v = (look[x.field] ?? "none") as string;
               if (v === "none") return null;
               const name = catalog?.[x.id].find((i) => i.id === v)?.name ?? x.label;
               return (
@@ -279,7 +281,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
           {locked.length > 0 && shop && (
             <div className="locker-unlock">
               {locked.map((x) => {
-                const id = look[x.field] as string;
+                const id = (look[x.field] ?? "none") as string;
                 const price = priceOf(x.field, id);
                 const name = catalog?.[x.id].find((i) => i.id === id)?.name ?? x.label;
                 const short = Math.max(0, price - shop.wallet.points);
@@ -391,7 +393,7 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
               </span>
             </label>
           )}
-          {((tab === "halos" && look.halo !== "wreath") || (tab === "hats" && !["crown", "santa", "antlers"].includes(look.hat) && !VOXEL_HATS.has(look.hat)) || (tab === "auras" && !["snow", "trail_snow", "trail_hearts", "trail_cape"].includes(look.aura))) && (
+          {((tab === "halos" && look.halo !== "wreath") || (tab === "hats" && !["crown", "santa", "antlers"].includes(look.hat) && !VOXEL_HATS.has(look.hat)) || (tab === "auras" && look.aura !== "snow")) && (
             <ColourBar
               colors={tab === "halos" ? HALO_COLORS : tab === "hats" ? HAT_COLORS : AURA_COLORS}
               value={tab === "halos" ? look.haloColor : tab === "hats" ? look.hatColor : look.auraColor}
@@ -821,7 +823,8 @@ function OutfitsPanel({ look, catalog, onWear, onWallet, onOwned, art }: {
       toast(msg(e), "error");
     }
   }
-  const same = (a: Look, b: Look) => (["cape", "wings", "halo", "hat", "aura", "pet", "nametag", "icon"] as const).every((k) => a[k] === b[k]);
+  const same = (a: Look, b: Look) => (["cape", "wings", "halo", "hat", "aura", "pet", "nametag", "icon"] as const).every((k) => a[k] === b[k])
+    && (a.trail ?? "none") === (b.trail ?? "none");
   const nameOf = (kind: ShopKind, id: string) => {
     const tab = TABS.find((x) => x.field === kind);
     return (tab && catalog?.[tab.id].find((i) => i.id === id)?.name) || id.replace(/^cc_/, "").replace(/_/g, " ");

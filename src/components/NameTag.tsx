@@ -45,6 +45,8 @@ export const NAME_STYLES: Record<string, { stops: number[]; moving: boolean }> =
   ember: { stops: [0x8a1a04, 0xff5a1a, 0xffd36b, 0xff5a1a], moving: true },
   pastel: { stops: [0xffb3d9, 0xb3e5ff, 0xd9ffb3, 0xfff0b3], moving: true },
   dusk: { stops: [0x2a1a5a, 0xc04dff, 0xff7a59], moving: false },
+  new_year: { stops: [0xfff4c2, 0xf2c230, 0xffffff, 0xb8860b, 0xf2c230], moving: true },
+  valentine: { stops: [0xff2e63, 0xff8fb0, 0xfff0f5, 0xff8fb0], moving: true },
 };
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
 const mixRgb = (a: number, b: number, t: number) => {

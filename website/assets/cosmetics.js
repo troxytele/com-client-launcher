@@ -3,8 +3,8 @@
 (() => {
   const { API, el, get } = window.CC;
   const $ = (id) => document.getElementById(id);
-  const look = { cape: "none", wings: "heaven", halo: "ring", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "sparkles", auraColor: 0xa77bff, pet: "none", nametag: "none", icon: "none" };
-  const FIELD = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", pets: "pet", nametags: "nametag", icons: "icon" };
+  const look = { cape: "none", wings: "heaven", halo: "ring", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "sparkles", auraColor: 0xa77bff, trail: "none", pet: "none", nametag: "none", icon: "none" };
+  const FIELD = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", trails: "trail", pets: "pet", nametags: "nametag", icons: "icon" };
   // wing types (WingsFeature.Shape): which design is which
   const wingType = (id) => (["monarch", "morpho", "celestial"].includes(id) ? "Butterfly" : id === "pixie" || id.endsWith("_fairy") ? "Fairy"
     : ["dragon", "devil", "blue_dragon", "bat", "emerald"].includes(id) ? "Dragon" : "Feathered");
@@ -15,7 +15,7 @@
   const EAR_COLORS = [0xededed, 0xefddb8, 0xd9a55b, 0xd07a33, 0x7b4a2d, 0x4a2e1c, 0x8c8782, 0x1e1a19];
   let catalog = null;
   let prices = null; // "cape:<hash>" -> points (0 = free), from the server's shop
-  const SHOP_KIND = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", pets: "pet", nametags: "nametag", icons: "icon" };
+  const SHOP_KIND = { capes: "cape", wings: "wings", halos: "halo", hats: "hat", auras: "aura", trails: "trail", pets: "pet", nametags: "nametag", icons: "icon" };
   let seasons = new Map(); // seasonal items (Christmas, limited drops, advent): "kind:id" -> {name, start, end, only}
   let only = new Map(); // "kind:id" -> "advent" (can't be bought) or "limited"
   let deal = null; // today's deal: one item 30% off for a day
@@ -184,10 +184,10 @@
           thumbViewer.viewer.animation = null;
         }
         const v = thumbViewer.viewer;
-        const lk = { cape: "none", wings: "none", halo: "none", haloColor: look.haloColor, hat: "none", hatColor: look.hatColor, aura: "none", auraColor: look.auraColor, pet: "none", nametag: "none", icon: "none" };
+        const lk = { cape: "none", wings: "none", halo: "none", haloColor: look.haloColor, hat: "none", hatColor: look.hatColor, aura: "none", auraColor: look.auraColor, trail: "none", pet: "none", nametag: "none", icon: "none" };
         lk[FIELD[k]] = id;
         thumbViewer.setLook(lk, null, null);
-        const head = k !== "auras";
+        const head = k !== "auras" && k !== "trails";
         v.playerWrapper.rotation.y = head ? 0.6 : 0.45;
         v.zoom = head ? 2.3 : 1.05;
         v.camera.position.y = head ? 14 : 2;

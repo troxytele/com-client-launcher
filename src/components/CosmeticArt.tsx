@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { EARS, earPalette, auraPoints } from "../../website-src/helpers.js";
+import { EARS, earPalette, auraPoints, trailRgb } from "../../website-src/helpers.js";
 
 // The Locker card pictures, drawn the same way as the client's Locker (LockerScreen.java): glowing halos made of soft
 // dots, the aura shapes seen from the side, and the flat hat pictures. Each card is a small animated canvas.
@@ -177,7 +177,7 @@ export function AuraArt({ id, color }: { id: string; color: number }) {
           const rz = x * sin + z * cos;
           const front = rz > 0 ? 1 : 0.4;
           const r = Math.max(2, sz * size * 3.2);
-          const rgb = id === "snow" || id === "trail_snow" ? 0xeef6ff : id === "trail_hearts" ? (t < 0.5 ? 0xff4f86 : 0xff8fb0) : color === -1 ? hue(t * 0.6 + now / 4000) : color & 0xffffff;
+          const rgb = id === "snow" ? 0xeef6ff : id.startsWith("trail_") ? trailRgb(id, color, t, now) : color === -1 ? hue(t * 0.6 + now / 4000) : color & 0xffffff;
           const k = Math.max(0, Math.min(1, bright)) * front;
           dot(ctx, W / 2 + rx * size, feet - y * size, r, rgb, 0.75 * k);
           dot(ctx, W / 2 + rx * size, feet - y * size, Math.max(1, r * 0.28), 0xffffff, 0.6 * k);

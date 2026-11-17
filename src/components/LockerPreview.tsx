@@ -41,7 +41,7 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
     // the aura: a pool of glowing dots moved every frame
     const aura = new THREE.Group();
     const dots: THREE.Mesh[] = [];
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 160; i++) {
       const m = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 8), glow(0xffffff, 0));
       dots.push(m);
       aura.add(m);
@@ -58,15 +58,17 @@ export default function LockerPreview({ skin, slim, look, cape, wings, zoom = 0.
       const unit = 16;
       const feet = -16;
       let i = 0;
-      if (l.aura !== "none") {
-        auraPoints(l.aura, now, (x, y, z, size, bright, t) => {
+      // the aura, then the walk trail (its own slot)
+      for (const style of [l.aura, l.trail ?? "none"]) {
+        if (style === "none") continue;
+        auraPoints(style, now, (x, y, z, size, bright, t) => {
           const d = dots[i++];
           if (!d) return;
           d.visible = true;
           d.position.set(x * unit, feet + y * unit, z * unit);
           d.scale.setScalar(Math.max(0.35, size * unit * 0.8));
           const mat = d.material as THREE.MeshBasicMaterial;
-          mat.color = auraColour(l.aura, l.auraColor, t, now);
+          mat.color = auraColour(style, l.auraColor, t, now);
           mat.opacity = Math.max(0, Math.min(1, bright));
         });
       }
