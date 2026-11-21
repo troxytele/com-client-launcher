@@ -254,6 +254,9 @@ export const api = {
   releaseNotes: (version: string) => invoke<string[]>("release_notes", { version }),
   social: () => invoke<Social>("social"),
   modsList: (kind: Kind) => invoke<Installed[]>("mods_list", { kind }),
+  /** the mods of any profile, and switching one on or off there */
+  profileMods: (id: string) => invoke<Installed[]>("profile_mods", { id }),
+  profileModToggle: (id: string, file: string) => invoke<string>("profile_mod_toggle", { id, file }),
   modToggle: (kind: Kind, file: string) => invoke<string>("mod_toggle", { kind, file }),
   modDelete: (kind: Kind, file: string) => invoke<void>("mod_delete", { kind, file }),
   packFixNested: (kind: Kind, file: string) => invoke<void>("pack_fix_nested", { kind, file }),

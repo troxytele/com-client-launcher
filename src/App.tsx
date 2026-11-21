@@ -265,7 +265,7 @@ export default function App() {
               skinKey={skinKey}
             />
           )}
-          {page === "profiles" && <Profiles info={info} reload={reload} running={phase !== "idle"} onPlay={(srv) => { setPage("home"); play(srv); }}
+          {page === "profiles" && <Profiles info={info} reload={reload} running={phase !== "idle"} starting={starting} runningIds={games.map((g) => g.profile_id)} onPlay={(srv) => { setPage("home"); play(srv); }}
             onMods={async (id?: string) => {
               if (id && id !== profile.id) await selectProfile(id);
               setPage("mods");

@@ -779,7 +779,18 @@
 "Edit a screenshot in the Gallery: crop it, draw arrows, boxes and text, blur names or coordinates, then save a copy or share it.": "Bearbeite einen Screenshot in der Galerie: zuschneiden, Pfeile, Rahmen und Text zeichnen, Namen oder Koordinaten verpixeln, dann eine Kopie speichern oder teilen.",
 "e.g. Notch": "z. B. Notch",
 "https://modrinth.com/modpack/… or C:\\Users\\…\\pack.mrpack": "https://modrinth.com/modpack/… oder C:\\Users\\…\\pack.mrpack",
-"Name icons": "Namens-Icons"
+"Name icons": "Namens-Icons",
+"Mods in this profile": "Mods in diesem Profil",
+"Add mods": "Mods hinzufügen",
+"Show less": "Weniger anzeigen",
+"Search…": "Suchen…",
+"Click again to delete": "Zum Löschen nochmal klicken",
+"Profile selected": "Profil ausgewählt",
+"Close this profile's game first": "Schließe zuerst das Spiel dieses Profils",
+"This profile is already in game": "Dieses Profil ist schon im Spiel",
+"Close this profile's game to switch mods on or off.": "Schließe das Spiel dieses Profils, um Mods ein- oder auszuschalten.",
+"No mods yet. Com Client and its own parts are always there and aren't listed here.": "Noch keine Mods. Com Client und seine Teile sind immer dabei und stehen nicht in der Liste.",
+"Selected: Play starts this profile": "Ausgewählt: Spielen startet dieses Profil"
 },
 "templates": {
 "\"{0}\" is on your desktop now: double-click it to play": "„{0}“ ist jetzt auf deinem Desktop: Doppelklick zum Spielen",
@@ -866,6 +877,8 @@
 "Install {0}": "{0} installieren",
 "{0} kB": "{0} kB",
 "played {0}": "gespielt {0}",
-"Message {0}": "Nachricht an {0}"
+"Message {0}": "Nachricht an {0}",
+"Show all {0}": "Alle {0} anzeigen",
+"{0} on · {1} off": "{0} an · {1} aus"
 }
 }

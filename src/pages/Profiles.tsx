@@ -2,7 +2,7 @@ import { getLang } from "../i18n";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PlayTime from "../components/PlayTime";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { ago, api, fmtTime, Info, msg, PinnedServer, Profile } from "../api";
+import { ago, api, fmtTime, Info, Installed, msg, PinnedServer, Profile } from "../api";
 import { toast } from "../stores";
 import Icon from "../components/Icon";
 import ImportDialog from "../components/ImportDialog";
@@ -32,12 +32,19 @@ export default function Profiles({
   info,
   reload,
   running,
+  starting = false,
+  runningIds = [],
   onPlay,
   onMods,
 }: {
   info: Info;
   reload: () => void;
+  /** any game is running or starting */
   running: boolean;
+  /** a game is being started right now */
+  starting?: boolean;
+  /** profiles whose game is open: only those are locked (several games can run at once) */
+  runningIds?: string[];
   onPlay: (server?: string) => void;
   /** Open Mods & Packs for this profile (it becomes the selected one): the search only shows its version's mods. */
   onMods?: (profileId?: string) => void;
@@ -98,10 +105,18 @@ export default function Profiles({
   const sessions = info.profiles.reduce((n, x) => n + (x.sessions?.length || 0), 0);
   const maxRam = Math.max(2048, Math.floor(info.total_ram / 512) * 512 - 1024);
   const selected = p.id === info.settings.active_profile;
+  const inGame = runningIds.includes(p.id); // this profile's game is open
+  const [confirmDel, setConfirmDel] = useState(false);
+  useEffect(() => setConfirmDel(false), [p.id]);
 
   async function select(id: string) {
-    await api.saveSettings({ ...info.settings, active_profile: id });
-    reload();
+    try {
+      await api.saveSettings({ ...info.settings, active_profile: id });
+      reload();
+      toast("Profile selected");
+    } catch (e) {
+      toast(msg(e), "error");
+    }
   }
 
   const [creating, setCreating] = useState(false);
@@ -242,8 +257,13 @@ export default function Profiles({
                       setRenaming(x.id);
                     }}
                   >
-                    {x.id === p.id ? p.name || x.name : x.name}
-                    {x.id === info.settings.active_profile && <em>Selected</em>}
+                    <span className="pcard-name">{x.id === p.id ? p.name || x.name : x.name}</span>
+                    {x.id === info.settings.active_profile && (
+                      <em title="Selected: Play starts this profile">
+                        <Icon name="check" size={10} />
+                      </em>
+                    )}
+                    {runningIds.includes(x.id) && <i className="pcard-live" title="In game" />}
                   </b>
                 )}
                 <span>
@@ -253,8 +273,8 @@ export default function Profiles({
               {onMods && (
                 <button
                   className="pcard-mods"
-                  title={running ? "Close the game first" : `Mods for ${x.name} (Minecraft ${x.version || info.mc_version})`}
-                  disabled={running}
+                  title={runningIds.includes(x.id) ? "Close this profile's game first" : `Mods for ${x.name} (Minecraft ${x.version || info.mc_version})`}
+                  disabled={runningIds.includes(x.id) || starting}
                   onClick={(e) => {
                     e.stopPropagation();
                     onMods(x.id);
@@ -316,11 +336,11 @@ export default function Profiles({
               </div>
               <div className="phead-actions">
                 {selected ? (
-                  <button className="btn primary" disabled={running} onClick={() => onPlay()}>
+                  <button className="btn primary" disabled={starting || inGame} title={inGame ? "This profile is already in game" : undefined} onClick={() => onPlay()}>
                     <Icon name="play" size={14} fill /> Play
                   </button>
                 ) : (
-                  <button className="btn primary" disabled={running} onClick={() => select(p.id)}>
+                  <button className="btn primary" disabled={starting} onClick={() => select(p.id)}>
                     <Icon name="check" size={14} /> Use this profile
                   </button>
                 )}
@@ -335,7 +355,7 @@ export default function Profiles({
                   : " · Fabric with Com Client. Only mods made for this version show up in this profile's mod search."}
               </span>
               {onMods && (
-                <button className="btn small" disabled={running} onClick={() => onMods(p.id)}>
+                <button className="btn small" disabled={inGame || starting} title={inGame ? "Close this profile's game first" : undefined} onClick={() => onMods(p.id)}>
                   <Icon name="search" size={13} /> Mods for {p.version || VERSIONS[0].id}
                 </button>
               )}
@@ -391,22 +411,34 @@ export default function Profiles({
               <span className="grow" />
               {info.profiles.length > 1 && (
                 <button
-                  className="btn small ghost danger"
-                  disabled={running}
-                  onClick={() =>
+                  className={"btn small danger" + (confirmDel ? "" : " ghost")}
+                  disabled={inGame || !!busy}
+                  title={inGame ? "Close this profile's game first" : undefined}
+                  onClick={() => {
+                    // first click asks, second click deletes
+                    if (!confirmDel) {
+                      setConfirmDel(true);
+                      setTimeout(() => setConfirmDel(false), 4000);
+                      return;
+                    }
                     act("del", async () => {
-                      await api.deleteProfile(p.id);
+                      const gone = p.id;
+                      const list = await api.deleteProfile(gone);
+                      // move off the deleted profile first, so nothing saves it back
+                      setEditId(list.find((x) => x.id !== gone)?.id ?? list[0].id);
+                      setP(list[0]);
                       reload();
-                      setEditId(info.profiles.find((x) => x.id !== p.id)!.id);
                       toast("Profile deleted (its folder was kept)");
-                    })
-                  }
+                    });
+                  }}
                 >
-                  <Icon name="trash" size={14} /> Delete
+                  <Icon name="trash" size={14} /> {confirmDel ? "Click again to delete" : "Delete"}
                 </button>
               )}
             </div>
           </section>
+
+          <ProfileMods id={p.id} inGame={inGame} onAdd={onMods && !inGame ? () => onMods(p.id) : undefined} />
 
           <Servers p={p} setP={setP} onJoin={selected && !running ? (a) => onPlay(a) : undefined} />
 
@@ -772,4 +804,81 @@ async function iconPng(icon: string): Promise<string> {
   const w = img.width * s, h = img.height * s;
   g.drawImage(img, (256 - w) / 2, (256 - h) / 2, w, h);
   return c.toDataURL("image/png");
+}
+
+/** The mods in this profile, each with an on/off switch. */
+function ProfileMods({ id, inGame, onAdd }: { id: string; inGame: boolean; onAdd?: () => void }) {
+  const [mods, setMods] = useState<Installed[] | null>(null);
+  const [filter, setFilter] = useState("");
+  const [open, setOpen] = useState(false);
+  const load = () =>
+    api
+      .profileMods(id)
+      .then(setMods)
+      .catch(() => setMods([]));
+  useEffect(() => {
+    setMods(null);
+    setOpen(false);
+    load();
+  }, [id]);
+
+  async function toggle(m: Installed) {
+    try {
+      await api.profileModToggle(id, m.file);
+      load();
+    } catch (e) {
+      toast(msg(e), "error");
+    }
+  }
+
+  const list = (mods ?? []).filter((m) => !filter || (m.name + " " + m.file).toLowerCase().includes(filter.toLowerCase()));
+  const shown = open || filter ? list : list.slice(0, 6);
+  const on = (mods ?? []).filter((m) => m.enabled).length;
+  return (
+    <section className="settings-block pmods">
+      <div className="pmods-head">
+        <h3>
+          <Icon name="cube" size={15} /> Mods in this profile
+        </h3>
+        {mods && <small>{mods.length ? `${on} on · ${mods.length - on} off` : ""}</small>}
+        <span className="grow" />
+        {mods && mods.length > 6 && (
+          <input className="pmods-filter" placeholder="Search…" value={filter} onChange={(e) => setFilter(e.target.value)} />
+        )}
+        {onAdd && (
+          <button className="btn small" onClick={onAdd}>
+            <Icon name="plus" size={13} /> Add mods
+          </button>
+        )}
+      </div>
+      {mods === null ? (
+        <div className="pmods-empty">
+          <Spinner size={14} />
+        </div>
+      ) : mods.length === 0 ? (
+        <div className="pmods-empty">No mods yet. Com Client and its own parts are always there and aren't listed here.</div>
+      ) : (
+        <>
+          <div className="pmods-list">
+            {shown.map((m) => (
+              <div key={m.file} className={"pmod" + (m.enabled ? "" : " off")}>
+                {m.icon ? <img src={m.icon} alt="" /> : <span className="pmod-noicon"><Icon name="cube" size={14} /></span>}
+                <span className="pmod-text">
+                  <b title={m.file}>{m.name || m.file}</b>
+                  <small>{m.version || m.file}</small>
+                </span>
+                <Switch on={m.enabled} disabled={inGame} onChange={() => toggle(m)} />
+              </div>
+            ))}
+          </div>
+          {!filter && list.length > 6 && (
+            <button className="btn small ghost pmods-more" onClick={() => setOpen(!open)}>
+              {open ? "Show less" : `Show all ${list.length}`}
+            </button>
+          )}
+          {inGame && <small className="muted">Close this profile's game to switch mods on or off.</small>}
+        </>
+      )}
+    </section>
+  );
 }

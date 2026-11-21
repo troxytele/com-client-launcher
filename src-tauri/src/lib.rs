@@ -826,6 +826,23 @@ async fn mods_list(state: State<'_, AppState>, kind: String) -> Res<Vec<mods::In
     tokio::task::spawn_blocking(move || mods::list(&dir, &kind)).await.map_err(|e| e.to_string())
 }
 
+/// The mods in one profile (not necessarily the selected one): the Profiles page lists them.
+#[tauri::command]
+async fn profile_mods(state: State<'_, AppState>, id: String) -> Res<Vec<mods::InstalledItem>> {
+    let dir = store::game_dir(&state.paths, &Profiles::load(&state.paths).get(&id));
+    tokio::task::spawn_blocking(move || mods::list(&dir, "mod")).await.map_err(|e| e.to_string())
+}
+
+/// Turns a mod in one profile on or off (not while that profile's game is running).
+#[tauri::command]
+fn profile_mod_toggle(state: State<'_, AppState>, id: String, file: String) -> Res<String> {
+    if state.games.lock().unwrap().iter().any(|g| g.info.profile_id == id) {
+        return Err("Close this profile's game first".into());
+    }
+    let dir = store::game_dir(&state.paths, &Profiles::load(&state.paths).get(&id));
+    mods::toggle(&dir, "mod", &file).map_err(err)
+}
+
 #[tauri::command]
 fn mod_toggle(state: State<'_, AppState>, kind: String, file: String) -> Res<String> {
     mods::toggle(&active_game_dir(&state.paths), &kind, &file).map_err(err)
@@ -1298,6 +1315,8 @@ pub fn run() {
             social,
             mods_list,
             mod_toggle,
+            profile_mods,
+            profile_mod_toggle,
             mod_delete,
             pack_fix_nested,
             mods_updates,
