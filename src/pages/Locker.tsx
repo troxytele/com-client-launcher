@@ -42,8 +42,9 @@ const AURA_COLORS = [0xa77bff, 0x8fd8ff, 0xff5aa8, 0xffd36b, 0x6bffb0, 0xff6b4a,
 const hex = (c: number) => "#" + (c & 0xffffff).toString(16).padStart(6, "0");
 const NONE: Look = { cape: "none", wings: "none", halo: "none", haloColor: 0xffe07a, hat: "none", hatColor: 0xededed, aura: "none", auraColor: 0xa77bff, pet: "none", petLeft: false, nametag: "none", icon: "none", petName: "", petColor: -1, plainTag: false, shield: "none", trail: "none", face: "none", back: "none" };
 
-// what you're trying on, kept while you look at other pages (cleared once it's saved)
-let draft: Look | null = null;
+// what you're trying on, kept while you look at other pages (cleared once it's saved). An unsaved pick survives leaving the page, but only while the server still has the look it was made from:
+// if you changed something in game (or on another device) since, the newer look wins
+let draft: { base: string; look: Look } | null = null;
 
 // Locker + shop: everything you can wear on Com Client, tried on your own skin in 3D. Most items cost points
 // (earned by playing, daily streaks and invites); staff own everything. Saving wears it in game for everyone.
@@ -72,7 +73,8 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
       .lookGet()
       .then((l) => {
         setSaved(l);
-        setLook(draft ?? l);
+        setLook(draft && draft.base === JSON.stringify(l) ? draft.look : l);
+        draft = null;
       })
       .catch((e) => toast(msg(e), "error"));
     api.shop().then(setShop).catch(() => setShop(null));
@@ -126,8 +128,32 @@ export default function Locker({ signedIn, onAccounts, skinKey }: { signedIn: bo
 
   const dirty = saved !== null && JSON.stringify(saved) !== JSON.stringify(look);
   useEffect(() => {
-    draft = dirty ? look : null;
+    draft = dirty && saved ? { base: JSON.stringify(saved), look } : null;
   }, [look, dirty]);
+  // what you change in game shows up here too: check again when the launcher comes back to the front, and now and then
+  useEffect(() => {
+    if (!signedIn || dirty || saving) return;
+    const again = () =>
+      api
+        .lookGet()
+        .then((l) => {
+          setSaved((old) => {
+            if (old && JSON.stringify(old) === JSON.stringify(l)) return old;
+            setLook(l);
+            return l;
+          });
+        })
+        .catch(() => {});
+    const onFocus = () => document.visibilityState !== "hidden" && again();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    const t = setInterval(again, 20000);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+      clearInterval(t);
+    };
+  }, [signedIn, dirty, saving]);
   // everything you own is worn as soon as you pick it (in game too, within half a minute)
   useEffect(() => {
     if (!dirty || saving || !shop || locked.length > 0) return;

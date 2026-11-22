@@ -519,6 +519,8 @@ async fn prepare_and_start(app: &AppHandle, state: &AppState, server: Option<Str
 
     rep.stage("Signing in", 0, 0);
     let account = store::fresh_account(&paths).await?;
+    // start the game in what you wear right now, not in this profile's older look
+    cosmetics::sync_profile(&game_dir, &account).await;
     // if the background check is still going, wait for it (it's checking the same files), then this is quick
     let _files = files_lock().lock().await;
     // each profile runs its own Minecraft version (1.21.11 with Com Client, 1.8.9 on Legacy Fabric)

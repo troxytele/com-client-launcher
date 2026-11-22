@@ -237,6 +237,60 @@ impl Default for Look {
     }
 }
 
+/// Writes a look into one profile's Com Client config (the game wears it when it starts).
+fn write_config(game_dir: &std::path::Path, look: &Look) -> Result<()> {
+    let file = game_dir.join("config").join("comclient").join("client.json");
+    let mut cfg: Value = std::fs::read_to_string(&file).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_else(|| json!({}));
+    if !cfg.is_object() {
+        cfg = json!({});
+    }
+    let o = cfg.as_object_mut().unwrap();
+    o.insert("cape".into(), json!(look.cape));
+    o.insert("wings".into(), json!(look.wings));
+    o.insert("halo".into(), json!(look.halo));
+    o.insert("haloColor".into(), json!(look.halo_color & 0xFFFFFF));
+    o.insert("hat".into(), json!(look.hat));
+    o.insert("hatColor".into(), json!(look.hat_color & 0xFFFFFF));
+    o.insert("aura".into(), json!(look.aura));
+    o.insert("pet".into(), json!(look.pet));
+    o.insert("petLeft".into(), json!(look.pet_left));
+    o.insert("nametag".into(), json!(look.nametag));
+    o.insert("icon".into(), json!(look.icon));
+    o.insert("petName".into(), json!(look.pet_name));
+    o.insert("petColor".into(), json!(look.pet_color));
+    o.insert("plainTag".into(), json!(look.plain_tag));
+    o.insert("shield".into(), json!(look.shield));
+    o.insert("trail".into(), json!(look.trail));
+    o.insert("face".into(), json!(look.face));
+    o.insert("back".into(), json!(look.back));
+    o.insert("auraRainbow".into(), json!(look.aura_color == -1));
+    if look.aura_color != -1 {
+        o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));
+    }
+    if let Some(parent) = file.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let _ = std::fs::write(&file, serde_json::to_string_pretty(&cfg)?);
+    Ok(())
+}
+
+/// Your look as the server has it (None when the server can't be reached or you have no look there yet).
+async fn server_look(acc: &Account) -> Option<Look> {
+    let v = social::request(acc, "GET", &format!("/cosmetics?uuids={}", acc.uuid), None).await.ok()?;
+    let c = v["cosmetics"].get(&acc.uuid).or_else(|| v["cosmetics"].as_object().and_then(|o| o.values().next()))?;
+    serde_json::from_value::<Look>(c.clone()).ok()
+}
+
+/// Before a game starts: puts what you wear right now (the server's look, which has your latest changes from the
+/// launcher, the website or another game) into that profile's config. Otherwise a profile you haven't played for a
+/// while starts with its old look and sends it to the server, undoing your newer choice.
+pub async fn sync_profile(game_dir: &std::path::Path, acc: &Account) {
+    let got = tokio::time::timeout(std::time::Duration::from_secs(4), server_look(acc)).await;
+    if let Ok(Some(look)) = got {
+        let _ = write_config(game_dir, &look);
+    }
+}
+
 fn valid(id: &str, list: &[(&str, &str)]) -> bool {
     id == "none" || list.iter().any(|(x, _)| *x == id)
 }
@@ -299,38 +353,7 @@ pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
     let v = social::request(acc, "POST", "/cosmetics", Some(body)).await?;
     let look = &serde_json::from_value::<Look>(v).unwrap_or_else(|_| look.clone());
     for p in Profiles::load(paths).list {
-        let file = store::game_dir(paths, &p).join("config").join("comclient").join("client.json");
-        let mut cfg: Value = std::fs::read_to_string(&file).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_else(|| json!({}));
-        if !cfg.is_object() {
-            cfg = json!({});
-        }
-        let o = cfg.as_object_mut().unwrap();
-        o.insert("cape".into(), json!(look.cape));
-        o.insert("wings".into(), json!(look.wings));
-        o.insert("halo".into(), json!(look.halo));
-        o.insert("haloColor".into(), json!(look.halo_color & 0xFFFFFF));
-        o.insert("hat".into(), json!(look.hat));
-        o.insert("hatColor".into(), json!(look.hat_color & 0xFFFFFF));
-        o.insert("aura".into(), json!(look.aura));
-        o.insert("pet".into(), json!(look.pet));
-        o.insert("petLeft".into(), json!(look.pet_left));
-        o.insert("nametag".into(), json!(look.nametag));
-        o.insert("icon".into(), json!(look.icon));
-        o.insert("petName".into(), json!(look.pet_name));
-        o.insert("petColor".into(), json!(look.pet_color));
-        o.insert("plainTag".into(), json!(look.plain_tag));
-        o.insert("shield".into(), json!(look.shield));
-        o.insert("trail".into(), json!(look.trail));
-        o.insert("face".into(), json!(look.face));
-        o.insert("back".into(), json!(look.back));
-        o.insert("auraRainbow".into(), json!(look.aura_color == -1));
-        if look.aura_color != -1 {
-            o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));
-        }
-        if let Some(parent) = file.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        let _ = std::fs::write(&file, serde_json::to_string_pretty(&cfg)?);
+        write_config(&store::game_dir(paths, &p), look)?;
     }
     Ok(look.clone())
 }
