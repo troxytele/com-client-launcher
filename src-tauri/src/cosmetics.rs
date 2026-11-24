@@ -264,6 +264,8 @@ fn write_config(game_dir: &std::path::Path, look: &Look) -> Result<()> {
     o.insert("face".into(), json!(look.face));
     o.insert("back".into(), json!(look.back));
     o.insert("auraRainbow".into(), json!(look.aura_color == -1));
+    // the server has this look now: nothing waiting to be sent from the game
+    o.insert("lookPending".into(), json!(false));
     if look.aura_color != -1 {
         o.insert("auraColor".into(), json!(look.aura_color & 0xFFFFFF));
     }
@@ -285,10 +287,55 @@ async fn server_look(acc: &Account) -> Option<Look> {
 /// launcher, the website or another game) into that profile's config. Otherwise a profile you haven't played for a
 /// while starts with its old look and sends it to the server, undoing your newer choice.
 pub async fn sync_profile(game_dir: &std::path::Path, acc: &Account) {
+    // the game changed your look but couldn't send it (signed out, invalid session, backend asleep): that one is
+    // newer than the server's, so send it now instead of putting the old one back
+    if let Some((local, true)) = read_config(game_dir) {
+        let body = match serde_json::to_value(sanitize(&local)) {
+            Ok(b) => b,
+            Err(_) => return,
+        };
+        let sent = tokio::time::timeout(std::time::Duration::from_secs(6), social::request(acc, "POST", "/cosmetics", Some(body))).await;
+        if let Ok(Ok(v)) = sent {
+            if let Ok(kept) = serde_json::from_value::<Look>(v) {
+                let _ = write_config(game_dir, &kept);
+            }
+        }
+        return; // not sent: keep the game's look, the game sends it itself once it can
+    }
     let got = tokio::time::timeout(std::time::Duration::from_secs(4), server_look(acc)).await;
     if let Ok(Some(look)) = got {
         let _ = write_config(game_dir, &look);
     }
+}
+
+/// Anything unknown to this launcher becomes "none" (instead of the whole look failing with "Unknown cosmetic").
+fn sanitize(look: &Look) -> Look {
+    let mut l = look.clone();
+    let fix = |id: &mut String, list: &[(&str, &str)]| {
+        if !valid(id, list) {
+            *id = "none".into();
+        }
+    };
+    fix(&mut l.cape, CUSTOM_CAPES);
+    fix(&mut l.wings, WINGS);
+    fix(&mut l.halo, HALOS);
+    fix(&mut l.hat, HATS);
+    fix(&mut l.aura, AURAS);
+    fix(&mut l.pet, PETS);
+    fix(&mut l.nametag, NAMETAGS);
+    fix(&mut l.icon, ICONS);
+    fix(&mut l.shield, SHIELDS);
+    fix(&mut l.trail, TRAILS);
+    fix(&mut l.face, FACES);
+    fix(&mut l.back, BACKS);
+    l
+}
+
+/// The look in a profile's Com Client config, and whether the game still has to send it to the server.
+fn read_config(game_dir: &std::path::Path) -> Option<(Look, bool)> {
+    let text = std::fs::read_to_string(game_dir.join("config/comclient/client.json")).ok()?;
+    let cfg: Value = serde_json::from_str(&text).ok()?;
+    Some((look_from_config(&cfg), cfg["lookPending"].as_bool().unwrap_or(false)))
 }
 
 fn valid(id: &str, list: &[(&str, &str)]) -> bool {
@@ -297,6 +344,11 @@ fn valid(id: &str, list: &[(&str, &str)]) -> bool {
 
 /// Your look: from the server, otherwise from the selected profile's Com Client config.
 pub async fn get(paths: &Paths, acc: &Account) -> Look {
+    // changed in game but not on the server yet: that's what you really wear
+    let active = store::game_dir(paths, &Profiles::load(paths).get(&store::Settings::load(paths).active_profile));
+    if let Some((local, true)) = read_config(&active) {
+        return sanitize(&local);
+    }
     if let Ok(v) = social::request(acc, "GET", &format!("/cosmetics?uuids={}", acc.uuid), None).await {
         if let Some(c) = v["cosmetics"].get(&acc.uuid).or_else(|| v["cosmetics"].as_object().and_then(|o| o.values().next())) {
             if let Ok(l) = serde_json::from_value::<Look>(c.clone()) {
@@ -311,6 +363,10 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
         .ok()
         .and_then(|t| serde_json::from_str(&t).ok())
         .unwrap_or(Value::Null);
+    look_from_config(&cfg)
+}
+
+fn look_from_config(cfg: &Value) -> Look {
     let mut l = Look::default();
     let st = |k: &str, d: &str| cfg[k].as_str().unwrap_or(d).to_string();
     l.cape = st("cape", "none");
@@ -341,13 +397,8 @@ pub async fn get(paths: &Paths, acc: &Account) -> Look {
 /// Wears it: tells the server (everyone with Com Client sees it) and writes it into every profile's Com Client
 /// config, so the game wears the same thing next time it starts.
 pub async fn save(paths: &Paths, acc: &Account, look: &Look) -> Result<Look> {
-    if !valid(&look.cape, CUSTOM_CAPES) || !valid(&look.wings, WINGS) || !valid(&look.halo, HALOS)
-        || !valid(&look.hat, HATS) || !valid(&look.aura, AURAS) || !valid(&look.pet, PETS) || !valid(&look.nametag, NAMETAGS)
-        || !valid(&look.icon, ICONS) || !valid(&look.shield, SHIELDS) || !valid(&look.trail, TRAILS)
-        || !valid(&look.face, FACES) || !valid(&look.back, BACKS)
-    {
-        bail!("Unknown cosmetic");
-    }
+    // something this launcher doesn't know (newer than it, or gone) is taken off instead of failing the whole save
+    let look = &sanitize(look);
     let body = serde_json::to_value(look)?;
     // the server takes off anything you haven't unlocked, so wear what it kept
     let v = social::request(acc, "POST", "/cosmetics", Some(body)).await?;

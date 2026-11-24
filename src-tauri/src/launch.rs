@@ -133,6 +133,8 @@ pub fn arguments(paths: &Paths, plan: &Plan) -> Vec<String> {
     if let Some(replay) = plan.replay.as_deref().filter(|r| !r.trim().is_empty()) {
         args.push(format!("-Dcomclient.replay={replay}"));
     }
+    // where the launcher keeps its accounts, so the game can renew an invalid session itself (no restart)
+    args.push(format!("-Dcomclient.launcher={}", native(&paths.root)));
     if !plan.extra_mods.is_empty() {
         let list: Vec<String> = plan.extra_mods.iter().map(|p| native(p)).collect();
         args.push(format!("-Dfabric.addMods={}", list.join(sep)));
